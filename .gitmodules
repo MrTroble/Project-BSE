@@ -1,0 +1,3 @@
+[submodule "TGEngine"]
+	path = TGEngine
+	url = https://github.com/MrTroble/TGEngine
