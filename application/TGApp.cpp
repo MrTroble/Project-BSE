@@ -14,6 +14,7 @@
 #include <cmath>
 #include <limits>
 #include <string>
+#include "NifLoader.hpp"
 #undef min
 #undef max
 
@@ -33,6 +34,8 @@ int main(const int count, const char **strings)
 		return -1;
 	}
 	auto api = getAPILayer();
+
+	tge::nif::load("assets/wrhouse02.nif");
 
 	auto &light = guiModul->light;
 	light.color = glm::vec3(1, 1, 1);

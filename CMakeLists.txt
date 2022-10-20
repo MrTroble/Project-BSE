@@ -6,13 +6,13 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 
 add_compile_definitions(APPLICATION_NAME="BSE")
 
-add_subdirectory(nifly)
-add_subdirectory(TGEngine)
-
 if(WIN32)  
 add_compile_options("/D_ITERATOR_DEBUG_LEVEL=0" "/MD" "/EHa")
 add_link_options("/ignore:4099")
 endif()
+
+add_subdirectory(nifly)
+add_subdirectory(TGEngine)
 
 add_executable(TGApp "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/NifLoader.cpp")
 target_link_libraries(TGApp PUBLIC tc::TGEngine nifly)
