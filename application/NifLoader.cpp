@@ -10,7 +10,9 @@ namespace tge::nif {
 	size_t load(const std::string& name, void* shaderPipe) {
 		const auto api = getAPILayer();
 		const auto ggm = getGameGraphicsModule();
-		const nifly::NifFile file(name);
+		const auto sha = api->getShaderAPI();
+		nifly::NifFile file(name);
+		file.PrepareData();
 		const auto& shapes = file.GetShapes();
 
 		std::vector<RenderInfo> renderInfos;
@@ -18,19 +20,47 @@ namespace tge::nif {
 
 		std::vector<void*> dataPointer;
 		std::vector<size_t> sizes;
-		for (const auto shape : shapes) {
-			const auto geom = shape->GetGeomData();
+		size_t current = 0;
+		dataPointer.reserve(shapes.size() * 5);
+		sizes.reserve(shapes.size() * 5);
+		for (auto shape : shapes) {
+			nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
+			if (!bishape)
+				continue;
+			auto& info = renderInfos[current];
+			info.vertexBuffer.push_back(dataPointer.size());
+
+			dataPointer.push_back(bishape->vertData.data());
+			sizes.push_back(bishape->vertData.size() * sizeof(nifly::BSVertexData));
+
+			std::vector<std::Triangle> triangles;
+			shape->GetTriangles(triangles);
+			if (!triangles.empty()) {
+				info.indexBuffer = dataPointer.size();
+				sizes.push_back(triangles.size() * sizeof(std::Triangle));
+				dataPointer.push_back(triangles.data());
+				info.indexCount = triangles.size() * 3;
+				info.indexSize = IndexSize::UINT16;
+			}
+			else {
+				info.indexCount = bishape->vertData.size();
+				info.indexSize = IndexSize::NONE;
+			}
+			current++;
 		}
+
 		const auto indexBufferID = api->pushData(dataPointer.size(), dataPointer.data(), sizes.data(), DataType::VertexIndexData);
 
-		size_t current = 0;
+		current = 0;
 		for (const auto shape : shapes) {
 			auto& info = renderInfos[current];
 			const auto geom = shape->GetGeomData();
-			info.indexCount = geom->GetNumTriangles() == 0 ? geom->GetNumVertices() : geom->GetNumTriangles();
-			info.indexSize = geom->GetNumTriangles() == 0 ? IndexSize::NONE:IndexSize::UINT16;
+			info.materialId = ggm->defaultMaterial;
+			info.bindingID = sha->createBindings(ggm->defaultPipe);
 			info.indexBuffer += indexBufferID;
-			info.vertexBuffer.push_back(current);
+			for (auto& index : info.vertexBuffer) {
+				index += indexBufferID;
+			}
 			current++;
 		}
 		api->pushRender(renderInfos.size(), renderInfos.data());
