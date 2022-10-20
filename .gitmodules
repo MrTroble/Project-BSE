@@ -1,3 +1,6 @@
 [submodule "TGEngine"]
 	path = TGEngine
 	url = https://github.com/MrTroble/TGEngine
+[submodule "nifly"]
+	path = nifly
+	url = https://github.com/ousnius/nifly

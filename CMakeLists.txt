@@ -6,6 +6,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 
 add_compile_definitions(APPLICATION_NAME="BSE")
 
+add_subdirectory(nifly)
 add_subdirectory(TGEngine)
 
 if(WIN32)  

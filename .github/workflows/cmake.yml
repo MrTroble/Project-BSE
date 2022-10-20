@@ -16,7 +16,7 @@ jobs:
         with:
             submodules: recursive
       - name: Cache
-        uses: actions/cache@v3.0.6
+        uses: actions/cache@v3
         with:
            path: ${{github.workspace}}\build\_deps
            key: wincache
@@ -52,7 +52,7 @@ jobs:
         with:
             submodules: recursive
       - name: Cache
-        uses: actions/cache@v3.0.6
+        uses: actions/cache@v3
         with:
            path: ${{github.workspace}}/build/_deps
            key: linuxcache
