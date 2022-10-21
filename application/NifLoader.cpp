@@ -7,18 +7,22 @@ namespace tge::nif {
 	using namespace tge::graphics;
 	using namespace tge::main;
 
-	size_t load(const std::string& name, void* shaderPipe) {
+	Error NifModule::init()
+	{
+		return Error();
+	}
+
+	size_t NifModule::load(const std::string& name, void* shaderPipe) const {
 		const auto api = getAPILayer();
 		const auto ggm = getGameGraphicsModule();
 		const auto sha = api->getShaderAPI();
 		nifly::NifFile file(name);
-		file.PrepareData();
 		const auto& shapes = file.GetShapes();
 
 		std::vector<RenderInfo> renderInfos;
 		renderInfos.resize(shapes.size());
 
-		std::vector<void*> dataPointer;
+		std::vector<const void*> dataPointer;
 		std::vector<size_t> sizes;
 		size_t current = 0;
 		dataPointer.reserve(shapes.size() * 5);
@@ -30,8 +34,9 @@ namespace tge::nif {
 			auto& info = renderInfos[current];
 			info.vertexBuffer.push_back(dataPointer.size());
 
-			dataPointer.push_back(bishape->vertData.data());
-			sizes.push_back(bishape->vertData.size() * sizeof(nifly::BSVertexData));
+			const auto& verticies = bishape->UpdateRawVertices();
+			dataPointer.push_back(verticies.data());
+			sizes.push_back(verticies.size() * sizeof(nifly::Vector3));
 
 			std::vector<std::Triangle> triangles;
 			shape->GetTriangles(triangles);

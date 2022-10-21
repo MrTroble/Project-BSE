@@ -24,8 +24,10 @@ using namespace tge;
 
 int main(const int count, const char **strings)
 {
+	nif::NifModule* nifModule = new nif::NifModule();
 	lateModules.push_back(guiModul);
-	lateModules.push_back(ioModul);
+	lateModules.push_back(ioModul);	
+	lateModules.push_back(nifModule);
 
 	const auto initResult = init();
 	if (initResult != main::Error::NONE)
@@ -35,7 +37,7 @@ int main(const int count, const char **strings)
 	}
 	auto api = getAPILayer();
 
-	tge::nif::load("assets/wrhouse02.nif");
+	nifModule->load("assets/wrhouse02.nif");
 
 	auto &light = guiModul->light;
 	light.color = glm::vec3(1, 1, 1);
