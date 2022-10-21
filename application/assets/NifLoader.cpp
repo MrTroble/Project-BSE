@@ -1,19 +1,15 @@
 #include "NifLoader.hpp"
 #include <NifFile.hpp>
 #include <TGEngine.hpp>
-#include <Util.hpp>
 
 namespace tge::nif {
 
 	using namespace tge::graphics;
 	using namespace tge::main;
-	using namespace tge::shader;
 
 	Error NifModule::init()
 	{
-		vertexFile = util::wholeFile("assets/testNif.vert");
-		fragmentsFile = util::wholeFile("assets/testNif.frag");
-		return Error::NONE;
+		return Error();
 	}
 
 	size_t NifModule::load(const std::string& name, void* shaderPipe) const {
@@ -25,10 +21,6 @@ namespace tge::nif {
 
 		std::vector<RenderInfo> renderInfos;
 		renderInfos.resize(shapes.size());
-
-		const auto pipe = sha->compile({ {ShaderType::VERTEX, vertexFile}, {ShaderType::FRAGMENT, fragmentsFile} });
-		Material material(pipe);
-		const auto materialId = api->pushMaterials(1, &material);
 
 		std::vector<const void*> dataPointer;
 		std::vector<size_t> sizes;
@@ -69,8 +61,9 @@ namespace tge::nif {
 		current = 0;
 		for (const auto shape : shapes) {
 			auto& info = renderInfos[current];
-			info.materialId = materialId;
-			info.bindingID = sha->createBindings(pipe);
+			const auto geom = shape->GetGeomData();
+			info.materialId = ggm->defaultMaterial;
+			info.bindingID = sha->createBindings(ggm->defaultPipe);
 			info.indexBuffer += indexBufferID;
 			for (auto& index : info.vertexBuffer) {
 				index += indexBufferID;
@@ -78,7 +71,6 @@ namespace tge::nif {
 			current++;
 			const auto translate = shape->transform.translation;
 			auto& nodeInfo = nodeInfos[current];
-
 			nodeInfo.parent = 0;
 			nodeInfo.bindingID = info.bindingID;
 			nodeInfo.transforms.translation = glm::vec3(translate.x, translate.y, translate.z);
