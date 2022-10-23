@@ -28,7 +28,7 @@ namespace tge::nif {
 
 		std::vector<char> vertexFile;
 		std::vector<char> fragmentsFile;
-		std::unordered_map<std::vector<std::string>, void*> shaderCache;
+		mutable std::unordered_map<std::vector<std::string>, void*> shaderCache;
 		tge::main::Error init();
 
 		size_t load(const std::string& name, void* shaderPipe = nullptr) const;

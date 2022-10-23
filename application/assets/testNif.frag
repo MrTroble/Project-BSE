@@ -5,18 +5,59 @@
 	"codes": [
 		{
 			"code": [
-				"layout(location=0) in vec2 UV;",
+				"$next_in vec2 UVIN;"
+			],
+			"dependsOn": [ "UV" ]
+		},
+		{
+			"code": [
+				"$next_in vec3 NORMALIN;"
+			],
+			"dependsOn": [ "NORMAL" ]
+		},
+		{
+			"code": [
+				"$next_in vec4 COLORIN;"
+			],
+			"dependsOn": [ "COLOR" ]
+		},
+		{
+			"code": [
 				"layout(location=0) out vec4 COLOR;",
 				"layout(location=1) out vec4 NORMAL;",
 				"layout(location=2) out float ROUGHNESS;",
 				"layout(location=3) out float METALLIC;",
-				"layout(binding=0) uniform sampler samp;",
-				"layout(binding=1) uniform texture2D tex;",
+				"layout(binding=0) uniform sampler samplertex;",
+				"layout(binding=1) uniform texture2D colorTexture;",
+				"layout(binding=4) uniform texture2D normalTexture;",
 				"void main() {",
-				"   COLOR = vec4(1, 0, 0, 1);",
-				"   NORMAL = vec4(1, 1, 1, 1);",
 				"   ROUGHNESS = 0;",
 				"   METALLIC = 0;",
+				"   NORMAL = vec4(1, 1, 1, 1);",
+				"   COLOR = vec4(1, 1, 1, 1);"
+			]
+		},
+		{
+			"code": [
+				"   COLOR = texture(sampler2D(colorTexture, samplertex), UVIN);",
+				"   NORMAL = texture(sampler2D(normalTexture, samplertex), UVIN);"
+			],
+			"dependsOn": [ "UV" ]
+		},
+		{
+			"code": [
+				"   COLOR *= COLORIN;"
+			],
+			"dependsOn": [ "COLOR" ]
+		},
+		{
+			"code": [
+				"   NORMAL *= vec4(NORMALIN, 1);"
+			],
+			"dependsOn": [ "NORMAL" ]
+		},
+		{
+			"code": [
 				"}"
 			]
 		}
