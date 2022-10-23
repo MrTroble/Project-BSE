@@ -41,7 +41,7 @@ int main(const int count, const char **strings)
 	ioModul->ggm = getGameGraphicsModule();
 	ioModul->ggm->updateViewMatrix(glm::perspective(glm::radians(45.0f), 1.0f, 0.00001f, 10000.0f));
 
-	nifModule->load("assets/wrhouse02.nif");
+	ioModul->nodeID = nifModule->load("assets/wrhouse02.nif");
 
 	auto &light = guiModul->light;
 	light.color = glm::vec3(1, 1, 1);
