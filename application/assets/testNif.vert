@@ -10,12 +10,15 @@
 				"layout(binding=2) uniform MVP {",
 				"   mat4 matrix;",
 				"} mvp;",
+				"layout(binding=3) uniform PROJ {",
+				"   mat4 proj;",
+				"} proj;",
 				"out gl_PerVertex {",
 				"   vec4 gl_Position;",
 				"};",
 				"void main() {",
 				"   UVOUT = vec2(0,0);",
-				"   gl_Position = mvp.matrix * vec4(POSITION, 1);",
+				"   gl_Position = mvp.matrix * proj.proj * vec4(POSITION, 1);",
 				"}"
 			]
 		}

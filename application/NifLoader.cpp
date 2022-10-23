@@ -35,6 +35,8 @@ namespace tge::nif {
 		size_t current = 0;
 		dataPointer.reserve(shapes.size() * 5);
 		sizes.reserve(shapes.size() * 5);
+		std::vector<std::vector<std::Triangle>> triangleLists;
+		triangleLists.resize(shapes.size());
 		for (auto shape : shapes) {
 			nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
 			if (!bishape)
@@ -46,7 +48,7 @@ namespace tge::nif {
 			dataPointer.push_back(verticies.data());
 			sizes.push_back(verticies.size() * sizeof(nifly::Vector3));
 
-			std::vector<std::Triangle> triangles;
+			auto & triangles = triangleLists[current];
 			shape->GetTriangles(triangles);
 			if (!triangles.empty()) {
 				info.indexBuffer = dataPointer.size();
