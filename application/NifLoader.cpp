@@ -66,11 +66,12 @@ namespace tge::nif {
 
 		std::vector<tge::graphics::NodeInfo> nodeInfos;
 		nodeInfos.resize(shapes.size() + 1);
+		const auto startID = sha->createBindings(pipe, shapes.size());
 		current = 0;
 		for (const auto shape : shapes) {
 			auto& info = renderInfos[current];
 			info.materialId = materialId;
-			info.bindingID = sha->createBindings(pipe);
+			info.bindingID = startID + current;
 			info.indexBuffer += indexBufferID;
 			for (auto& index : info.vertexBuffer) {
 				index += indexBufferID;
