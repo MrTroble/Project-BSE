@@ -37,6 +37,8 @@ namespace tge::nif {
 		sizes.reserve(shapes.size() * 5);
 		std::vector<std::vector<std::Triangle>> triangleLists;
 		triangleLists.resize(shapes.size());
+		std::vector<std::string> textureNames;
+		textureNames.reserve(shapes.size());
 		for (auto shape : shapes) {
 			nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
 			if (!bishape) {
@@ -63,9 +65,15 @@ namespace tge::nif {
 				info.indexCount = verticies.size();
 				info.indexSize = IndexSize::NONE;
 			}
+			const auto textures = file.GetTexturePathRefs(shape);
+			for (const auto texture : textures) {
+				const auto& tex = texture.get();
+				if(!tex.empty())
+					textureNames.push_back(tex);
+			}
 			current++;
 		}
-
+		const auto texturesLoaded = ggm->loadTextures(textureNames, tge::graphics::LoadType::DDSPP);
 		const auto indexBufferID = api->pushData(dataPointer.size(), dataPointer.data(), sizes.data(), DataType::VertexIndexData);
 
 		std::vector<tge::graphics::NodeInfo> nodeInfos;
