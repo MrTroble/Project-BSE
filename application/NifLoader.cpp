@@ -39,11 +39,13 @@ namespace tge::nif {
 		triangleLists.resize(shapes.size());
 		for (auto shape : shapes) {
 			nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
-			if (!bishape)
+			if (!bishape) {
+				printf("[WARN]: No BSTriShape!\n");
 				continue;
+			}
 			auto& info = renderInfos[current];
 			info.vertexBuffer.push_back(dataPointer.size());
-
+			
 			const auto& verticies = bishape->UpdateRawVertices();
 			dataPointer.push_back(verticies.data());
 			sizes.push_back(verticies.size() * sizeof(nifly::Vector3));
