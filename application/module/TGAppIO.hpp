@@ -11,8 +11,9 @@ public:
 	size_t nodeID;
 	tge::graphics::NodeTransform transform;
 	glm::vec2 vec;
-	glm::vec3 cache{1, 0, 1};
+	glm::vec3 cache{};
 	bool pressedMiddle = false;
+	float scale = 1;
 
 	void tick(double deltatime) override
 	{
@@ -20,13 +21,16 @@ public:
 
 	void mouseEvent(const tge::io::MouseEvent event) override
 	{
-		if (event.pressed == 16) {
+		if (event.pressed == tge::io::SCROLL) {
+			scale += event.x / 10.0f;
+		}
+
+		if (event.pressed == tge::io::MIDDLE_MOUSE) {
 			const glm::vec2 current(event.x, event.y);
 			if (pressedMiddle) {
-				glm::vec2 delta = vec - current;
+				glm::vec2 delta = (vec - current) * scale;
 				cache.x += delta.x;
-				cache.z += delta.y;
-				ggm->updateCameraMatrix(glm::lookAt(cache, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)));
+				cache.y += delta.y;
 			}
 			else {
 				pressedMiddle = true;
@@ -36,6 +40,8 @@ public:
 		else {
 			pressedMiddle = false;
 		}
+
+		ggm->updateCameraMatrix(glm::lookAt(glm::normalize(cache) * scale, glm::vec3(0, 0, 0), glm::vec3(0, 0, -1)));
 	}
 
 	void keyboardEvent(const tge::io::KeyboardEvent event) override
