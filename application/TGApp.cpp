@@ -39,7 +39,7 @@ int main(const int count, const char **strings)
 	auto api = getAPILayer();
 
 	ioModul->ggm = getGameGraphicsModule();
-	ioModul->ggm->updateViewMatrix(glm::perspective(glm::radians(45.0f), 1.0f, 0.00001f, 10000.0f));
+	ioModul->ggm->updateViewMatrix(glm::perspective(glm::radians(45.0f), 1.0f, 0.01f, 10000.0f));
 
 	ioModul->nodeID = nifModule->load("assets/wrhouse02.nif");
 

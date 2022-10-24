@@ -41,7 +41,7 @@ public:
 			pressedMiddle = false;
 		}
 
-		ggm->updateCameraMatrix(glm::lookAt(glm::normalize(cache) * scale, glm::vec3(0, 0, 0), glm::vec3(0, 0, -1)));
+		ggm->updateCameraMatrix(glm::lookAt(cache, glm::vec3(1, 1, 0) + cache, glm::vec3(0, 0, -1)));
 	}
 
 	void keyboardEvent(const tge::io::KeyboardEvent event) override

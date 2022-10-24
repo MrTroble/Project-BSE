@@ -76,7 +76,7 @@ namespace tge::nif {
 				const auto& uvData = bishape->UpdateRawColors();
 				info.vertexBuffer.push_back(dataPointer.size());
 				dataPointer.push_back(uvData.data());
-				sizes.push_back(uvData.size() * sizeof(nifly::Vector4));
+				sizes.push_back(uvData.size() * sizeof(nifly::Color4));
 			}
 
 			auto foundItr = shaderCache.find(cacheString);
