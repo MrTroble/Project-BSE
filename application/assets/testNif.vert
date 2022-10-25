@@ -41,7 +41,7 @@
 		{
 			"code": [
 				"void main() {",
-				"   gl_Position = mvp.matrix * proj.proj * vec4(POSITION, 1);"
+				"   gl_Position = proj.proj * mvp.matrix * vec4(POSITION, 1);"
 			]
 		},
 		{

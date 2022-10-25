@@ -149,7 +149,7 @@ namespace tge::nif {
 			const auto translate = shape->transform.translation;
 			auto& nodeInfo = nodeInfos[current];
 
-			nodeInfo.parent = 0;
+			nodeInfo.parent = ggm->nextNodeID();
 			nodeInfo.bindingID = info.bindingID;
 			nodeInfo.transforms.translation = glm::vec3(translate.x, translate.y, translate.z);
 
