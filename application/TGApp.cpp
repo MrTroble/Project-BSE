@@ -39,6 +39,7 @@ int main(const int count, const char **strings)
 	auto api = getAPILayer();
 
 	ioModul->ggm = getGameGraphicsModule();
+	guiModul->api = api;
 	ioModul->ggm->updateViewMatrix(glm::perspective(glm::radians(45.0f), 1.0f, 0.01f, 10000.0f));
 
 	ioModul->nodeID = nifModule->load("assets/wrhouse02.nif");
@@ -47,7 +48,7 @@ int main(const int count, const char **strings)
 	light.color = glm::vec3(1, 1, 1);
 	light.pos = glm::vec3(0, 10, 0);
 	light.intensity = 1.0f;
-	api->pushLights(1, &light);
+	guiModul->lightID = api->pushLights(1, &light);
 
 	const auto startResult = start();
 	if (startResult != main::Error::NONE)
