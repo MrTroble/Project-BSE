@@ -42,6 +42,8 @@ namespace tge::nif {
 		std::vector<Material> materials;
 		materials.reserve(shapes.size());
 
+		const auto nextNodeID = ggm->nextNodeID();
+
 		for (auto shape : shapes) {
 			nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
 			if (!bishape) {
@@ -149,7 +151,8 @@ namespace tge::nif {
 			const auto translate = shape->transform.translation;
 			auto& nodeInfo = nodeInfos[current];
 
-			nodeInfo.parent = ggm->nextNodeID();
+			nodeInfo.parent = nextNodeID;
+			info.constRanges.push_back({ sizeof(uint32_t), (void*)&nextNodeID, shader::ShaderType::FRAGMENT });
 			nodeInfo.bindingID = info.bindingID;
 			nodeInfo.transforms.translation = glm::vec3(translate.x, translate.y, translate.z);
 

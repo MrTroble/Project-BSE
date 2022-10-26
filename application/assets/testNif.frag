@@ -30,8 +30,9 @@
 				"layout(binding=0) uniform sampler samplertex;",
 				"layout(binding=1) uniform texture2D colorTexture;",
 				"layout(binding=4) uniform texture2D normalTexture;",
+				"layout(push_constant) uniform constants { uint id; } pushConst;",
 				"void main() {",
-				"   ROUGHNESS = 0;",
+				"   ROUGHNESS = pushConst.id;",
 				"   METALLIC = 0;",
 				"   NORMAL = vec4(1, 1, 1, 1);",
 				"   COLOR = vec4(1, 1, 1, 1);"
