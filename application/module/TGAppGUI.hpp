@@ -25,7 +25,9 @@ public:
 				) {
 				lightID = api->pushLights(1, &light);
 			}
-			if (ImGui::SliderFloat3("Transform node 2", (float*)&transformData.translation, -1000.0f, 1000.0f)) {
+			if (ImGui::SliderFloat3("Transform node 2", (float*)&transformData.translation, -1000.0f, 1000.0f) || //
+				ImGui::SliderFloat3("Scale node 2", (float*)&transformData.scale, -10.0f, 10.0f) //
+				) {
 				ggm->updateTransform(nodeID, transformData);
 			}
 		}

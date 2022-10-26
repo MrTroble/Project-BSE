@@ -16,6 +16,9 @@
 #include <string>
 #include "NifLoader.hpp"
 #include <glm/glm.hpp>
+
+#define TGE_IMPORT_INTEROP 1
+#include "../interop/Interop.hpp"
 #undef min
 #undef max
 
@@ -42,6 +45,9 @@ int main(const int count, const char **strings)
 	guiModul->api = api;
 	guiModul->ggm = ioModul->ggm;
 	ioModul->ggm->updateViewMatrix(glm::perspective(glm::radians(45.0f), 1.0f, 0.01f, 10000.0f));
+
+	std::array<RefernceLoad, 0> references = {};
+	loadReferences(references.size(), references.data());
 
 	ioModul->nodeID = nifModule->load("assets/wrhouse02.nif");
 	guiModul->nodeID = nifModule->load("assets/wrhouse02.nif");

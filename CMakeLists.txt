@@ -14,8 +14,10 @@ endif()
 add_subdirectory(nifly)
 add_subdirectory(TGEngine)
 
+add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp") 
+
 add_executable(TGApp "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/NifLoader.cpp")
-target_link_libraries(TGApp PUBLIC tc::TGEngine nifly)
+target_link_libraries(TGApp PUBLIC tc::TGEngine nifly TGInterOp)
 target_include_directories(TGApp PUBLIC "TGEngine/TGEngine/public" ${NIFLY_INCLUDE_DIR})
 
 add_executable(TGAppTest "application/test/TGTest.cpp"  "application/TGAppDef.cpp"  "application/NifLoader.cpp")
