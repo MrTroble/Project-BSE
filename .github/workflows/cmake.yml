@@ -29,11 +29,11 @@ jobs:
           xcopy ${{github.workspace}}\application\assets\ ${{github.workspace}}\build\Release\assets\ /S/I/Y
           xcopy ${{github.workspace}}\TGEngine\TGEngine\assets\*.* ${{github.workspace}}\build\Release\assets\ /S/I/Y
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v3
         with:
           name: TGAppWindows
           path: |
-            ${{github.workspace}}\build\Release\TGApp.exe
+            ${{github.workspace}}\build\Release\TG*
             ${{github.workspace}}\build\Release\assets
           if-no-files-found: error
           
@@ -65,10 +65,10 @@ jobs:
           cp -r ${{github.workspace}}/application/assets/ ${{github.workspace}}/build/
           cp -r ${{github.workspace}}/TGEngine/TGEngine/assets/*.* ${{github.workspace}}/build/assets/
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v3
         with:
           name: TGAppLinux
           path: |
-            ${{github.workspace}}/build/TGApp
+            ${{github.workspace}}/build/TG*
             ${{github.workspace}}/build/assets
           if-no-files-found: error
