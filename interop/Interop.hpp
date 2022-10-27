@@ -1,9 +1,13 @@
 #pragma once
 
+#ifdef WIN32
 #ifdef TGE_IMPORT_INTEROP
 #define TGE_DLLEXPORT extern "C" __declspec(dllimport)
 #else
 #define TGE_DLLEXPORT extern "C" __declspec(dllexport)
+#endif
+#else
+#define TGE_DLLEXPORT extern "C"
 #endif
 
 typedef unsigned int ReferenceKey;
