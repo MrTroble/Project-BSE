@@ -4,12 +4,12 @@
 
 std::vector<LoadCallback> loadCallbacks;
 
-void loadReferences(uint count, RefernceLoad* load) {
+void loadReferences(uint count, ReferenceLoad* load) {
 	for (const auto callback : loadCallbacks)
 		callback(count, load);
 }
 
-bool updateReferences(uint count, RefernceUpdate* keys)
+bool updateReferences(uint count, ReferenceUpdate* keys)
 {
 	return bool();
 }

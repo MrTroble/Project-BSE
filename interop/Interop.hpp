@@ -25,7 +25,7 @@ struct ReferenceTransform {
 	vec3 rotations;
 };
 
-struct RefernceLoad {
+struct ReferenceLoad {
 	FormKey formKey;
 	char* path;
 	ReferenceTransform transform;
@@ -35,7 +35,7 @@ enum class UpdateType {
 	TRANSFORM, PATH
 };
 
-struct RefernceUpdate {
+struct ReferenceUpdate {
 	FormKey formKey;
 	UpdateType update;
 	union {
@@ -44,11 +44,11 @@ struct RefernceUpdate {
 	};
 };
 
-typedef void(*LoadCallback)(uint count, RefernceLoad* load);
+typedef void(*LoadCallback)(uint count, ReferenceLoad* load);
 
-TGE_DLLEXPORT void loadReferences(uint count, RefernceLoad* load);
+TGE_DLLEXPORT void loadReferences(uint count, ReferenceLoad* load);
 
-TGE_DLLEXPORT bool updateReferences(uint count, RefernceUpdate* keys);
+TGE_DLLEXPORT bool updateReferences(uint count, ReferenceUpdate* keys);
 
 TGE_DLLEXPORT bool hideReferences(uint count, FormKey* keys, bool hide);
 

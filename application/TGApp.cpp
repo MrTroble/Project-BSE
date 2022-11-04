@@ -27,10 +27,10 @@ using namespace tge::main;
 using namespace tge::graphics;
 using namespace tge;
 
-void testReferences(uint count, RefernceLoad* load) {
+void testReferences(uint count, ReferenceLoad* load) {
 	std::cout << count << std::endl;
 	if (count > 0) {
-		RefernceLoad cload = *load;
+		ReferenceLoad cload = *load;
 		std::cout << "CLOAD:" << std::endl;
 		std::cout << cload.formKey << std::endl;
 		std::cout << cload.path << std::endl;
