@@ -18,7 +18,7 @@ add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp")
 
 add_executable(TGApp "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/NifLoader.cpp")
 target_link_libraries(TGApp PUBLIC tc::TGEngine nifly TGInterOp)
-target_include_directories(TGApp PUBLIC "TGEngine/TGEngine/public" ${NIFLY_INCLUDE_DIR})
+target_include_directories(TGApp PUBLIC "TGEngine/TGEngine/public" ${NIFLY_INCLUDE_DIR} "$ENV{VULKAN_DIR}")
 
 add_executable(TGAppTest "application/test/TGTest.cpp"  "application/TGAppDef.cpp"  "application/NifLoader.cpp")
 target_link_libraries(TGAppTest PUBLIC tc::TGEngine gtest_main nifly)

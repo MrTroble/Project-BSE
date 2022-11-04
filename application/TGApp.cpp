@@ -16,6 +16,7 @@
 #include <string>
 #include "NifLoader.hpp"
 #include <glm/glm.hpp>
+#include <iostream>
 
 #define TGE_IMPORT_INTEROP 1
 #include "../interop/Interop.hpp"
@@ -25,6 +26,19 @@
 using namespace tge::main;
 using namespace tge::graphics;
 using namespace tge;
+
+void testReferences(uint count, RefernceLoad* load) {
+	std::cout << count << std::endl;
+	if (count > 0) {
+		RefernceLoad cload = *load;
+		std::cout << "CLOAD:" << std::endl;
+		std::cout << cload.formKey << std::endl;
+		std::cout << cload.path << std::endl;
+		std::cout << cload.transform.translation.x << std::endl;
+		std::cout << cload.transform.rotations.x << std::endl;
+		std::cout << cload.transform.scale.x << std::endl;
+	}
+}
 
 int main(const int count, const char **strings)
 {
@@ -48,6 +62,10 @@ int main(const int count, const char **strings)
 
 	ioModul->nodeID = nifModule->load("assets/wrhouse02.nif");
 	guiModul->nodeID = nifModule->load("assets/wrhouse02.nif");
+
+	addLoadHook(&testReferences);
+
+	loadReferences(0, nullptr);
 
 	auto &light = guiModul->light;
 	light.color = glm::vec3(1, 1, 1);

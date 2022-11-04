@@ -10,7 +10,7 @@
 #define TGE_DLLEXPORT extern "C"
 #endif
 
-typedef unsigned int ReferenceKey;
+typedef char* FormKey;
 typedef unsigned int uint;
 
 struct vec3 {
@@ -26,7 +26,7 @@ struct ReferenceTransform {
 };
 
 struct RefernceLoad {
-	char* formKey;
+	FormKey formKey;
 	char* path;
 	ReferenceTransform transform;
 };
@@ -36,17 +36,22 @@ enum class UpdateType {
 };
 
 struct RefernceUpdate {
-	ReferenceKey formKey;
+	FormKey formKey;
 	UpdateType update;
 	union {
 		char* path;
+		ReferenceTransform transform;
 	};
 };
 
-TGE_DLLEXPORT ReferenceKey loadReferences(uint count, RefernceLoad* load);
+typedef void(*LoadCallback)(uint count, RefernceLoad* load);
+
+TGE_DLLEXPORT void loadReferences(uint count, RefernceLoad* load);
 
 TGE_DLLEXPORT bool updateReferences(uint count, RefernceUpdate* keys);
 
-TGE_DLLEXPORT bool hideReferences(uint count, ReferenceKey* keys);
+TGE_DLLEXPORT bool hideReferences(uint count, FormKey* keys, bool hide);
 
-TGE_DLLEXPORT bool deleteReferences(uint count, ReferenceKey* keys);
+TGE_DLLEXPORT bool deleteReferences(uint count, FormKey* keys);
+
+TGE_DLLEXPORT bool addLoadHook(LoadCallback callback);
