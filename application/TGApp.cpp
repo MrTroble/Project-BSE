@@ -63,7 +63,7 @@ int initTGEditor(const int count, const char **strings)
 	ioModul->nodeID = nifModule->load("assets/wrhouse02.nif");
 	guiModul->nodeID = nifModule->load("assets/wrhouse02.nif");
 
-	addLoadHook(&testReferences);
+	addLoadCallback(&testReferences);
 
 	loadReferences(0, nullptr);
 
