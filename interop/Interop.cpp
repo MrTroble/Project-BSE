@@ -1,18 +1,32 @@
 #include "Interop.hpp"
 #include <iostream>
 #include <vector>
+#include "InternalInterop.hpp"
 
-std::vector<LoadCallback> loadCallbacks;
-std::vector<DeleteCallback> deleteCallbacks;
-std::vector<UpdateCallback> updateCallbacks;
-std::vector<HideCallback> hideCallbacks;
+std::vector<LoadCallback> loadCallbacks{ &tge::interop::load };
+std::vector<DeleteCallback> deleteCallbacks{ &tge::interop::remove };
+std::vector<UpdateCallback> updateCallbacks{ &tge::interop::update };
+std::vector<HideCallback> hideCallbacks{ &tge::interop::hide };
 
-#define ADD_OR_RETURN_ON_FAIL(cCallbackVector, cCallbackPtr) const auto endItr = end(cCallbackVector);\
+#define ADD_OR_RETURN_ON_FAIL(cCallbackVector, cCallbackPtr) \
+if (cCallbackPtr == nullptr)\
+return false;\
+const auto endItr = end(cCallbackVector);\
 const auto founditr = std::find(begin(cCallbackVector), endItr, cCallbackPtr); \
 if (founditr != endItr) \
 return false;\
 cCallbackVector.push_back(cCallbackPtr);\
 return true;
+
+#define CALL_FOR_EACH(cCallbackVector, ...) \
+for (const auto callback : cCallbackVector)\
+	if (!callback(__VA_ARGS__))\
+		return false;\
+return true;
+
+#define ASSERT_VALID_POINTER(cCount, cPointer)\
+if (cPointer == nullptr && cCount > 0)\
+return false;
 
 bool addLoadCallback(LoadCallback callback) {
 	ADD_OR_RETURN_ON_FAIL(loadCallbacks, callback);
@@ -30,23 +44,25 @@ bool addDeleteCallback(DeleteCallback callback) {
 	ADD_OR_RETURN_ON_FAIL(deleteCallbacks, callback);
 }
 
-
-void loadReferences(uint count, ReferenceLoad* load) {
-	for (const auto callback : loadCallbacks)
-		callback(count, load);
+bool loadReferences(uint count, ReferenceLoad* load) {
+	ASSERT_VALID_POINTER(count, load);
+	CALL_FOR_EACH(loadCallbacks, count, load);
 }
 
 bool updateReferences(uint count, ReferenceUpdate* keys)
 {
-	return bool();
+	ASSERT_VALID_POINTER(count, keys);
+	CALL_FOR_EACH(updateCallbacks, count, keys);
 }
 
 bool hideReferences(uint count, FormKey* keys, bool hide)
 {
-	return bool();
+	ASSERT_VALID_POINTER(count, keys);
+	CALL_FOR_EACH(hideCallbacks, count, keys, hide);
 }
 
 bool deleteReferences(uint count, FormKey* keys)
 {
-	return bool();
+	ASSERT_VALID_POINTER(count, keys);
+	CALL_FOR_EACH(deleteCallbacks, count, keys);
 }
