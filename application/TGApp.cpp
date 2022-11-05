@@ -63,10 +63,6 @@ int initTGEditor(const int count, const char **strings)
 	ioModul->nodeID = nifModule->load("assets/wrhouse02.nif");
 	guiModul->nodeID = nifModule->load("assets/wrhouse02.nif");
 
-	addLoadCallback(&testReferences);
-
-	loadReferences(0, nullptr);
-
 	auto &light = guiModul->light;
 	light.color = glm::vec3(1, 1, 1);
 	light.pos = glm::vec3(0, 10, 0);
