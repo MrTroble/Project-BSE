@@ -45,6 +45,9 @@ struct ReferenceUpdate {
 };
 
 typedef void(*LoadCallback)(uint count, ReferenceLoad* load);
+typedef void(*UpdateCallback)(uint count, ReferenceUpdate* keys);
+typedef void(*HideCallback)(uint count, FormKey* keys, bool hide);
+typedef void(*DeleteCallback)(uint count, FormKey* keys, bool hide);
 
 TGE_DLLEXPORT void loadReferences(uint count, ReferenceLoad* load);
 
@@ -54,4 +57,10 @@ TGE_DLLEXPORT bool hideReferences(uint count, FormKey* keys, bool hide);
 
 TGE_DLLEXPORT bool deleteReferences(uint count, FormKey* keys);
 
-TGE_DLLEXPORT bool addLoadHook(LoadCallback callback);
+TGE_DLLEXPORT bool addLoadCallback(LoadCallback callback);
+
+TGE_DLLEXPORT bool addUpdateCallback(UpdateCallback callback);
+
+TGE_DLLEXPORT bool addHideCallback(HideCallback callback);
+
+TGE_DLLEXPORT bool addDeleteCallback(DeleteCallback callback);

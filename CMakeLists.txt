@@ -14,13 +14,11 @@ endif()
 add_subdirectory(nifly)
 add_subdirectory(TGEngine)
 
-add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp") 
+add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp" "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/module/NifLoader.cpp") 
+target_include_directories(TGInterOp PUBLIC "TGEngine/TGEngine/public" ${NIFLY_INCLUDE_DIR} "$ENV{VULKAN_DIR}")
+target_link_libraries(TGInterOp PUBLIC tc::TGEngine nifly)
 
-add_executable(TGApp "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/NifLoader.cpp")
-target_link_libraries(TGApp PUBLIC tc::TGEngine nifly TGInterOp)
-target_include_directories(TGApp PUBLIC "TGEngine/TGEngine/public" ${NIFLY_INCLUDE_DIR} "$ENV{VULKAN_DIR}")
+add_executable(TGApp "application/TGAppLauncher.cpp")
+target_link_libraries(TGApp PUBLIC TGInterOp)
 
-add_executable(TGAppTest "application/test/TGTest.cpp"  "application/TGAppDef.cpp"  "application/NifLoader.cpp")
-target_link_libraries(TGAppTest PUBLIC tc::TGEngine gtest_main nifly)
-target_include_directories(TGAppTest PUBLIC "TGEngine/TGEngine/public" ${NIFLY_INCLUDE_DIR})
 install(DIRECTORY "application/assets" DESTINATION $<TARGET_FILE_DIR:TGApp>)

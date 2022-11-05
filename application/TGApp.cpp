@@ -14,7 +14,7 @@
 #include <cmath>
 #include <limits>
 #include <string>
-#include "NifLoader.hpp"
+#include "module/NifLoader.hpp"
 #include <glm/glm.hpp>
 #include <iostream>
 
@@ -40,7 +40,7 @@ void testReferences(uint count, ReferenceLoad* load) {
 	}
 }
 
-int main(const int count, const char **strings)
+int initTGEditor(const int count, const char **strings)
 {
 	nif::NifModule* nifModule = new nif::NifModule();
 	lateModules.push_back(guiModul);
