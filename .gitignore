@@ -308,3 +308,4 @@ dependencies/deps.zip
 .vscode/settings.json
 /out/build/x64-Debug
 /out/install/x64-Debug
+/out

@@ -6,6 +6,10 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 
 add_compile_definitions(APPLICATION_NAME="BSE")
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+add_compile_definitions(DEBUG=1)
+endif()
+
 if(WIN32)  
 add_compile_options("/D_ITERATOR_DEBUG_LEVEL=0" "/MD" "/EHa")
 add_link_options("/ignore:4099")
