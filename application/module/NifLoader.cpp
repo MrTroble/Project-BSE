@@ -22,12 +22,16 @@ namespace tge::nif
 	}
 
 	size_t
-		NifModule::load(const std::string& name, void* shaderPipe) const
+		NifModule::load(const std::string& name, const NodeTransform& baseTransform, void* shaderPipe) const
 	{
 		const auto api = getAPILayer();
 		const auto ggm = getGameGraphicsModule();
 		const auto sha = api->getShaderAPI();
 		nifly::NifFile file(name);
+		if (!file.IsValid()) {
+			printf("[WARN] Invalid nif file %s\n", name.c_str());
+			return SIZE_MAX;
+		}
 		const auto& shapes = file.GetShapes();
 
 		std::vector<RenderInfo> renderInfos;
@@ -171,6 +175,7 @@ namespace tge::nif
 		bindingInfos.reserve(shapes.size() * 3);
 		std::vector<tge::graphics::NodeInfo> nodeInfos;
 		nodeInfos.resize(shapes.size() + 1);
+		nodeInfos[0].transforms = baseTransform;
 		current = 0;
 		for (const auto shape : shapes)
 		{

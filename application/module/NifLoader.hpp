@@ -31,7 +31,8 @@ namespace tge::nif {
 		mutable std::unordered_map<std::vector<std::string>, void*> shaderCache;
 		tge::main::Error init();
 
-		size_t load(const std::string& name, void* shaderPipe = nullptr) const;
+		size_t load(const std::string& name, const NodeTransform& baseTransform, void* shaderPipe = nullptr) const;
 	};
 
+	nif::NifModule* nifModule = new nif::NifModule();
 }

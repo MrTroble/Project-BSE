@@ -27,10 +27,9 @@ using namespace tge;
 
 int initTGEditor(const int count, const char **strings)
 {
-	nif::NifModule* nifModule = new nif::NifModule();
 	lateModules.push_back(guiModul);
 	lateModules.push_back(ioModul);	
-	lateModules.push_back(nifModule);
+	lateModules.push_back(tge::nif::nifModule);
 
 	const auto initResult = init();
 	if (initResult != main::Error::NONE)
@@ -45,9 +44,6 @@ int initTGEditor(const int count, const char **strings)
 	guiModul->ggm = ioModul->ggm;
 	const auto extent = api->getRenderExtent();
 	ioModul->ggm->updateViewMatrix(glm::perspective(glm::radians(45.0f), extent.x / extent.y, 0.01f, 10000.0f));
-
-	ioModul->nodeID = nifModule->load("assets/wrhouse02.nif");
-	guiModul->nodeID = nifModule->load("assets/wrhouse02.nif");
 
 	auto &light = guiModul->light;
 	light.color = glm::vec3(1, 1, 1);
