@@ -1,7 +1,7 @@
 #include "InternalInterop.hpp"
+#include <TGEngine.hpp>
 #include "../application/module/NifLoader.hpp"
 #include <unordered_map>
-#include <TGEngine.hpp>
 
 namespace tge::interop {
 

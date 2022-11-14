@@ -13,6 +13,8 @@ namespace tge::nif
 	using namespace tge::main;
 	using namespace tge::shader;
 
+	NifModule* nifModule = new nif::NifModule();
+
 	Error
 		NifModule::init()
 	{
@@ -22,7 +24,7 @@ namespace tge::nif
 	}
 
 	size_t
-		NifModule::load(const std::string& name, const NodeTransform& baseTransform, void* shaderPipe) const
+		NifModule::load(const std::string& name, const tge::graphics::NodeTransform& baseTransform, void* shaderPipe) const
 	{
 		const auto api = getAPILayer();
 		const auto ggm = getGameGraphicsModule();
