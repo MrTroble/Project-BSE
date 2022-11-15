@@ -25,6 +25,8 @@ struct ReferenceTransform {
 	vec3 rotations;
 };
 
+constexpr ReferenceTransform TGE_DEFAULT_TRANSFORM = { {0.0f,0.0f,0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} };
+
 struct ReferenceLoad {
 	FormKey formKey;
 	char* path;

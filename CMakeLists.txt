@@ -27,4 +27,7 @@ target_link_libraries(TGInterOp PUBLIC tc::TGEngine nifly)
 add_executable(TGApp "application/TGAppLauncher.cpp")
 target_link_libraries(TGApp PUBLIC TGInterOp)
 
+add_executable(TGTest "application/test/TGTest.cpp")
+target_link_libraries(TGTest PUBLIC TGInterOp)
+
 install(DIRECTORY "application/assets" DESTINATION $<TARGET_FILE_DIR:TGApp>)

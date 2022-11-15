@@ -25,6 +25,8 @@ using namespace tge::main;
 using namespace tge::graphics;
 using namespace tge;
 
+bool finishedLoading = false;
+
 int initTGEditor(const int count, const char **strings)
 {
 	lateModules.push_back(guiModul);
@@ -51,12 +53,17 @@ int initTGEditor(const int count, const char **strings)
 	light.intensity = 1.0f;
 	guiModul->lightID = api->pushLights(1, &light);
 
+	finishedLoading = true;
 	const auto startResult = start();
 	if (startResult != main::Error::NONE)
 	{
 		printf("Error in start!");
 		return -1;
 	}
-
+	finishedLoading = false;
 	return (uint32_t)startResult;
+}
+
+bool isFinished() {
+	return finishedLoading;
 }

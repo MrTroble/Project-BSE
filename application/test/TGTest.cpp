@@ -1,8 +1,24 @@
+#define TGE_IMPORT_INTEROP 1
+#include <TGEngine.hpp>
 #include "../TGApp.hpp"
-#include <gtest/gtest.h>
-#include "../NifLoader.hpp"
+#include <thread>
 
-int main(int argv, char** in) {
-	testing::InitGoogleTest(&argv, in);
-	return RUN_ALL_TESTS();
+using namespace tge::main;
+using namespace tge::graphics;
+
+void test() {
+	while (!isFinished())
+		continue;
+	ReferenceLoad load;
+	load.formKey = (FormKey)"TEST";
+	load.path = (char*)"assets/wrhouse02.nif";
+	load.transform = TGE_DEFAULT_TRANSFORM;
+	const auto ref = loadReferences(1, &load);
+	printf("Loaded, %d\n", ref);
+}
+
+int main(int argv, const char** in) {
+	std::thread thread(&test);
+	thread.detach();
+	return initTGEditor(argv, in);
 }

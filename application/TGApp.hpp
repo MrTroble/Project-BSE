@@ -8,3 +8,5 @@ extern TGAppGUI *guiModul;
 extern TGAppIO *ioModul;
 
 TGE_DLLEXPORT int initTGEditor(const int count, const char** strings);
+
+TGE_DLLEXPORT bool isFinished();
