@@ -10,3 +10,5 @@ extern TGAppIO *ioModul;
 TGE_DLLEXPORT int initTGEditor(const int count, const char** strings);
 
 TGE_DLLEXPORT bool isFinished();
+
+TGE_DLLEXPORT void waitFinishedInit();

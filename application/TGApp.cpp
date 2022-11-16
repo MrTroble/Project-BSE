@@ -26,9 +26,11 @@ using namespace tge::graphics;
 using namespace tge;
 
 bool finishedLoading = false;
+std::mutex waitMutex;
 
 int initTGEditor(const int count, const char **strings)
 {
+	waitMutex.lock();
 	lateModules.push_back(guiModul);
 	lateModules.push_back(ioModul);	
 	lateModules.push_back(tge::nif::nifModule);
@@ -39,6 +41,7 @@ int initTGEditor(const int count, const char **strings)
 		printf("Error in init!");
 		return -1;
 	}
+	waitMutex.unlock();
 	auto api = getAPILayer();
 
 	ioModul->ggm = getGameGraphicsModule();
@@ -66,4 +69,8 @@ int initTGEditor(const int count, const char **strings)
 
 bool isFinished() {
 	return finishedLoading;
+}
+
+void waitFinishedInit() {
+	std::lock_guard lg(waitMutex);
 }
