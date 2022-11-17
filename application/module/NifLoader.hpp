@@ -26,10 +26,12 @@ namespace tge::nif {
 
 	class NifModule : public tge::main::Module {
 	public:
-
+		bool finishedLoading = false;
 		std::vector<char> vertexFile;
 		std::vector<char> fragmentsFile;
+		std::string assetDirectory;
 		mutable std::unordered_map<std::vector<std::string>, void*> shaderCache;
+		
 		tge::main::Error init();
 
 		size_t load(const std::string& name, const tge::graphics::NodeTransform& baseTransform, void* shaderPipe = nullptr) const;

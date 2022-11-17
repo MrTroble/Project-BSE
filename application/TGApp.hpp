@@ -7,7 +7,12 @@
 extern TGAppGUI *guiModul;
 extern TGAppIO *ioModul;
 
-TGE_DLLEXPORT int initTGEditor(const int count, const char** strings);
+struct InitConfig {
+	uint32_t version = 1;
+	char* assetDirectory = nullptr;
+};
+
+TGE_DLLEXPORT int initTGEditor(const InitConfig* config);
 
 TGE_DLLEXPORT bool isFinished();
 

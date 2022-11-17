@@ -17,6 +17,8 @@
 #include "module/NifLoader.hpp"
 #include <glm/glm.hpp>
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #undef min
 #undef max
@@ -28,20 +30,26 @@ using namespace tge;
 bool finishedLoading = false;
 std::mutex waitMutex;
 
-int initTGEditor(const int count, const char **strings)
+int initTGEditor(const InitConfig* config)
 {
+	if (config->version != 1) {
+		printf("[Error] Wrong version number in config!");
+		return -1;
+	}
+
 	waitMutex.lock();
 	lateModules.push_back(guiModul);
-	lateModules.push_back(ioModul);	
+	lateModules.push_back(ioModul);
 	lateModules.push_back(tge::nif::nifModule);
+	tge::nif::nifModule->assetDirectory = config->assetDirectory;
 
 	const auto initResult = init();
+	waitMutex.unlock();
 	if (initResult != main::Error::NONE)
 	{
 		printf("Error in init!");
 		return -1;
 	}
-	waitMutex.unlock();
 	auto api = getAPILayer();
 
 	ioModul->ggm = getGameGraphicsModule();
@@ -50,7 +58,7 @@ int initTGEditor(const int count, const char **strings)
 	const auto extent = api->getRenderExtent();
 	ioModul->ggm->updateViewMatrix(glm::perspective(glm::radians(45.0f), extent.x / extent.y, 0.01f, 10000.0f));
 
-	auto &light = guiModul->light;
+	auto& light = guiModul->light;
 	light.color = glm::vec3(1, 1, 1);
 	light.pos = glm::vec3(0, 10, 0);
 	light.intensity = 1.0f;
@@ -72,5 +80,9 @@ bool isFinished() {
 }
 
 void waitFinishedInit() {
-	std::lock_guard lg(waitMutex);
+	using namespace std::chrono_literals;
+	do {
+		std::this_thread::sleep_for(10ms);
+		std::lock_guard aquired(waitMutex);
+	} while (!isFinished());
 }

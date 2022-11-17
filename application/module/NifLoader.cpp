@@ -20,12 +20,17 @@ namespace tge::nif
 	{
 		vertexFile = util::wholeFile("assets/testNif.vert");
 		fragmentsFile = util::wholeFile("assets/testNif.frag");
+		finishedLoading = true;
 		return Error::NONE;
 	}
 
 	size_t
 		NifModule::load(const std::string& name, const tge::graphics::NodeTransform& baseTransform, void* shaderPipe) const
 	{
+		if (!finishedLoading) {
+			printf("[WARN] Call nif before loaded! %s\n", name.c_str());
+			return SIZE_MAX;
+		}
 		const auto api = getAPILayer();
 		const auto ggm = getGameGraphicsModule();
 		const auto sha = api->getShaderAPI();
