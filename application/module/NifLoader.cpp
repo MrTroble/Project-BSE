@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <graphics/vulkan/VulkanShaderPipe.hpp>
 #include <string>
+#include <algorithm>
 
 namespace tge::nif
 {
@@ -53,8 +54,9 @@ namespace tge::nif
 		triangleLists.resize(shapes.size());
 
 		std::vector<std::string> textureNames;
-		std::unordered_map<std::string, size_t> textureNamesToID;
 		textureNames.reserve(shapes.size());
+
+		std::unordered_map<std::string, size_t> textureNamesToID;
 
 		std::vector<Material> materials;
 		materials.reserve(shapes.size());
@@ -155,15 +157,19 @@ namespace tge::nif
 				const auto& tex = texture.get();
 				if (!tex.empty())
 				{
-					textureNames.push_back("assets\\" + tex);
+					textureNames.push_back(tex);
 				}
 			}
 			current++;
 		}
 		const auto materialId
 			= api->pushMaterials(materials.size(), materials.data());
+
+		std::vector<std::string> texturePaths;
+		texturePaths.resize(textureNames.size());
+		std::transform(begin(textureNames), end(textureNames), begin(texturePaths), [&](auto& str) { return this->assetDirectory + str; });
 		const auto texturesLoaded
-			= ggm->loadTextures(textureNames, tge::graphics::LoadType::DDSPP);
+			= ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
 		const auto indexBufferID
 			= api->pushData(dataPointer.size(), dataPointer.data(), sizes.data(),
 				DataType::VertexIndexData);
@@ -216,8 +222,8 @@ namespace tge::nif
 					const auto ref = file.GetHeader().GetBlock(indexTexData);
 					const auto& base = ref->textures[0].get();
 					const auto& normal = ref->textures[1].get();
-					const auto albedoID = textureNamesToID["assets\\" + base];
-					const auto normalID = textureNamesToID["assets\\" + normal];
+					const auto albedoID = textureNamesToID[base];
+					const auto normalID = textureNamesToID[normal];
 					const BindingInfo samplerBinding{ 0,
 													  nodeInfo.bindingID,
 													  BindingType::Sampler,

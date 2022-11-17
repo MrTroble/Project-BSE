@@ -20,5 +20,6 @@ void test() {
 int main(int argv, const char** in) {
 	std::thread thread(&test);
 	thread.detach();
-	return initTGEditor(argv, in);
+	const InitConfig config{ 1, "assets\\" };
+	return initTGEditor(&config);
 }

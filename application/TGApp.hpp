@@ -9,7 +9,7 @@ extern TGAppIO *ioModul;
 
 struct InitConfig {
 	uint32_t version = 1;
-	char* assetDirectory = nullptr;
+	const char* assetDirectory = nullptr;
 };
 
 TGE_DLLEXPORT int initTGEditor(const InitConfig* config);

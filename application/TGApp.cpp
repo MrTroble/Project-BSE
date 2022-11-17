@@ -32,6 +32,11 @@ std::mutex waitMutex;
 
 int initTGEditor(const InitConfig* config)
 {
+	if (config == nullptr) {
+		printf("[Error] Config must not be null!");
+		return -1;
+	}
+
 	if (config->version != 1) {
 		printf("[Error] Wrong version number in config!");
 		return -1;
