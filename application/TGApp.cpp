@@ -47,6 +47,16 @@ int initTGEditor(const InitConfig* config)
 	lateModules.push_back(ioModul);
 	lateModules.push_back(tge::nif::nifModule);
 	tge::nif::nifModule->assetDirectory = config->assetDirectory;
+#ifdef WIN32
+	constexpr auto END_CHARACTER = '\\';
+#else
+#ifdef __linux__
+	constexpr auto END_CHARACTER = '/';
+#endif
+#endif
+	auto& dir = tge::nif::nifModule->assetDirectory;
+	if (dir.back() != END_CHARACTER)
+		dir += END_CHARACTER;
 
 	const auto initResult = init();
 	waitMutex.unlock();

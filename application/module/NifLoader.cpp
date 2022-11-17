@@ -35,7 +35,7 @@ namespace tge::nif
 		const auto api = getAPILayer();
 		const auto ggm = getGameGraphicsModule();
 		const auto sha = api->getShaderAPI();
-		nifly::NifFile file(name);
+		nifly::NifFile file(assetDirectory + name);
 		if (!file.IsValid()) {
 			printf("[WARN] Invalid nif file %s\n", name.c_str());
 			return SIZE_MAX;
