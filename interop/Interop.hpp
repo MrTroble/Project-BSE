@@ -29,7 +29,7 @@ constexpr ReferenceTransform TGE_DEFAULT_TRANSFORM = { {0.0f,0.0f,0.0f}, {1.0f, 
 
 struct ReferenceLoad {
 	FormKey formKey;
-	char* path;
+	const char* path;
 	ReferenceTransform transform;
 };
 
@@ -41,7 +41,7 @@ struct ReferenceUpdate {
 	FormKey formKey;
 	UpdateType update;
 	union {
-		char* path;
+		const char* path;
 		ReferenceTransform transform;
 	};
 };
