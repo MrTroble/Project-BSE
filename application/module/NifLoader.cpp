@@ -206,7 +206,10 @@ namespace tge::nif
 			auto& nodeInfo = nodeInfos[current];
 
 			nodeInfo.parent = nextNodeID;
-			info.constRanges.push_back({ sizeof(uint32_t), (void*)&nextNodeID,
+			std::vector<char> pushData;
+			pushData.resize(sizeof(size_t));
+			memcpy(pushData.data(), &nextNodeID, pushData.size());
+			info.constRanges.push_back({ pushData,
 										  shader::ShaderType::FRAGMENT });
 			nodeInfo.bindingID = info.bindingID;
 			nodeInfo.transforms.translation
