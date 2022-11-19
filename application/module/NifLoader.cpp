@@ -25,6 +25,21 @@ namespace tge::nif
 		return Error::NONE;
 	}
 
+	struct UpdateInfo {
+		std::vector<std::string>& cacheString;
+		std::vector<const void*>& dataPointer;
+		std::vector<size_t>& sizes;
+		std::vector<size_t>& vertexBuffer;
+	};
+
+	template<typename Type>
+	inline void updateOn(const UpdateInfo& info, const std::string& name, const std::vector<Type>& uvData) {
+		info.cacheString.push_back(name);
+		info.vertexBuffer.push_back(info.dataPointer.size());
+		info.dataPointer.push_back(uvData.data());
+		info.sizes.push_back(uvData.size() * sizeof(Type));
+	}
+
 	size_t
 		NifModule::load(const std::string& name, const tge::graphics::NodeTransform& baseTransform, void* shaderPipe) const
 	{
@@ -80,29 +95,20 @@ namespace tge::nif
 
 			std::vector<std::string> cacheString;
 			cacheString.reserve(10);
+			UpdateInfo updateInfo = {
+				cacheString, dataPointer, sizes, info.vertexBuffer
+			};
 			if (bishape->HasUVs())
 			{
-				cacheString.push_back("UV");
-				const auto& uvData = bishape->UpdateRawUvs();
-				info.vertexBuffer.push_back(dataPointer.size());
-				dataPointer.push_back(uvData.data());
-				sizes.push_back(uvData.size() * sizeof(nifly::Vector2));
+				updateOn(updateInfo, "UV", bishape->UpdateRawUvs());
 			}
 			if (bishape->HasNormals())
 			{
-				cacheString.push_back("NORMAL");
-				const auto& uvData = bishape->UpdateRawNormals();
-				info.vertexBuffer.push_back(dataPointer.size());
-				dataPointer.push_back(uvData.data());
-				sizes.push_back(uvData.size() * sizeof(nifly::Vector3));
+				updateOn(updateInfo, "NORMAL", bishape->UpdateRawNormals());
 			}
 			if (bishape->HasVertexColors())
 			{
-				cacheString.push_back("COLOR");
-				const auto& uvData = bishape->UpdateRawColors();
-				info.vertexBuffer.push_back(dataPointer.size());
-				dataPointer.push_back(uvData.data());
-				sizes.push_back(uvData.size() * sizeof(nifly::Color4));
+				updateOn(updateInfo, "COLOR", bishape->UpdateRawColors());
 			}
 
 			auto foundItr = shaderCache.find(cacheString);
@@ -207,7 +213,7 @@ namespace tge::nif
 
 			nodeInfo.parent = nextNodeID;
 			std::vector<char> pushData;
-			pushData.resize(sizeof(size_t));
+			pushData.resize(sizeof(uint32_t));
 			memcpy(pushData.data(), &nextNodeID, pushData.size());
 			info.constRanges.push_back({ pushData,
 										  shader::ShaderType::FRAGMENT });

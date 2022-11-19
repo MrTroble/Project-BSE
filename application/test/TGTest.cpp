@@ -7,8 +7,7 @@ using namespace tge::main;
 using namespace tge::graphics;
 
 void test() {
-	while (!isFinished())
-		continue;
+	waitFinishedInit();
 	ReferenceLoad load;
 	load.formKey = (FormKey)"TEST";
 	load.path = (char*)"wrhouse02.nif";
