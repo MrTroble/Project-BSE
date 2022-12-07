@@ -23,13 +23,18 @@
 		},
 		{
 			"code": [
+				"layout(binding=0) uniform sampler samplertex;",
+				"layout(binding=1) uniform texture2D colorTexture;",
+				"layout(binding=4) uniform texture2D normalTexture;"
+			],
+			"dependsOn": [ "UV", "TEXTURES" ]
+		},
+		{
+			"code": [
 				"layout(location=0) out vec4 COLOR;",
 				"layout(location=1) out vec4 NORMAL;",
 				"layout(location=2) out float ROUGHNESS;",
 				"layout(location=3) out float METALLIC;",
-				"layout(binding=0) uniform sampler samplertex;",
-				"layout(binding=1) uniform texture2D colorTexture;",
-				"layout(binding=4) uniform texture2D normalTexture;",
 				"layout(push_constant) uniform constants { uint id; } pushConst;",
 				"void main() {",
 				"   ROUGHNESS = pushConst.id;",
@@ -43,7 +48,7 @@
 				"   COLOR = texture(sampler2D(colorTexture, samplertex), UVIN);",
 				"   NORMAL = texture(sampler2D(normalTexture, samplertex), UVIN);"
 			],
-			"dependsOn": [ "UV" ]
+			"dependsOn": [ "UV", "TEXTURES" ]
 		},
 		{
 			"code": [

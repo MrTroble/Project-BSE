@@ -56,7 +56,9 @@ size_t NifModule::load(const std::string& name,
   const auto& shapes = file.GetShapes();
 
   std::vector<RenderInfo> renderInfos;
-  renderInfos.resize(shapes.size());
+  renderInfos.reserve(shapes.size());
+  std::vector<size_t> shapeIndex;
+  shapeIndex.reserve(shapes.size());
 
   std::vector<const void*> dataPointer;
   std::vector<size_t> sizes;
@@ -82,7 +84,7 @@ size_t NifModule::load(const std::string& name,
       printf("[WARN]: No BSTriShape!\n");
       continue;
     }
-    auto& info = renderInfos[current];
+    RenderInfo info;
 
     const auto& verticies = bishape->UpdateRawVertices();
     info.vertexBuffer.push_back(dataPointer.size());
@@ -90,17 +92,25 @@ size_t NifModule::load(const std::string& name,
     sizes.push_back(verticies.size() * sizeof(nifly::Vector3));
 
     std::vector<std::string> cacheString;
+    const auto shader = file.GetShader(shape);
+    if (shader != nullptr && shader->HasTextureSet())
+      cacheString.push_back("TEXTURES");
     cacheString.reserve(10);
     UpdateInfo updateInfo = {cacheString, dataPointer, sizes,
                              info.vertexBuffer};
+
+    size_t bindingCount = 0;
     if (bishape->HasUVs()) {
       updateOn(updateInfo, "UV", bishape->UpdateRawUvs());
+      bindingCount++;
     }
     if (bishape->HasNormals()) {
       updateOn(updateInfo, "NORMAL", bishape->UpdateRawNormals());
+      bindingCount++;
     }
     if (bishape->HasVertexColors()) {
       updateOn(updateInfo, "COLOR", bishape->UpdateRawColors());
+      bindingCount++;
     }
 
     auto foundItr = shaderCache.find(cacheString);
@@ -113,7 +123,7 @@ size_t NifModule::load(const std::string& name,
       tge::shader::VulkanShaderPipe* ptr =
           (tge::shader::VulkanShaderPipe*)foundItr->second;
       ptr->vertexInputBindings.clear();
-      ptr->vertexInputBindings.resize(cacheString.size() + 1);
+      ptr->vertexInputBindings.resize(bindingCount + 1);
       ptr->vertexInputBindings[0] = vk::VertexInputBindingDescription(0, 12);
       for (auto& attribute : ptr->vertexInputAttributes) {
         attribute.binding = attribute.location;
@@ -129,6 +139,7 @@ size_t NifModule::load(const std::string& name,
           ptr->vertexInputBindings.size();
     }
     void* ptr = foundItr->second;
+    info.materialId = materials.size();
     materials.push_back(Material(ptr));
 
     auto& triangles = triangleLists[current];
@@ -150,6 +161,8 @@ size_t NifModule::load(const std::string& name,
         textureNames.push_back(tex);
       }
     }
+    renderInfos.push_back(info);
+    shapeIndex.push_back(current);
     current++;
   }
   const auto materialId =
@@ -177,26 +190,21 @@ size_t NifModule::load(const std::string& name,
   std::vector<BindingInfo> bindingInfos;
   bindingInfos.reserve(shapes.size() * 3);
   std::vector<tge::graphics::NodeInfo> nodeInfos;
-  nodeInfos.resize(shapes.size() + 1);
+  nodeInfos.resize(shapeIndex.size() + 1);
   nodeInfos[0].transforms = baseTransform;
-  current = 0;
-  for (const auto shape : shapes) {
+  for (size_t i = 0; i < shapeIndex.size(); i++) {
+    const auto shape = shapes[shapeIndex[i]];
     nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
-    if (!bishape) {
-      printf("[WARN]: No BSTriShape!\n");
-      continue;
-    }
-    auto& info = renderInfos[current];
-    info.materialId = materialId + current;
+    auto& info = renderInfos[i];
+    info.materialId += materialId;
     info.bindingID =
-        sha->createBindings(materials[current].costumShaderData, 1);
+        sha->createBindings(materials[i].costumShaderData, 1);
     info.indexBuffer += indexBufferID;
     for (auto& index : info.vertexBuffer) {
       index += indexBufferID;
     }
-    current++;
     const auto translate = shape->transform.translation;
-    auto& nodeInfo = nodeInfos[current];
+    auto& nodeInfo = nodeInfos[i + 1];
 
     nodeInfo.parent = nextNodeID;
     std::vector<char> pushData;
