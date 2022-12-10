@@ -3,6 +3,9 @@
 #include <IO/IOModule.hpp>
 #include <glm/gtx/transform.hpp>
 #include <graphics/GameGraphicsModule.hpp>
+#include <array>
+
+constexpr float offset = 2.0f;
 
 class TGAppIO : public tge::io::IOModule
 {
@@ -14,38 +17,48 @@ public:
 	glm::vec3 cache{};
 	bool pressedMiddle = false;
 	float scale = 1;
-
+	std::array<bool, 255> stack = { false };
+	
 	void tick(double deltatime) override
 	{
+		const auto actualOffset = offset * deltatime;
+		if(stack['W']) {
+			cache.y += actualOffset;
+		}
+		if(stack['S']) {
+			cache.y -= actualOffset;
+		}
+		if(stack['A']) {
+			cache.x += actualOffset;
+		}
+		if(stack['D']) {
+			cache.x -= actualOffset;
+		}
+		if(stack['Q']) {
+			cache.z += actualOffset;
+		}
+		if(stack['E']) {
+			cache.z -= actualOffset;
+		}
+
+		if(stack['R']) {
+			cache = glm::vec3(0);
+		}
+
+		std::fill(begin(stack), end(stack), false);
+		ggm->updateCameraMatrix(glm::lookAt(cache, glm::vec3(0, 1, 0) + cache, glm::vec3(0, 0, -1)));
 	}
 
 	void mouseEvent(const tge::io::MouseEvent event) override
 	{
-		if (event.pressed == tge::io::SCROLL) {
-			scale += event.x / 10.0f;
-		}
 
-		if (event.pressed == tge::io::MIDDLE_MOUSE) {
-			const glm::vec2 current(event.x, event.y);
-			if (pressedMiddle) {
-				glm::vec2 delta = (vec - current) * scale;
-				cache.x += delta.x;
-				cache.y += delta.y;
-			}
-			else {
-				pressedMiddle = true;
-			}
-			vec = current;
-		}
-		else {
-			pressedMiddle = false;
-		}
-
-		ggm->updateCameraMatrix(glm::lookAt(cache, glm::vec3(1, 1, 0) + cache, glm::vec3(0, 0, -1)));
 	}
 
 	void keyboardEvent(const tge::io::KeyboardEvent event) override
 	{
+		if(event.signal < 255) {
+			stack[event.signal] = true;
+		}
 	}
 
 	void recreate() override {

@@ -31,7 +31,8 @@ namespace tge::nif {
 		std::vector<char> fragmentsFile;
 		std::string assetDirectory;
 		mutable std::unordered_map<std::vector<std::string>, void*> shaderCache;
-		
+		float translationFactor = 0.0001f;
+
 		tge::main::Error init();
 
 		size_t load(const std::string& name, const tge::graphics::NodeTransform& baseTransform, void* shaderPipe = nullptr) const;
