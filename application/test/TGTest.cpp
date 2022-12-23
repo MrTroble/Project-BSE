@@ -12,11 +12,18 @@ void test() {
   std::vector<ReferenceLoad> loads;
   std::vector<std::string> names(100);
   std::fill(begin(names), end(names), "wrhouse02.nif");
+  vec3 translate(0, 0, 0);
   for (const auto& name : names) {
     ReferenceLoad load;
     load.formKey = (FormKey) "TEST";
     load.path = name.c_str();
     load.transform = TGE_DEFAULT_TRANSFORM;
+    load.transform.translation = translate;
+    translate.x += 1;
+    if (translate.x >= 1 * 10) {
+      translate.y += 1;
+      translate.x = 0;
+    }
     loads.push_back(load);
   }
   const auto ref = loadReferences(loads.size(), loads.data());
