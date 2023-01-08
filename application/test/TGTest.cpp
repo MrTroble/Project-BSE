@@ -12,7 +12,7 @@ void test() {
   std::vector<ReferenceLoad> loads;
   std::vector<std::string> names(100);
   std::fill(begin(names), end(names), "wrhouse02.nif");
-  vec3 translate(0, 0, 0);
+  vec3 translate = {0,0,0};
   for (const auto& name : names) {
     ReferenceLoad load;
     load.formKey = (FormKey) "TEST";
