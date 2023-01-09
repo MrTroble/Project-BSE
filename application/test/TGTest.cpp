@@ -19,9 +19,9 @@ void test() {
     load.path = name.c_str();
     load.transform = TGE_DEFAULT_TRANSFORM;
     load.transform.translation = translate;
-    translate.x += 1;
-    if (translate.x >= 1 * 10) {
-      translate.y += 1;
+    translate.x += 0.1;
+    if (translate.x >= 0.1 * 10) {
+      translate.y += 0.1;
       translate.x = 0;
     }
     loads.push_back(load);
