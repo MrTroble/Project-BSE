@@ -18,6 +18,10 @@ NifModule* nifModule = new nif::NifModule();
 Error NifModule::init() {
   vertexFile = util::wholeFile("assets/testNif.vert");
   fragmentsFile = util::wholeFile("assets/testNif.frag");
+  const auto ggm = getGameGraphicsModule();
+  tge::graphics::NodeInfo nodeInfo;
+  nodeInfo.transforms.scale *= this->translationFactor;
+  basicNifNode = ggm->addNode(&nodeInfo, 1);
   finishedLoading = true;
   return Error::NONE;
 }
@@ -192,7 +196,7 @@ size_t NifModule::load(const std::string& name,
   std::vector<tge::graphics::NodeInfo> nodeInfos;
   nodeInfos.resize(shapeIndex.size() + 1);
   nodeInfos[0].transforms = baseTransform;
-  nodeInfos[0].transforms.scale *= translationFactor;
+  nodeInfos[0].parent = basicNifNode;
   for (size_t i = 0; i < shapeIndex.size(); i++) {
     const auto shape = shapes[shapeIndex[i]];
     nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
