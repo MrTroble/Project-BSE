@@ -4,12 +4,12 @@
 
 namespace tge::interop {
 
-	bool load(uint count, ReferenceLoad* load);
+	bool load(const uint count, const ReferenceLoad* load);
 
-	bool update(uint count, ReferenceUpdate* keys);
+	bool update(const uint count, const ReferenceUpdate* keys);
 
-	bool hide(uint count, FormKey* keys, bool hide);
+	bool hide(const uint count, const FormKey* keys, bool hide);
 	
-	bool remove(uint count, FormKey* keys);
+	bool remove(const uint count, const FormKey* keys);
 
 }
