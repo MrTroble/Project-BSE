@@ -25,7 +25,7 @@
 			"code": [
 				"layout(binding=0) uniform sampler samplertex;",
 				"layout(binding=1) uniform texture2D colorTexture;",
-				"layout(binding=4) uniform texture2D normalTexture;"
+				"layout(binding=4) uniform texture2D normalTexture;",
 			],
 			"dependsOn": [ "UV", "TEXTURES" ]
 		},
@@ -36,6 +36,7 @@
 				"layout(location=2) out float ROUGHNESS;",
 				"layout(location=3) out float METALLIC;",
 				"layout(push_constant) uniform constants { uint id; } pushConst;",
+				"layout(binding=5) uniform block { float id; } currentSelectID;",
 				"void main() {",
 				"   ROUGHNESS = pushConst.id;",
 				"   METALLIC = 0;",

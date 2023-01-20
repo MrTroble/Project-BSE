@@ -62,4 +62,7 @@ bool hide(const uint count, const FormKey* keys, const bool hide) {
 }
 
 bool remove(const uint count, const FormKey* keys) { return false; }
+
+bool select(const FormKey key) { return false; }
+
 }  // namespace tge::interop

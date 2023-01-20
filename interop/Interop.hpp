@@ -50,6 +50,7 @@ typedef bool (*UpdateCallback)(const uint count, const ReferenceUpdate* keys);
 typedef bool (*HideCallback)(const uint count, const FormKey* keys,
                              const bool hide);
 typedef bool (*DeleteCallback)(const uint count, const FormKey* keys);
+typedef bool (*SelectCallback)(const FormKey key);
 
 /*
  * The given [...]References functions should be called to manipulate the given
@@ -66,6 +67,8 @@ TGE_DLLEXPORT bool updateReferences(uint count, ReferenceUpdate* keys);
 TGE_DLLEXPORT bool hideReferences(uint count, FormKey* keys, bool hide);
 
 TGE_DLLEXPORT bool deleteReferences(uint count, FormKey* keys);
+
+TGE_DLLEXPORT bool selectReferences(FormKey key);
 
 /*
  * With the add[...]Callback functions you can add your callback functions to
@@ -84,3 +87,5 @@ TGE_DLLEXPORT bool addUpdateCallback(UpdateCallback callback);
 TGE_DLLEXPORT bool addHideCallback(HideCallback callback);
 
 TGE_DLLEXPORT bool addDeleteCallback(DeleteCallback callback);
+
+TGE_DLLEXPORT bool addSelectCallback(SelectCallback callback);
