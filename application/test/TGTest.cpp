@@ -7,16 +7,34 @@
 using namespace tge::main;
 using namespace tge::graphics;
 
+std::vector<std::string> fromKeys;
+
+bool deleteHalf() {
+  std::vector<FormKey> keys;
+  size_t s = 0;
+  for (auto& key : fromKeys) {
+    if (rand() % 2 == 0) {
+      keys.push_back(key.c_str());
+    }
+    s++;
+  }
+  return deleteReferences(keys.size(), keys.data());
+}
+
 void test() {
   waitFinishedInit();
   std::vector<ReferenceLoad> loads;
   std::vector<std::string> names(100);
   std::fill(begin(names), end(names), "wrhouse02.nif");
-  vec3 translate = {0,0,0};
+  vec3 translate = {0, 0, 0};
   constexpr auto toMeter = 1.42875f * 100;
+
+  fromKeys.reserve(200);
+  size_t current = 0;
   for (const auto& name : names) {
+    fromKeys.push_back("testKey" + std::to_string(current));
     ReferenceLoad load;
-    load.formKey = (FormKey) "TEST";
+    load.formKey = fromKeys.back().c_str();
     load.path = name.c_str();
     load.transform = TGE_DEFAULT_TRANSFORM;
     load.transform.translation = translate;
@@ -26,15 +44,12 @@ void test() {
       translate.x = 0;
     }
     loads.push_back(load);
+    current++;
   }
+
+  addLoadFinishedCallback(&deleteHalf);
   const auto ref = loadReferences(loads.size(), loads.data());
   printf("Loaded, %d\n", ref);
-
-  for (auto& load : loads) {
-    load.transform.translation.z += 6 * toMeter;
-  }
-  const auto ref2 = loadReferences(loads.size(), loads.data());
-  printf("Loaded, %d\n", ref2);
 }
 
 int main(int argv, const char** in) {

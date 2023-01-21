@@ -50,6 +50,7 @@ bool load(const uint count, const ReferenceLoad* loads) {
           if (nodeID == SIZE_MAX) return;
           REFERENCE_MAP[load.formKey] = nodeID;
         }
+        callLoadFinishedCallback();
       });
   thread.detach();
   return true;
@@ -61,8 +62,13 @@ bool hide(const uint count, const FormKey* keys, const bool hide) {
   return false;
 }
 
-bool remove(const uint count, const FormKey* keys) { return false; }
-
-bool select(const FormKey key) { return false; }
+bool remove(const uint count, const FormKey* keys) {
+  std::vector<size_t> ids(count);
+  for (size_t i = 0; i < count; i++) {
+    ids[i] = REFERENCE_MAP[keys[i]];
+  }
+  tge::nif::nifModule->remove(ids.size(), ids.data());
+  return true;
+}
 
 }  // namespace tge::interop

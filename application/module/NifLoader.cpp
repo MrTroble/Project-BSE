@@ -26,6 +26,16 @@ Error NifModule::init() {
   return Error::NONE;
 }
 
+void NifModule::remove(const size_t size, const size_t* ids) {
+  std::vector<size_t> values;
+  values.resize(size);
+  for (size_t i = 0; i < size; i++) {
+    values[i] = nodeIdToRender[ids[i]];
+  }
+  const auto api = getAPILayer();
+  api->removeRender(values.size(), values.data());
+}
+
 struct UpdateInfo {
   std::vector<std::string>& cacheString;
   std::vector<const void*>& dataPointer;
@@ -44,7 +54,7 @@ inline void updateOn(const UpdateInfo& info, const std::string& name,
 
 size_t NifModule::load(const std::string& name,
                        const tge::graphics::NodeTransform& baseTransform,
-                       void* shaderPipe) const {
+                       void* shaderPipe) {
   if (!finishedLoading) {
     printf("[WARN] Call nif before loaded! %s\n", name.c_str());
     return SIZE_MAX;
@@ -202,8 +212,7 @@ size_t NifModule::load(const std::string& name,
     nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
     auto& info = renderInfos[i];
     info.materialId += materialId;
-    info.bindingID =
-        sha->createBindings(materials[i].costumShaderData, 1);
+    info.bindingID = sha->createBindings(materials[i].costumShaderData, 1);
     info.indexBuffer += indexBufferID;
     for (auto& index : info.vertexBuffer) {
       index += indexBufferID;
@@ -248,7 +257,10 @@ size_t NifModule::load(const std::string& name,
 
   sha->bindData(bindingInfos.data(), bindingInfos.size());
 
-  api->pushRender(renderInfos.size(), renderInfos.data());
+  const auto pushRender =
+      api->pushRender(renderInfos.size(), renderInfos.data());
+
+  this->nodeIdToRender[nodes] = pushRender;
 
   return nodes;
 }

@@ -52,9 +52,11 @@ class TGAppIO : public tge::io::IOModule {
       const auto bounds = ggm->getWindowModule()->getBounds();
       const auto imageData = ggm->getAPILayer()->getImageData(imageID);
       const auto fbuffer = (float*)imageData.data();
-      glm::vec2 internalPos = vec;
-      const float idSelected = *(fbuffer + (int)(bounds.width * internalPos.y) + (int)internalPos.x);
-      printf("%f\n", idSelected);
+      const auto offset = (size_t)(bounds.width * vec.y) + (int)vec.x;
+      if (imageData.size() > offset*sizeof(float)) {
+        const float idSelected = *(fbuffer + offset);
+        printf("%f\n", idSelected);
+      }
     }
 
     std::fill(begin(stack), end(stack), false);

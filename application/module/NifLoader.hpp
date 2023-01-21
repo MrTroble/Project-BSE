@@ -30,13 +30,16 @@ namespace tge::nif {
 		std::vector<char> vertexFile;
 		std::vector<char> fragmentsFile;
 		std::string assetDirectory;
-		mutable std::unordered_map<std::vector<std::string>, void*> shaderCache;
+		std::unordered_map<std::vector<std::string>, void*> shaderCache;
         float translationFactor = 0.00142875f;
         uint32_t basicNifNode;
+        std::unordered_map<size_t, size_t> nodeIdToRender;
 
 		tge::main::Error init();
 
-		size_t load(const std::string& name, const tge::graphics::NodeTransform& baseTransform, void* shaderPipe = nullptr) const;
+		size_t load(const std::string& name, const tge::graphics::NodeTransform& baseTransform, void* shaderPipe = nullptr);
+
+		void remove(const size_t size, const size_t* ids);
 	};
 
 	extern nif::NifModule* nifModule;
