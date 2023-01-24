@@ -25,7 +25,7 @@
 			"code": [
 				"layout(binding=0) uniform sampler samplertex;",
 				"layout(binding=1) uniform texture2D colorTexture;",
-				"layout(binding=4) uniform texture2D normalTexture;",
+				"layout(binding=4) uniform texture2D normalTexture;"
 			],
 			"dependsOn": [ "UV", "TEXTURES" ]
 		},

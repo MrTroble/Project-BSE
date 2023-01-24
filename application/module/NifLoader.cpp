@@ -107,8 +107,14 @@ size_t NifModule::load(const std::string& name,
 
     std::vector<std::string> cacheString;
     const auto shader = file.GetShader(shape);
-    if (shader != nullptr && shader->HasTextureSet())
-      cacheString.push_back("TEXTURES");
+    auto shaderData = file.GetShader(shape);
+    if (shaderData && shader->HasTextureSet()) {
+      const auto indexTexData = shaderData->TextureSetRef();
+      const auto ref = file.GetHeader().GetBlock(indexTexData);
+      if (ref != nullptr && ref->textures.size() > 1) {
+        cacheString.push_back("TEXTURES");
+      }
+    }
     cacheString.reserve(10);
     UpdateInfo updateInfo = {cacheString, dataPointer, sizes,
                              info.vertexBuffer};
@@ -238,17 +244,18 @@ size_t NifModule::load(const std::string& name,
         const auto& normal = ref->textures[1].get();
         const auto albedoID = textureNamesToID[base];
         const auto normalID = textureNamesToID[normal];
-        const BindingInfo samplerBinding{0,
-                                         nodeInfo.bindingID,
-                                         BindingType::Sampler,
-                                         {UINT64_MAX, samplerID}};
-        const BindingInfo albedoBinding{
-            1, nodeInfo.bindingID, BindingType::Texture, {albedoID, samplerID}};
-        const BindingInfo normalBinding{
-            4, nodeInfo.bindingID, BindingType::Texture, {normalID, samplerID}};
-        bindingInfos.push_back(albedoBinding);
-        bindingInfos.push_back(normalBinding);
-        bindingInfos.push_back(samplerBinding);
+        bindingInfos.push_back({1,
+                                nodeInfo.bindingID,
+                                BindingType::Texture,
+                                {albedoID, samplerID}});
+        bindingInfos.push_back({4,
+                                nodeInfo.bindingID,
+                                BindingType::Texture,
+                                {normalID, samplerID}});
+        bindingInfos.push_back({0,
+                                nodeInfo.bindingID,
+                                BindingType::Sampler,
+                                {UINT64_MAX, samplerID}});
       }
     }
   }
