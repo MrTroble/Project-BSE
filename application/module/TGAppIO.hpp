@@ -22,6 +22,8 @@ class TGAppIO : public tge::io::IOModule {
 
   tge::main::Error init() override;
 
+  void selectInternal(const size_t size);
+
   void tick(double deltatime) override {
     const auto actualOffset = offset * deltatime;
     if (stack['W']) {
@@ -52,10 +54,11 @@ class TGAppIO : public tge::io::IOModule {
       const auto bounds = ggm->getWindowModule()->getBounds();
       const auto imageData = ggm->getAPILayer()->getImageData(imageID);
       const auto fbuffer = (float*)imageData.data();
-      const auto offset = (size_t)(bounds.width * vec.y) + (int)vec.x;
+      printf("For: %d, %d", bounds.width * bounds.height, imageData.size() / sizeof(float));
+      const auto offset = (size_t)(bounds.height * vec.x) + (int)vec.y;
       if (imageData.size() > offset*sizeof(float)) {
         const float idSelected = *(fbuffer + offset);
-        printf("%f\n", idSelected);
+        selectInternal(static_cast<size_t>(idSelected));
       }
     }
 

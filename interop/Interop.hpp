@@ -49,7 +49,7 @@ typedef bool (*LoadCallback)(const uint count, const ReferenceLoad* load);
 typedef bool (*UpdateCallback)(const uint count, const ReferenceUpdate* keys);
 typedef bool (*HideCallback)(const uint count, const FormKey* keys,
                              const bool hide);
-typedef bool (*DeleteCallback)(const uint count, const FormKey* keys);
+typedef bool (*FormKeyCallback)(const uint count, const FormKey* keys);
 typedef bool (*LoadFinishedCallback)(void);
 
 /*
@@ -68,6 +68,8 @@ TGE_DLLEXPORT bool hideReferences(uint count, FormKey* keys, bool hide);
 
 TGE_DLLEXPORT bool deleteReferences(uint count, FormKey* keys);
 
+TGE_DLLEXPORT bool selectReferences(uint count, FormKey* keys);
+
 /*
  * With the add[...]Callback functions you can add your callback functions to
  * the system Those are called when the according event occures
@@ -84,8 +86,10 @@ TGE_DLLEXPORT bool addUpdateCallback(UpdateCallback callback);
 
 TGE_DLLEXPORT bool addHideCallback(HideCallback callback);
 
-TGE_DLLEXPORT bool addDeleteCallback(DeleteCallback callback);
+TGE_DLLEXPORT bool addDeleteCallback(FormKeyCallback callback);
 
 TGE_DLLEXPORT bool addLoadFinishedCallback(LoadFinishedCallback callback);
+
+TGE_DLLEXPORT bool addSelectCallback(FormKeyCallback callback);
 
 void callLoadFinishedCallback();

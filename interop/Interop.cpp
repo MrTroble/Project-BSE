@@ -6,9 +6,10 @@
 #include "InternalInterop.hpp"
 
 std::vector<LoadCallback> loadCallbacks{&tge::interop::load};
-std::vector<DeleteCallback> deleteCallbacks{&tge::interop::remove};
+std::vector<FormKeyCallback> deleteCallbacks{&tge::interop::remove};
 std::vector<UpdateCallback> updateCallbacks{&tge::interop::update};
 std::vector<HideCallback> hideCallbacks{&tge::interop::hide};
+std::vector<FormKeyCallback> selectCallbacks{&tge::interop::select};
 std::vector<LoadFinishedCallback> loadFinished{};
 
 #define ADD_OR_RETURN_ON_FAIL(cCallbackVector, cCallbackPtr)   \
@@ -40,12 +41,16 @@ bool addHideCallback(HideCallback callback) {
   ADD_OR_RETURN_ON_FAIL(hideCallbacks, callback);
 }
 
-bool addDeleteCallback(DeleteCallback callback) {
+bool addDeleteCallback(FormKeyCallback callback) {
   ADD_OR_RETURN_ON_FAIL(deleteCallbacks, callback);
 }
 
 bool addLoadFinishedCallback(LoadFinishedCallback callback) {
   ADD_OR_RETURN_ON_FAIL(loadFinished, callback);
+}
+
+bool addSelectCallback(FormKeyCallback callback) {
+  ADD_OR_RETURN_ON_FAIL(selectCallbacks, callback);
 }
 
 void callLoadFinishedCallback() {
@@ -71,4 +76,9 @@ bool hideReferences(uint count, FormKey* keys, bool hide) {
 bool deleteReferences(uint count, FormKey* keys) {
   ASSERT_VALID_POINTER(count, keys);
   CALL_FOR_EACH(deleteCallbacks, count, keys);
+}
+
+bool selectReferences(uint count, FormKey* keys) {
+  ASSERT_VALID_POINTER(count, keys);
+  CALL_FOR_EACH(selectCallbacks, count, keys);
 }

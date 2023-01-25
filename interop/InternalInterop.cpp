@@ -11,6 +11,7 @@
 namespace tge::interop {
 
 std::unordered_map<std::string, size_t> REFERENCE_MAP;
+std::unordered_map<size_t, std::string> REFERENCE_MAP_TO_STRING;
 std::mutex loadMutex;
 
 inline glm::vec3 vectors(const vec3& vec3) {
@@ -49,6 +50,7 @@ bool load(const uint count, const ReferenceLoad* loads) {
           const auto nodeID = nif->load(load.path, newTranform);
           if (nodeID == SIZE_MAX) return;
           REFERENCE_MAP[load.formKey] = nodeID;
+          REFERENCE_MAP_TO_STRING[nodeID] = load.formKey;
         }
         callLoadFinishedCallback();
       });
@@ -68,6 +70,22 @@ bool remove(const uint count, const FormKey* keys) {
     ids[i] = REFERENCE_MAP[keys[i]];
   }
   tge::nif::nifModule->remove(ids.size(), ids.data());
+  return true;
+}
+
+bool select(const uint count, const FormKey* keys) {
+  for (size_t i = 0; i < count; i++) {
+    printf("%s\n", keys[i]);
+  }
+  return true;
+}
+
+bool internalSelect(const size_t count, const size_t* ids) {
+  std::vector<FormKey> vector(count);
+  std::transform(ids, ids + count, vector.begin(), [](const auto id) {
+    return REFERENCE_MAP_TO_STRING[id].c_str();
+  });
+  selectReferences(count, vector.data());
   return true;
 }
 
