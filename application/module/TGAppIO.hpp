@@ -15,6 +15,7 @@ class TGAppIO : public tge::io::IOModule {
   tge::graphics::NodeTransform transform;
   glm::vec2 vec;
   glm::vec3 cache{};
+  tge::graphics::CacheIndex index;
   bool pressedMiddle = false;
   float scale = 1;
   std::array<bool, 255> stack = {false};
@@ -51,13 +52,12 @@ class TGAppIO : public tge::io::IOModule {
 
     if (pressedLeft) {
       pressedLeft = false;
-      const auto bounds = ggm->getWindowModule()->getBounds();
-      const auto imageData = ggm->getAPILayer()->getImageData(imageID);
+      const auto imageData = ggm->getAPILayer()->getImageData(imageID, &index);
+      const auto bounds = ggm->getAPILayer()->getRenderExtent();
       const auto fbuffer = (float*)imageData.data();
-      printf("For: %d, %d", bounds.width * bounds.height, imageData.size() / sizeof(float));
-      const auto offset = (size_t)(bounds.height * vec.x) + (int)vec.y;
+      const auto offset = (size_t)(bounds.x * vec.y) + (size_t)vec.x;
       if (imageData.size() > offset*sizeof(float)) {
-        const float idSelected = *(fbuffer + offset);
+        const float idSelected = fbuffer[offset];
         selectInternal(static_cast<size_t>(idSelected));
       }
     }
@@ -84,5 +84,7 @@ class TGAppIO : public tge::io::IOModule {
     const auto extent = ggm->getAPILayer()->getRenderExtent();
     ggm->updateViewMatrix(glm::perspective(
         glm::radians(45.0f), extent.x / extent.y, 0.01f, 10000.0f));
+    index.buffer = SIZE_MAX;
+    // TODO delete old buffer
   }
 };
