@@ -11,6 +11,6 @@ tge::main::Error TGAppIO::init() {
   return tge::io::IOModule::init();
 }
 
-void TGAppIO::selectInternal(const size_t size) {
-  tge::interop::internalSelect(1, &size);
+void TGAppIO::selectInternal() {
+  tge::interop::internalSelect(selectedIDs.size(), selectedIDs.data());
 }

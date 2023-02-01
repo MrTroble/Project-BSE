@@ -199,7 +199,8 @@ size_t NifModule::load(const std::string& name,
                     DataType::VertexIndexData);
 
   SamplerInfo samplerInfo{FilterSetting::LINEAR, FilterSetting::LINEAR,
-                          AddressMode::REPEAT, AddressMode::REPEAT};
+                          AddressMode::REPEAT, AddressMode::REPEAT,
+                          ggm->features.anisotropicfiltering};
   const auto samplerID = api->pushSampler(samplerInfo);
 
   size_t id = texturesLoaded;

@@ -4,11 +4,13 @@
 #include <array>
 #include <glm/gtx/transform.hpp>
 #include <graphics/GameGraphicsModule.hpp>
+#include <vector>
 
 constexpr float offset = 2.0f;
 
 class TGAppIO : public tge::io::IOModule {
  public:
+  std::vector<size_t> selectedIDs;
   tge::graphics::GameGraphicsModule* ggm;
   size_t nodeID;
   size_t imageID;
@@ -20,10 +22,11 @@ class TGAppIO : public tge::io::IOModule {
   float scale = 1;
   std::array<bool, 255> stack = {false};
   bool pressedLeft = false;
+  bool pressedShift = false;
 
   tge::main::Error init() override;
 
-  void selectInternal(const size_t size);
+  void selectInternal();
 
   void tick(double deltatime) override {
     const auto actualOffset = offset * deltatime;
@@ -56,25 +59,37 @@ class TGAppIO : public tge::io::IOModule {
       const auto bounds = ggm->getAPILayer()->getRenderExtent();
       const auto fbuffer = (float*)imageData.data();
       const auto offset = (size_t)(bounds.x * vec.y) + (size_t)vec.x;
-      if (imageData.size() > offset*sizeof(float)) {
-        const float idSelected = fbuffer[offset];
-        selectInternal(static_cast<size_t>(idSelected));
+      if (imageData.size() > offset * sizeof(float)) {
+        const size_t idSelected = static_cast<size_t>(fbuffer[offset]);
+        if (!pressedShift) {
+          selectedIDs.clear();
+          pressedLeft = false;
+        }
+        const auto end = std::end(selectedIDs);
+        const auto foundIter =
+            std::find(std::begin(selectedIDs), end, idSelected);
+        if (foundIter == end) selectedIDs.push_back(idSelected);
+        selectInternal();
       }
     }
-
     std::fill(begin(stack), end(stack), false);
     ggm->updateCameraMatrix(
         glm::lookAt(cache, glm::vec3(0, 1, 0) + cache, glm::vec3(0, 0, -1)));
   }
 
-  void mouseEvent(const tge::io::MouseEvent event) override {
+  void mouseEvent(const tge::io::MouseEvent &event) override {
     if (event.pressed == 1) {
-      pressedLeft = true;
-      vec = glm::vec2(event.x, event.y);
+      if (event.pressMode == tge::io::PressMode::CLICKED) {
+        pressedLeft = true;
+        vec = glm::vec2(event.x, event.y);
+        if (event.additional & 8) {
+          pressedShift = true;
+        }
+      }
     }
   }
 
-  void keyboardEvent(const tge::io::KeyboardEvent event) override {
+  void keyboardEvent(const tge::io::KeyboardEvent &event) override {
     if (event.signal < 255) {
       stack[event.signal] = true;
     }
