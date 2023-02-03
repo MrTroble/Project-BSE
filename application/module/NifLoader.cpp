@@ -22,6 +22,12 @@ Error NifModule::init() {
   tge::graphics::NodeInfo nodeInfo;
   nodeInfo.transforms.scale *= this->translationFactor;
   basicNifNode = ggm->addNode(&nodeInfo, 1);
+
+  const auto api = ggm->getAPILayer();
+  SamplerInfo samplerInfo{FilterSetting::LINEAR, FilterSetting::LINEAR,
+                          AddressMode::REPEAT, AddressMode::REPEAT,
+                          ggm->features.anisotropicfiltering};
+  samplerID = api->pushSampler(samplerInfo);
   finishedLoading = true;
   return Error::NONE;
 }
@@ -197,12 +203,6 @@ size_t NifModule::load(const std::string& name,
   const auto indexBufferID =
       api->pushData(dataPointer.size(), dataPointer.data(), sizes.data(),
                     DataType::VertexIndexData);
-
-  SamplerInfo samplerInfo{FilterSetting::LINEAR, FilterSetting::LINEAR,
-                          AddressMode::REPEAT, AddressMode::REPEAT,
-                          ggm->features.anisotropicfiltering};
-  const auto samplerID = api->pushSampler(samplerInfo);
-
   size_t id = texturesLoaded;
   for (const auto& name : textureNames) {
     textureNamesToID[name] = id++;

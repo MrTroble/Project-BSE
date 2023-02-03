@@ -33,6 +33,7 @@ namespace tge::nif {
 		std::unordered_map<std::vector<std::string>, void*> shaderCache;
         float translationFactor = 0.00142875f;
         uint32_t basicNifNode;
+        size_t samplerID;
         std::unordered_map<size_t, size_t> nodeIdToRender;
 
 		tge::main::Error init();
