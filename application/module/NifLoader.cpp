@@ -198,15 +198,10 @@ size_t NifModule::load(const std::string& name,
   texturePaths.resize(textureNames.size());
   std::transform(begin(textureNames), end(textureNames), begin(texturePaths),
                  [&](auto& str) { return this->assetDirectory + str; });
-  const auto texturesLoaded =
-      ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
+  ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
   const auto indexBufferID =
       api->pushData(dataPointer.size(), dataPointer.data(), sizes.data(),
                     DataType::VertexIndexData);
-  size_t id = texturesLoaded;
-  for (const auto& name : textureNames) {
-    textureNamesToID[name] = id++;
-  }
 
   std::vector<BindingInfo> bindingInfos;
   bindingInfos.reserve(shapes.size() * 3);
@@ -241,10 +236,11 @@ size_t NifModule::load(const std::string& name,
       const auto indexTexData = shaderData->TextureSetRef();
       const auto ref = file.GetHeader().GetBlock(indexTexData);
       if (ref != nullptr && ref->textures.size() > 1) {
-        const auto& base = ref->textures[0].get();
-        const auto& normal = ref->textures[1].get();
-        const auto albedoID = textureNamesToID[base];
-        const auto normalID = textureNamesToID[normal];
+        const auto base = assetDirectory + ref->textures[0].get();
+        const auto normal = assetDirectory + ref->textures[1].get();
+        std::lock_guard guard(ggm->protectTexture);
+        const auto albedoID = ggm->textureMap[base];
+        const auto normalID = ggm->textureMap[normal];
         bindingInfos.push_back({1,
                                 nodeInfo.bindingID,
                                 BindingType::Texture,
