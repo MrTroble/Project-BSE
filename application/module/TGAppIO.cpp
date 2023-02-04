@@ -6,7 +6,7 @@
 #include "../../interop/InternalInterop.hpp"
 
 tge::main::Error TGAppIO::init() {
-  auto api = (tge::graphics::VulkanGraphicsModule*)tge::main::getAPILayer();
+  auto api = (tge::graphics::VulkanGraphicsModule*)tge::main::getAPILayer()->backend();
   this->imageID = api->roughnessMetallicImage;
   return tge::io::IOModule::init();
 }
