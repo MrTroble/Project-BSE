@@ -44,13 +44,18 @@ bool load(const uint count, const ReferenceLoad* loads) {
   std::thread thread(
       [nif = tge::nif::nifModule, loadList = std::move(start)]() {
         const auto ggm = tge::main::getGameGraphicsModule();
-        for (const auto& load : loadList) {
-          std::lock_guard guard(loadMutex);
-          const auto newTranform = transformFromInput(load.transform);
-          const auto nodeID = nif->load(load.path, newTranform);
-          if (nodeID == SIZE_MAX) return;
-          REFERENCE_MAP[load.formKey] = nodeID;
-          REFERENCE_MAP_TO_STRING[nodeID] = load.formKey;
+        std::lock_guard guard(loadMutex);
+        std::vector<tge::nif::LoadNif> nifLoadings(loadList.size());
+        for (size_t i = 0; i < loadList.size(); i++) {
+          nifLoadings[i] = {loadList[i].path,
+                            transformFromInput(loadList[i].transform)};
+        }
+        const auto nodeIDs = nif->load(nifLoadings.size(), nifLoadings.data());
+        for (size_t i = 0; i < nodeIDs.size(); i++) {
+          const auto& formKey = loadList[i].formKey;
+          const auto id = nodeIDs[i];
+          REFERENCE_MAP[formKey] = id;
+          REFERENCE_MAP_TO_STRING[id] = formKey;
         }
         callLoadFinishedCallback();
       });
