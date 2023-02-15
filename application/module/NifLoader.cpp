@@ -69,16 +69,38 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
   const auto sha = api->getShaderAPI();
   std::vector<size_t> nodeCache;
   nodeCache.reserve(count);
+
+  std::unordered_set<std::string> textureNames;
+  textureNames.reserve(32000);
+
+  std::unordered_map<std::string, nifly::NifFile> filesByName;
+
   for (size_t i = 0; i < count; i++) {
-    const auto& load = loads[i];
-    const auto& name = load.file;
-    const auto& baseTransform = load.transform;
-    nifly::NifFile file(assetDirectory + name);
+    nifly::NifFile file(assetDirectory + loads[i].file);
     if (!file.IsValid()) {
-      printf("[WARN] Invalid nif file %s\n", name.c_str());
-      nodeCache.push_back(SIZE_MAX);
-      continue;
+      printf("[WARN] Invalid nif file %s\n", loads[i].file.c_str());
+      return {};
     }
+    filesByName[loads[i].file] = file;
+    for (const auto& shape : file.GetShapes()) {
+      const auto textures = file.GetTexturePathRefs(shape);
+      for (const auto texture : textures) {
+        const auto& tex = texture.get();
+        if (!tex.empty() || !textureNames.contains(tex)) {
+          textureNames.insert(tex);
+        }
+      }
+    }
+  }
+
+  std::vector<std::string> texturePaths;
+  texturePaths.resize(textureNames.size());
+  std::transform(begin(textureNames), end(textureNames), begin(texturePaths),
+                 [&](auto& str) { return this->assetDirectory + str; });
+  ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
+
+  for (size_t i = 0; i < count; i++) {
+    const auto& file = filesByName[loads[i].file];
     const auto& shapes = file.GetShapes();
 
     std::vector<RenderInfo> renderInfos;
@@ -93,11 +115,6 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     sizes.reserve(shapes.size() * 5);
     std::vector<std::vector<std::Triangle> > triangleLists;
     triangleLists.resize(shapes.size());
-
-    std::vector<std::string> textureNames;
-    textureNames.reserve(shapes.size());
-
-    std::unordered_map<std::string, size_t> textureNamesToID;
 
     std::vector<Material> materials;
     materials.reserve(shapes.size());
@@ -186,13 +203,6 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
         info.indexCount = verticies.size();
         info.indexSize = IndexSize::NONE;
       }
-      const auto textures = file.GetTexturePathRefs(shape);
-      for (const auto texture : textures) {
-        const auto& tex = texture.get();
-        if (!tex.empty()) {
-          textureNames.push_back(tex);
-        }
-      }
       renderInfos.push_back(info);
       shapeIndex.push_back(current);
       current++;
@@ -200,11 +210,6 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     const auto materialId =
         api->pushMaterials(materials.size(), materials.data());
 
-    std::vector<std::string> texturePaths;
-    texturePaths.resize(textureNames.size());
-    std::transform(begin(textureNames), end(textureNames), begin(texturePaths),
-                   [&](auto& str) { return this->assetDirectory + str; });
-    ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
     const auto indexBufferID =
         api->pushData(dataPointer.size(), dataPointer.data(), sizes.data(),
                       DataType::VertexIndexData);
@@ -213,7 +218,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     bindingInfos.reserve(shapes.size() * 3);
     std::vector<tge::graphics::NodeInfo> nodeInfos;
     nodeInfos.resize(shapeIndex.size() + 1);
-    nodeInfos[0].transforms = baseTransform;
+    nodeInfos[0].transforms = loads[i].transform;
     nodeInfos[0].parent = basicNifNode;
     for (size_t i = 0; i < shapeIndex.size(); i++) {
       const auto shape = shapes[shapeIndex[i]];
