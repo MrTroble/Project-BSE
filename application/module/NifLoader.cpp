@@ -188,7 +188,6 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
             ptr->vertexInputBindings.size();
       }
       void* ptr = foundItr->second;
-      info.materialId = materials.size();
       materials.push_back(Material(ptr));
 
       auto& triangles = triangleLists[current];
@@ -224,7 +223,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       const auto shape = shapes[shapeIndex[i]];
       nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
       auto& info = renderInfos[i];
-      info.materialId += materialId;
+      info.materialId = materialId[i];
       info.bindingID = sha->createBindings(materials[i].costumShaderData, 1);
       info.indexBuffer += indexBufferID;
       for (auto& index : info.vertexBuffer) {

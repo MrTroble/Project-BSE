@@ -29,6 +29,14 @@ struct LoadNif {
   tge::graphics::NodeTransform transform;
 };
 
+struct LoadedModelInformation {
+  size_t render = 0;
+  size_t nifHandle = 0;
+  std::vector<size_t> buffer;
+  std::vector<size_t> textures;
+  size_t referenceCount = 0;
+};
+
 class NifModule : public tge::main::Module {
  public:
   bool finishedLoading = false;
@@ -36,6 +44,7 @@ class NifModule : public tge::main::Module {
   std::vector<char> fragmentsFile;
   std::string assetDirectory;
   std::unordered_map<std::vector<std::string>, void*> shaderCache;
+  std::unordered_map<std::string, LoadedModelInformation> loadInformation;
   float translationFactor = 0.00142875f;
   uint32_t basicNifNode;
   size_t samplerID;

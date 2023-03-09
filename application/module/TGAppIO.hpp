@@ -29,7 +29,7 @@ class TGAppIO : public tge::io::IOModule {
   void selectInternal();
 
   void tick(double deltatime) override {
-    const auto actualOffset = offset * deltatime;
+    const float actualOffset = (float)(offset * deltatime);
     if (stack['W']) {
       cache.y += actualOffset;
     }
