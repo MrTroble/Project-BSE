@@ -1,0 +1,2 @@
+interceptor_via_fun:glslang::GlslangToSpv
+interceptor_via_fun:vkNegotiateLoaderLayerInterfaceVersion

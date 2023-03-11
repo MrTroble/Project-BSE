@@ -2,12 +2,18 @@ cmake_minimum_required (VERSION 3.12)
 
 project ("BSE" LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_COMPILER_FORCED TRUE)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 
 add_compile_definitions(APPLICATION_NAME="BSE")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_compile_definitions(DEBUG=1)
+endif()
+
+if(false)
+add_compile_options("-fsanitize=address")
+add_link_options("-fsanitize=address")
 endif()
 
 if(WIN32)  
