@@ -99,22 +99,29 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
                  [&](auto& str) { return this->assetDirectory + str; });
   ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
 
+  std::vector<const void*> dataPointer;
+  std::vector<size_t> sizes;
+  dataPointer.reserve(count * count);
+  sizes.reserve(count * count);
+
+  std::vector<std::vector<RenderInfo>> allRenderInfos;
+  allRenderInfos.resize(count);
+
+  std::vector<size_t> allNodes;
+  allNodes.resize(count);
+
+  std::vector<std::vector<std::Triangle>> allTriangleLists;
+  allTriangleLists.reserve(count * count);
+
   for (size_t i = 0; i < count; i++) {
     const auto& file = filesByName[loads[i].file];
     const auto& shapes = file.GetShapes();
+    size_t current = 0;
 
     std::vector<RenderInfo> renderInfos;
     renderInfos.reserve(shapes.size());
     std::vector<size_t> shapeIndex;
     shapeIndex.reserve(shapes.size());
-
-    std::vector<const void*> dataPointer;
-    std::vector<size_t> sizes;
-    size_t current = 0;
-    dataPointer.reserve(shapes.size() * 5);
-    sizes.reserve(shapes.size() * 5);
-    std::vector<std::vector<std::Triangle> > triangleLists;
-    triangleLists.resize(shapes.size());
 
     std::vector<Material> materials;
     materials.reserve(shapes.size());
@@ -190,11 +197,12 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       void* ptr = foundItr->second;
       materials.push_back(Material(ptr));
 
-      auto& triangles = triangleLists[current];
+      allTriangleLists.push_back({});
+      auto& triangles = allTriangleLists.back();
       shape->GetTriangles(triangles);
       if (!triangles.empty()) {
         info.indexBuffer = dataPointer.size();
-        sizes.push_back(triangles.size() * sizeof(std::Triangle));
+        sizes.push_back(triangles.size() * sizeof(nifly::Triangle));
         dataPointer.push_back(triangles.data());
         info.indexCount = triangles.size() * 3;
         info.indexSize = IndexSize::UINT16;
@@ -209,9 +217,6 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     const auto materialId =
         api->pushMaterials(materials.size(), materials.data());
 
-    const auto indexBufferID =
-        api->pushData(dataPointer.size(), dataPointer.data(), sizes.data(),
-                      DataType::VertexIndexData);
 
     std::vector<BindingInfo> bindingInfos;
     bindingInfos.reserve(shapes.size() * 3);
@@ -225,10 +230,6 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       auto& info = renderInfos[i];
       info.materialId = materialId[i];
       info.bindingID = sha->createBindings(materials[i].costumShaderData, 1);
-      info.indexBuffer += indexBufferID;
-      for (auto& index : info.vertexBuffer) {
-        index += indexBufferID;
-      }
       const auto translate = shape->transform.translation;
       auto& nodeInfo = nodeInfos[i + 1];
 
@@ -268,14 +269,30 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     }
 
     const auto nodes = ggm->addNode(nodeInfos.data(), nodeInfos.size());
-
+    allNodes[i] = nodes;
     sha->bindData(bindingInfos.data(), bindingInfos.size());
+    allRenderInfos[i] = renderInfos;
+    nodeCache.push_back(nodes);
+  }
+
+  const auto indexBufferID =
+      api->pushData(dataPointer.size(), dataPointer.data(), sizes.data(),
+                    DataType::VertexIndexData);
+
+  for (size_t i = 0; i < count; i++) {
+    auto& renderInfos = allRenderInfos[i];
+    if (renderInfos.empty()) continue;
+    for (auto& info : renderInfos) {
+      info.indexBuffer += indexBufferID;
+      for (auto& index : info.vertexBuffer) {
+        index += indexBufferID;
+      }
+    }
 
     const auto pushRender =
         api->pushRender(renderInfos.size(), renderInfos.data());
 
-    this->nodeIdToRender[nodes] = pushRender;
-    nodeCache.push_back(nodes);
+    this->nodeIdToRender[allNodes[i]] = pushRender;
   }
 
   return nodeCache;
