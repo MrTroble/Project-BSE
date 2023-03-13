@@ -33,7 +33,7 @@ Error NifModule::init() {
 }
 
 void NifModule::remove(const size_t size, const size_t* ids) {
-  std::vector<size_t> values;
+  std::vector<TRenderHolder> values;
   values.resize(size);
   for (size_t i = 0; i < size; i++) {
     values[i] = nodeIdToRender[ids[i]];

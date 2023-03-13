@@ -11,12 +11,10 @@ std::vector<std::string> fromKeys;
 
 bool deleteHalf() {
   std::vector<FormKey> keys;
-  size_t s = 0;
   for (auto& key : fromKeys) {
     if (rand() % 2 == 0) {
       keys.push_back(key.c_str());
     }
-    s++;
   }
   return deleteReferences(keys.size(), keys.data());
 }

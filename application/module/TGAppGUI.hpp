@@ -28,7 +28,7 @@ class TGAppGUI : public tge::gui::GUIModule {
       if (api != nullptr) {
         const auto debug =
             ((tge::graphics::PerformanceMessuringAPILayer*)api)->getDebug();
-        ImGui::Text(debug.c_str());
+        ImGui::Text("%s", debug.c_str());
       }
     }
     focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
