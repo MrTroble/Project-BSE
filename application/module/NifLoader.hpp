@@ -47,7 +47,7 @@ class NifModule : public tge::main::Module {
   std::unordered_map<std::string, LoadedModelInformation> loadInformation;
   float translationFactor = 0.00142875f;
   uint32_t basicNifNode;
-  size_t samplerID;
+  graphics::TSamplerHolder samplerID;
   std::unordered_map<size_t, graphics::TRenderHolder> nodeIdToRender;
 
   tge::main::Error init();
