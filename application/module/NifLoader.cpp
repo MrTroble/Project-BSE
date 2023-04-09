@@ -33,7 +33,7 @@ Error NifModule::init() {
 }
 
 void NifModule::remove(const size_t size, const size_t* ids) {
-  std::vector<size_t> values;
+  std::vector<TRenderHolder> values;
   values.resize(size);
   for (size_t i = 0; i < size; i++) {
     values[i] = nodeIdToRender[ids[i]];
@@ -59,7 +59,7 @@ inline void updateOn(const UpdateInfo& info, const std::string& name,
 }
 
 std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
-                       void* shaderPipe) {
+                                    void* shaderPipe) {
   if (!finishedLoading) {
     printf("[WARN] Call nif before loaded!\n");
     return {};
@@ -217,7 +217,6 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     const auto materialId =
         api->pushMaterials(materials.size(), materials.data());
 
-
     std::vector<BindingInfo> bindingInfos;
     bindingInfos.reserve(shapes.size() * 3);
     std::vector<tge::graphics::NodeInfo> nodeInfos;
@@ -226,7 +225,6 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     nodeInfos[0].parent = basicNifNode;
     for (size_t i = 0; i < shapeIndex.size(); i++) {
       const auto shape = shapes[shapeIndex[i]];
-      nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
       auto& info = renderInfos[i];
       info.materialId = materialId[i];
       info.bindingID = sha->createBindings(materials[i].costumShaderData, 1);
@@ -252,18 +250,20 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
           std::lock_guard guard(ggm->protectTexture);
           const auto albedoID = ggm->textureMap[base];
           const auto normalID = ggm->textureMap[normal];
-          bindingInfos.push_back({1,
-                                  nodeInfo.bindingID,
-                                  BindingType::Texture,
-                                  {albedoID, samplerID}});
-          bindingInfos.push_back({4,
-                                  nodeInfo.bindingID,
-                                  BindingType::Texture,
-                                  {normalID, samplerID}});
-          bindingInfos.push_back({0,
-                                  nodeInfo.bindingID,
-                                  BindingType::Sampler,
-                                  {UINT64_MAX, samplerID}});
+          BindingInfo binding;
+          binding.bindingSet = nodeInfo.bindingID;
+          binding.type = BindingType::Texture;
+          binding.data.texture.sampler = samplerID;
+          binding.data.texture.texture = albedoID;
+          binding.binding = 1;
+          bindingInfos.push_back(binding);
+          binding.data.texture.texture = normalID;
+          binding.binding = 4;
+          bindingInfos.push_back(binding);
+          binding.data.texture.texture = INVALID_SIZE_T;
+          binding.type = BindingType::Sampler;
+          binding.binding = 0;
+          bindingInfos.push_back(binding);
         }
       }
     }

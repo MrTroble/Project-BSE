@@ -43,7 +43,6 @@ bool load(const uint count, const ReferenceLoad* loads) {
   }
   std::thread thread(
       [nif = tge::nif::nifModule, loadList = std::move(start)]() {
-        const auto ggm = tge::main::getGameGraphicsModule();
         std::lock_guard guard(loadMutex);
         std::vector<tge::nif::LoadNif> nifLoadings(loadList.size());
         for (size_t i = 0; i < loadList.size(); i++) {
