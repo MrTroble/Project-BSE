@@ -86,7 +86,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       const auto textures = file.GetTexturePathRefs(shape);
       for (const auto texture : textures) {
         const auto& tex = texture.get();
-        if (!tex.empty() || !textureNames.contains(tex)) {
+        if (!tex.empty() && !textureNames.contains(tex)) {
           textureNames.insert(tex);
         }
       }
@@ -260,7 +260,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
           binding.data.texture.texture = normalID;
           binding.binding = 4;
           bindingInfos.push_back(binding);
-          binding.data.texture.texture = INVALID_SIZE_T;
+          binding.data.texture.texture = TTextureHolder();
           binding.type = BindingType::Sampler;
           binding.binding = 0;
           bindingInfos.push_back(binding);
