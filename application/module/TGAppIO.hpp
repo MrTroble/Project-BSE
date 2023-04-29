@@ -99,7 +99,7 @@ class TGAppIO : public tge::io::IOModule {
     const auto extent = ggm->getAPILayer()->getRenderExtent();
     ggm->updateViewMatrix(glm::perspective(
         glm::radians(45.0f), extent.x / extent.y, 0.01f, 10000.0f));
-    index.buffer = INVALID_SIZE_T;
+    index.buffer = tge::graphics::TDataHolder();
     // TODO delete old buffer
   }
 };

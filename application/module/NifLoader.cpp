@@ -44,18 +44,15 @@ void NifModule::remove(const size_t size, const size_t* ids) {
 
 struct UpdateInfo {
   std::vector<std::string>& cacheString;
-  std::vector<const void*>& dataPointer;
-  std::vector<size_t>& sizes;
-  std::vector<size_t>& vertexBuffer;
+  std::vector<BufferInfo>& dataInfo;
 };
 
 template <typename Type>
 inline void updateOn(const UpdateInfo& info, const std::string& name,
-                     const std::vector<Type>& uvData) {
+                     std::vector<Type>& uvData) {
   info.cacheString.push_back(name);
-  info.vertexBuffer.push_back(info.dataPointer.size());
-  info.dataPointer.push_back(uvData.data());
-  info.sizes.push_back(uvData.size() * sizeof(Type));
+  info.dataInfo.push_back(
+      {uvData.data(), uvData.size() * sizeof(Type), DataType::VertexData});
 }
 
 std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
@@ -99,10 +96,8 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
                  [&](auto& str) { return this->assetDirectory + str; });
   ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
 
-  std::vector<const void*> dataPointer;
-  std::vector<size_t> sizes;
-  dataPointer.reserve(count * count);
-  sizes.reserve(count * count);
+  std::vector<BufferInfo> dataInfos;
+  dataInfos.reserve(count * count);
 
   std::vector<std::vector<RenderInfo>> allRenderInfos;
   allRenderInfos.resize(count);
@@ -136,10 +131,11 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       }
       RenderInfo info;
 
-      const auto& verticies = bishape->UpdateRawVertices();
-      info.vertexBuffer.push_back(dataPointer.size());
-      dataPointer.push_back(verticies.data());
-      sizes.push_back(verticies.size() * sizeof(nifly::Vector3));
+      const auto oldSize = dataInfos.size();
+      auto& verticies = bishape->UpdateRawVertices();
+      dataInfos.push_back({verticies.data(),
+                           verticies.size() * sizeof(nifly::Vector3),
+                           DataType::VertexData});
 
       std::vector<std::string> cacheString;
       const auto shader = file.GetShader(shape);
@@ -152,8 +148,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
         }
       }
       cacheString.reserve(10);
-      UpdateInfo updateInfo = {cacheString, dataPointer, sizes,
-                               info.vertexBuffer};
+      UpdateInfo updateInfo = {cacheString, dataInfos};
 
       size_t bindingCount = 0;
       if (bishape->HasUVs()) {
@@ -168,6 +163,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
         updateOn(updateInfo, "COLOR", bishape->UpdateRawColors());
         bindingCount++;
       }
+      info.vertexBuffer.resize(dataInfos.size() - oldSize);
 
       auto foundItr = shaderCache.find(cacheString);
       if (foundItr == end(shaderCache)) {
@@ -201,9 +197,9 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       auto& triangles = allTriangleLists.back();
       shape->GetTriangles(triangles);
       if (!triangles.empty()) {
-        info.indexBuffer = dataPointer.size();
-        sizes.push_back(triangles.size() * sizeof(nifly::Triangle));
-        dataPointer.push_back(triangles.data());
+        dataInfos.push_back({triangles.data(),
+                             triangles.size() * sizeof(nifly::Triangle),
+                             DataType::IndexData});
         info.indexCount = triangles.size() * 3;
         info.indexSize = IndexSize::UINT16;
       } else {
@@ -275,18 +271,17 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     nodeCache.push_back(nodes);
   }
 
-  const auto indexBufferID =
-      api->pushData(dataPointer.size(), dataPointer.data(), sizes.data(),
-                    DataType::VertexIndexData);
+  const auto indexBufferID = api->pushData(dataInfos.size(), dataInfos.data());
 
+  auto startPointer = indexBufferID.data();
   for (size_t i = 0; i < count; i++) {
     auto& renderInfos = allRenderInfos[i];
     if (renderInfos.empty()) continue;
     for (auto& info : renderInfos) {
-      info.indexBuffer += indexBufferID;
       for (auto& index : info.vertexBuffer) {
-        index += indexBufferID;
+        index = *(startPointer++);
       }
+      info.indexBuffer = *(startPointer++);
     }
 
     const auto pushRender =
