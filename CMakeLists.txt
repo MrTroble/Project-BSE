@@ -26,6 +26,32 @@ endif()
 add_subdirectory(nifly)
 add_subdirectory(TGEngine)
 
+include(FetchContent)
+FETCHCONTENT_DECLARE(
+  binary_io
+  URL https://github.com/Ryan-rsm-McKenzie/binary_io
+)
+FETCHCONTENT_DECLARE(
+  DirectXTex
+  URL https://github.com/microsoft/DirectXTex
+)
+FETCHCONTENT_DECLARE(
+  lz4
+  URL https://github.com/lz4/lz4
+)
+FETCHCONTENT_DECLARE(
+  mmio
+  URL https://github.com/Ryan-rsm-McKenzie/mmio
+)
+FETCHCONTENT_DECLARE(
+  zlib
+  URL https://github.com/madler/zlib
+)
+FETCHCONTENT_DECLARE(
+  bsa
+  URL https://github.com/Ryan-rsm-McKenzie/bsa
+)
+
 add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp" "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/module/NifLoader.cpp" "interop/InternalInterop.cpp" "application/module/TGAppIO.cpp") 
 target_include_directories(TGInterOp PUBLIC "TGEngine/TGEngine/public" ${NIFLY_INCLUDE_DIR} "$ENV{VULKAN_DIR}")
 target_link_libraries(TGInterOp PUBLIC tc::TGEngine nifly)
