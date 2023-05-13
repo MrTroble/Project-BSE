@@ -15,7 +15,7 @@ jobs:
       - uses: johnwason/vcpkg-action@v4
         with:
            pkgs: 'rsm-bsa'
-           triplet: 'x64-windows-release'
+           triplet: 'x64-windows'
            token: ${{ github.token }}
       - uses: actions/checkout@v3
         with:
