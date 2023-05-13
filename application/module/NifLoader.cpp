@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <graphics/vulkan/VulkanShaderPipe.hpp>
 #include <string>
+#include <bsa/bsa.hpp>
 
 namespace tge::nif {
 

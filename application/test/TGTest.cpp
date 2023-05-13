@@ -53,6 +53,7 @@ void test() {
 int main(int argv, const char** in) {
   std::thread thread(&test);
   thread.detach();
-  const InitConfig config{1, "assets"};
+  auto directory = "assets";
+  const InitConfig config{1, (char*)directory};
   return initTGEditor(&config);
 }
