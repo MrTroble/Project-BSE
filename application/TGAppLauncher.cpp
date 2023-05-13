@@ -2,6 +2,6 @@
 #include "TGApp.hpp"
 
 int main(const int count, const char** strings) {
-	const InitConfig config{ 1, "assets\\" };
+	const InitConfig config{ 1, (char*)"assets\\" };
 	return initTGEditor(&config);
 }
