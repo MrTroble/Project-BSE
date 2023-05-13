@@ -12,6 +12,10 @@ jobs:
   build_win:
     runs-on: windows-latest
     steps:
+      - uses: johnwason/vcpkg-action@v4
+        with:
+           pkgs: 'rsm-bsa vulkan'
+           triplet: 'x64-windows-release'
       - uses: actions/checkout@v3
         with:
             submodules: recursive
