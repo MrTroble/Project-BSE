@@ -12,11 +12,6 @@ jobs:
   build_win:
     runs-on: windows-latest
     steps:
-      - uses: johnwason/vcpkg-action@v4
-        with:
-           pkgs: 'rsm-bsa'
-           triplet: 'x64-windows'
-           token: ${{ github.token }}
       - uses: actions/checkout@v3
         with:
             submodules: recursive
@@ -25,8 +20,13 @@ jobs:
         with:
            path: ${{github.workspace}}\build\_deps
            key: wincache
+      - uses: johnwason/vcpkg-action@v4
+        with:
+           pkgs: 'rsm-bsa'
+           triplet: 'x64-windows-release'
+           token: ${{ github.token }}
       - name: Configure CMake
-        run: cmake ./ -B ${{github.workspace}}\build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_TOOLCHAIN_FILE=D:\a\Project-BSE\Project-BSE\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_MANIFEST_MODE=OFF
+        run: cmake ./ -B ${{github.workspace}}\build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_MANIFEST_MODE=OFF
       - name: Build
         run: cmake --build ${{github.workspace}}\build --config ${{env.BUILD_TYPE}}
       - name: Copy
