@@ -16,6 +16,7 @@ jobs:
         with:
            pkgs: 'rsm-bsa vulkan'
            triplet: 'x64-windows-release'
+           token: ${{ github.token }}
       - uses: actions/checkout@v3
         with:
             submodules: recursive
