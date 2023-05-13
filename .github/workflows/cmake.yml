@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: johnwason/vcpkg-action@v4
         with:
-           pkgs: 'rsm-bsa vulkan'
+           pkgs: 'rsm-bsa'
            triplet: 'x64-windows-release'
            token: ${{ github.token }}
       - uses: actions/checkout@v3
