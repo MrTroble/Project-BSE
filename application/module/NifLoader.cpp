@@ -7,6 +7,7 @@
 #include <graphics/vulkan/VulkanShaderPipe.hpp>
 #include <string>
 #include <bsa/bsa.hpp>
+#include <sstream>
 
 namespace tge::nif {
 
@@ -15,6 +16,8 @@ using namespace tge::main;
 using namespace tge::shader;
 
 NifModule* nifModule = new nif::NifModule();
+
+static std::vector<bsa::tes4::archive> archivesLoaded;
 
 Error NifModule::init() {
   vertexFile = util::wholeFile("assets/testNif.vert");
@@ -30,6 +33,16 @@ Error NifModule::init() {
                           ggm->features.anisotropicfiltering};
   samplerID = api->pushSampler(samplerInfo);
   finishedLoading = true;
+  archivesLoaded.resize(archiveNames.size());
+  size_t next = 0;
+  for (const auto& name : archiveNames) {
+    auto& archive = archivesLoaded[next++];
+    archive.read(this->assetDirectory + name);
+    if (archive.empty()) {
+      printf("[WARN] Archive empty after load [%s] !\n", name.c_str());
+      return Error::NOT_INITIALIZED;
+    }
+  }
   return Error::NONE;
 }
 
@@ -56,6 +69,8 @@ inline void updateOn(const UpdateInfo& info, const std::string& name,
       {uvData.data(), uvData.size() * sizeof(Type), DataType::VertexData});
 }
 
+static std::unordered_map<std::string, nifly::NifFile> filesByName;
+
 std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
                                     void* shaderPipe) {
   if (!finishedLoading) {
@@ -71,15 +86,26 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
   std::unordered_set<std::string> textureNames;
   textureNames.reserve(32000);
 
-  std::unordered_map<std::string, nifly::NifFile> filesByName;
-
   for (size_t i = 0; i < count; i++) {
+    const std::filesystem::path fullpath(loads[i].file);
     nifly::NifFile file(assetDirectory + loads[i].file);
     if (!file.IsValid()) {
-      printf("[WARN] Invalid nif file %s\n", loads[i].file.c_str());
-      return {};
+      for (const auto& archive : archivesLoaded) {
+        const auto reference = archive[fullpath.stem().string()][fullpath.filename().string()];
+        if (!reference) continue;
+        std::string byteHolder;
+        byteHolder.resize(reference->decompressed_size());
+        std::span<std::byte> byteInput((std::byte*)byteHolder.data(), byteHolder.size());
+        reference->decompress_into(bsa::tes4::version::sse, byteInput);
+        std::istringstream stream(byteHolder);
+        file.Load(stream);
+        if (file.IsValid()) break;
+      }
+      if (!file.IsValid()) {
+        printf("[WARN] Invalid nif file %s\n", loads[i].file.c_str());
+        return {};
+      }
     }
-    filesByName[loads[i].file] = file;
     for (const auto& shape : file.GetShapes()) {
       const auto textures = file.GetTexturePathRefs(shape);
       for (const auto texture : textures) {
@@ -89,6 +115,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
         }
       }
     }
+    filesByName[loads[i].file] = std::move(file);
   }
 
   std::vector<std::string> texturePaths;

@@ -48,12 +48,19 @@ void test() {
   addLoadFinishedCallback(&deleteHalf);
   const auto ref = loadReferences(loads.size(), loads.data());
   printf("Loaded, %d\n", ref);
+
+  ReferenceLoad loadBSARef;
+  loadBSARef.formKey = "testBSAForm";
+  loadBSARef.path = "souphot.nif";
+  loadBSARef.transform = TGE_DEFAULT_TRANSFORM;
+  loadReferences(1, &loadBSARef);
 }
 
 int main(int argv, const char** in) {
   std::thread thread(&test);
   thread.detach();
   auto directory = "assets";
-  const InitConfig config{1, (char*)directory};
+  std::vector<char*> bsaHandles{(char*)"ccQDRSSE001-SurvivalMode.bsa"};
+  InitConfig config{1, (char*)directory, bsaHandles.size(), bsaHandles.data()};
   return initTGEditor(&config);
 }
