@@ -309,3 +309,4 @@ dependencies/deps.zip
 /out/build/x64-Debug
 /out/install/x64-Debug
 /out
+/vcpkg_installed
