@@ -9,7 +9,25 @@
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "cmakeToolchain": "C:\\Users\\nifro\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+      "cmakeToolchain": "C:\\Users\\nifro\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
+      "variables": [
+        {
+          "name": "VCPKG_MANIFEST_DIR",
+          "value": "../../../",
+          "type": "PATH"
+        },
+        {
+          "name": "VCPKG_MANIFEST_MODE",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "VCPKG_MANIFEST_INSTALL",
+          "value": "True",
+          "type": "BOOL"
+        }
+      ]
+
     },
     {
       "name": "x64-Release",
@@ -53,9 +71,19 @@
       "cmakeToolchain": "C:\\Users\\nifro\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
       "variables": [
         {
-          "name": "VCPKG_TARGET_TRIPLET",
-          "value": "x64-windows-release",
-          "type": "STRING"
+          "name": "VCPKG_MANIFEST_DIR",
+          "value": "../../../",
+          "type": "PATH"
+        },
+        {
+          "name": "VCPKG_MANIFEST_MODE",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "VCPKG_MANIFEST_INSTALL",
+          "value": "True",
+          "type": "BOOL"
         }
       ]
     }

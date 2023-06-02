@@ -9,6 +9,7 @@
     "glm",
     "imgui",
     "vulkan-headers",
-    "rsm-bsa"
+    "rsm-bsa",
+    "nifly"
   ]
 }
