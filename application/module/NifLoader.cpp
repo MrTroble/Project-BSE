@@ -125,12 +125,14 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       }
     } else {
       const auto& data = resolveFromArchives(fullpath);
-      const std::string stringInput(data.data(), data.data() + data.size());
-      std::istringstream stream(stringInput);
-      if (file.Load(stream) != 0) {
-        printf("[WARN] Found nif %s in archive but could not open it!\n",
-               loads[i].file.c_str());
-        return {};
+      if (!data.empty()) {
+        const std::string stringInput(data.data(), data.data() + data.size());
+        std::istringstream stream(stringInput, std::ios_base::binary);
+        if (file.Load(stream) != 0) {
+          printf("[WARN] Found nif %s in archive but could not open it!\n",
+                 loads[i].file.c_str());
+          return {};
+        }
       }
 
       if (!file.IsValid()) {
