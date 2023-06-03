@@ -1,14 +1,14 @@
 #include "NifLoader.hpp"
 
-#include <algorithm>
-#include <string>
-#include <sstream>
-#include <filesystem>
-#include <bsa/bsa.hpp>
 #include <NifFile.hpp>
 #include <TGEngine.hpp>
 #include <Util.hpp>
+#include <algorithm>
+#include <bsa/bsa.hpp>
+#include <filesystem>
 #include <graphics/vulkan/VulkanShaderPipe.hpp>
+#include <sstream>
+#include <string>
 
 namespace tge::nif {
 
@@ -20,6 +20,29 @@ NifModule* nifModule = new nif::NifModule();
 
 static std::vector<bsa::tes4::archive> archivesLoaded;
 
+std::vector<char> resolveFromArchives(const std::filesystem::path& fullpath) {
+  const bsa::tes4::directory::key dictionaryKey(
+      fullpath.parent_path().string());
+  const bsa::tes4::file::key fileKey(fullpath.filename().string());
+  for (const auto& archive : archivesLoaded) {
+    const auto reference = archive[dictionaryKey][fileKey];
+    if (!reference) continue;
+    std::vector<char> byteHolder;
+    if (reference->compressed()) {
+      byteHolder.resize(reference->decompressed_size());
+      std::span<std::byte> byteInput((std::byte*)byteHolder.data(),
+                                     byteHolder.size());
+      reference->decompress_into(bsa::tes4::version::sse, byteInput);
+    } else {
+      byteHolder =
+          std::vector<char>((char*)reference->data(),
+                            (char*)reference->data() + byteHolder.size());
+    }
+    return byteHolder;
+  }
+  return {};
+}
+
 Error NifModule::init() {
   vertexFile = util::wholeFile("assets/testNif.vert");
   fragmentsFile = util::wholeFile("assets/testNif.frag");
@@ -27,6 +50,8 @@ Error NifModule::init() {
   tge::graphics::NodeInfo nodeInfo;
   nodeInfo.transforms.scale *= this->translationFactor;
   basicNifNode = ggm->addNode(&nodeInfo, 1);
+
+  ggm->addAssetResolver(&resolveFromArchives);
 
   const auto api = ggm->getAPILayer();
   SamplerInfo samplerInfo{FilterSetting::LINEAR, FilterSetting::LINEAR,
@@ -94,33 +119,20 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     nifly::NifFile file;
     if (std::filesystem::exists(assetPath)) {
       if (file.Load(assetPath) != 0) {
-        printf("[WARN] Found nif but failed to open %s!\n", loads[i].file.c_str());
+        printf("[WARN] Found nif but failed to open %s!\n",
+               loads[i].file.c_str());
         return {};
       }
     } else {
-      const bsa::tes4::directory::key dictionaryKey(fullpath.parent_path().string());
-      const bsa::tes4::file::key fileKey(fullpath.filename().string());
-      for (const auto& archive : archivesLoaded) {
-        const auto reference = archive[dictionaryKey][fileKey];
-        if (!reference) continue;
-        std::string byteHolder;
-        if (reference->compressed()) {
-          byteHolder.resize(reference->decompressed_size());
-          std::span<std::byte> byteInput((std::byte*)byteHolder.data(),
-                                         byteHolder.size());
-          reference->decompress_into(bsa::tes4::version::sse, byteInput);
-        } else {
-          byteHolder.resize(reference->size());
-          std::copy(reference->data(), reference->data() + byteHolder.size(),
-                    (std::byte*)byteHolder.data());
-        }
-        std::istringstream stream(byteHolder);
-        if (file.Load(stream) != 0) {
-          printf("[WARN] Found nif %s in archive but could not open it!\n", loads[i].file.c_str());
-          return {};
-        }
-        break;
+      const auto& data = resolveFromArchives(fullpath);
+      const std::string stringInput(data.data(), data.data() + data.size());
+      std::istringstream stream(stringInput);
+      if (file.Load(stream) != 0) {
+        printf("[WARN] Found nif %s in archive but could not open it!\n",
+               loads[i].file.c_str());
+        return {};
       }
+
       if (!file.IsValid()) {
         printf("[WARN] Could not find nif file %s\n", loads[i].file.c_str());
         return {};
