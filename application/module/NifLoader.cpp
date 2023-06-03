@@ -51,7 +51,10 @@ Error NifModule::init() {
   nodeInfo.transforms.scale *= this->translationFactor;
   basicNifNode = ggm->addNode(&nodeInfo, 1);
 
-  ggm->addAssetResolver(&resolveFromArchives);
+  ggm->addAssetResolver(
+      [sizeOfAssetsDir = this->assetDirectory.size()](const std::string& name) {
+    return resolveFromArchives(name.substr(sizeOfAssetsDir));
+  });
 
   const auto api = ggm->getAPILayer();
   SamplerInfo samplerInfo{FilterSetting::LINEAR, FilterSetting::LINEAR,

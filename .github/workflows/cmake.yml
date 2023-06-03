@@ -8,6 +8,7 @@ on:
 
 env:
   BUILD_TYPE: Release
+  VULKAN_SDK: C:/VulkanSDK/1.3.250.0
 jobs:
   build_win:
     runs-on: windows-latest
