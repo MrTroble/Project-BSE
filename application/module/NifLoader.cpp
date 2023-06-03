@@ -36,7 +36,7 @@ std::vector<char> resolveFromArchives(const std::filesystem::path& fullpath) {
     } else {
       byteHolder =
           std::vector<char>((char*)reference->data(),
-                            (char*)reference->data() + byteHolder.size());
+                            (char*)reference->data() + reference->size());
     }
     return byteHolder;
   }
