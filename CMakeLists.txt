@@ -10,7 +10,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_compile_definitions(DEBUG=1)
 endif()
 
-if(true)
+if(false)
 add_compile_options("-fsanitize=address")
 add_link_options("-fsanitize=address")
 add_compile_definitions(_DISABLE_VECTOR_ANNOTATION=1)
