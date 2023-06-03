@@ -1,11 +1,12 @@
 #pragma once
 
-#include <Module.hpp>
-#include <cinttypes>
-#include <graphics/GameGraphicsModule.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <cinttypes>
+
+#include <Module.hpp>
+#include <graphics/GameGraphicsModule.hpp>
 
 namespace std {
 template <>

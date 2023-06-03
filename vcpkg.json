@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-  "name": "tgengine",
+  "name": "bse",
   "version": "1.0.0",
   "supports": "windows",
   "license": "Apache-2.0",

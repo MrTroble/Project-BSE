@@ -1,13 +1,14 @@
 #include "NifLoader.hpp"
 
+#include <algorithm>
+#include <string>
+#include <sstream>
+#include <filesystem>
+#include <bsa/bsa.hpp>
 #include <NifFile.hpp>
 #include <TGEngine.hpp>
 #include <Util.hpp>
-#include <algorithm>
 #include <graphics/vulkan/VulkanShaderPipe.hpp>
-#include <string>
-#include <bsa/bsa.hpp>
-#include <sstream>
 
 namespace tge::nif {
 
@@ -87,22 +88,41 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
   textureNames.reserve(32000);
 
   for (size_t i = 0; i < count; i++) {
+    if (filesByName.contains(loads[i].file)) continue;
     const std::filesystem::path fullpath(loads[i].file);
-    nifly::NifFile file(assetDirectory + loads[i].file);
-    if (!file.IsValid()) {
+    const std::filesystem::path assetPath(assetDirectory + loads[i].file);
+    nifly::NifFile file;
+    if (std::filesystem::exists(assetPath)) {
+      if (file.Load(assetPath) != 0) {
+        printf("[WARN] Found nif but failed to open %s!\n", loads[i].file.c_str());
+        return {};
+      }
+    } else {
+      const bsa::tes4::directory::key dictionaryKey(fullpath.parent_path().string());
+      const bsa::tes4::file::key fileKey(fullpath.filename().string());
       for (const auto& archive : archivesLoaded) {
-        const auto reference = archive[fullpath.stem().string()][fullpath.filename().string()];
+        const auto reference = archive[dictionaryKey][fileKey];
         if (!reference) continue;
         std::string byteHolder;
-        byteHolder.resize(reference->decompressed_size());
-        std::span<std::byte> byteInput((std::byte*)byteHolder.data(), byteHolder.size());
-        reference->decompress_into(bsa::tes4::version::sse, byteInput);
+        if (reference->compressed()) {
+          byteHolder.resize(reference->decompressed_size());
+          std::span<std::byte> byteInput((std::byte*)byteHolder.data(),
+                                         byteHolder.size());
+          reference->decompress_into(bsa::tes4::version::sse, byteInput);
+        } else {
+          byteHolder.resize(reference->size());
+          std::copy(reference->data(), reference->data() + byteHolder.size(),
+                    (std::byte*)byteHolder.data());
+        }
         std::istringstream stream(byteHolder);
-        file.Load(stream);
-        if (file.IsValid()) break;
+        if (file.Load(stream) != 0) {
+          printf("[WARN] Found nif %s in archive but could not open it!\n", loads[i].file.c_str());
+          return {};
+        }
+        break;
       }
       if (!file.IsValid()) {
-        printf("[WARN] Invalid nif file %s\n", loads[i].file.c_str());
+        printf("[WARN] Could not find nif file %s\n", loads[i].file.c_str());
         return {};
       }
     }

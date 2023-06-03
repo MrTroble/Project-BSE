@@ -1,9 +1,8 @@
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.15)
 
 project ("BSE" LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_COMPILER_FORCED TRUE)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 
 add_compile_definitions(APPLICATION_NAME="BSE")
 
@@ -11,12 +10,14 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_compile_definitions(DEBUG=1)
 endif()
 
-if(false)
+if(true)
 add_compile_options("-fsanitize=address")
 add_link_options("-fsanitize=address")
+add_compile_definitions(_DISABLE_VECTOR_ANNOTATION=1)
 endif()
 
-if(WIN32)  
+if(WIN32)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 add_link_options("/ignore:4099")
 else()
 add_compile_options("-fPIC")

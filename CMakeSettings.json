@@ -25,9 +25,13 @@
           "name": "VCPKG_MANIFEST_INSTALL",
           "value": "True",
           "type": "BOOL"
+        },
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static",
+          "type": "STRING"
         }
       ]
-
     },
     {
       "name": "x64-Release",
@@ -55,6 +59,11 @@
           "name": "VCPKG_MANIFEST_INSTALL",
           "value": "True",
           "type": "BOOL"
+        },
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static",
+          "type": "STRING"
         }
       ]
     },
@@ -84,6 +93,11 @@
           "name": "VCPKG_MANIFEST_INSTALL",
           "value": "True",
           "type": "BOOL"
+        },
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static",
+          "type": "STRING"
         }
       ]
     }

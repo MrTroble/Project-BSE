@@ -51,7 +51,7 @@ void test() {
 
   ReferenceLoad loadBSARef;
   loadBSARef.formKey = "testBSAForm";
-  loadBSARef.path = "souphot.nif";
+  loadBSARef.path = "meshes\\survival\\maginvhungerpenaltyspellart.nif";
   loadBSARef.transform = TGE_DEFAULT_TRANSFORM;
   loadReferences(1, &loadBSARef);
 }
