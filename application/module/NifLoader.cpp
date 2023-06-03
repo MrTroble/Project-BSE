@@ -159,7 +159,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
   texturePaths.resize(textureNames.size());
   std::transform(begin(textureNames), end(textureNames), begin(texturePaths),
                  [&](auto& str) { return this->assetDirectory + str; });
-  ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
+  const auto& values = ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
 
   std::vector<BufferInfo> dataInfos;
   dataInfos.reserve(count * count);

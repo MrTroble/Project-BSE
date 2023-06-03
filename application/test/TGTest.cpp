@@ -49,18 +49,34 @@ void test() {
   const auto ref = loadReferences(loads.size(), loads.data());
   printf("Loaded, %d\n", ref);
 
-  ReferenceLoad loadBSARef;
-  loadBSARef.formKey = "testBSAForm";
-  loadBSARef.path = "meshes\\survival\\maginvhungerpenaltyspellart.nif";
-  loadBSARef.transform = TGE_DEFAULT_TRANSFORM;
-  loadReferences(1, &loadBSARef);
+  ReferenceLoad loadBSARef[3];
+  loadBSARef[0].formKey = "testBSAForm";
+  loadBSARef[0].path = "meshes\\survival\\maginvhungerpenaltyspellart.nif";
+  loadBSARef[0].transform = TGE_DEFAULT_TRANSFORM;
+  loadBSARef[0].transform.translation.x = -300;
+  loadBSARef[0].transform.scale = vec3(0.3, 0.3, 0.3);
+
+  loadBSARef[1].formKey = "testBSACompressedWithTexturesForm";
+  loadBSARef[1].path = "meshes\\architecture\\whiterun\\wrhouse02.nif";
+  loadBSARef[1].transform = TGE_DEFAULT_TRANSFORM;
+  loadBSARef[1].transform.translation.x = -500;
+  loadBSARef[1].transform.scale = vec3(0.1, 0.1, 0.1);
+
+  loadBSARef[2].formKey = "testProblemNifForm";
+  loadBSARef[2].path = "dwerubblecolumn02.nif";
+  loadBSARef[2].transform = TGE_DEFAULT_TRANSFORM;
+  loadBSARef[2].transform.translation.x = -400;
+  loadBSARef[2].transform.scale = vec3(0.1, 0.1, 0.1);
+  loadReferences(3, loadBSARef);
 }
 
 int main(int argv, const char** in) {
   std::thread thread(&test);
   thread.detach();
   auto directory = "assets";
-  std::vector<char*> bsaHandles{(char*)"ccQDRSSE001-SurvivalMode.bsa"};
+  std::vector<char*> bsaHandles{(char*)"ccQDRSSE001-SurvivalMode.bsa",
+                                (char*)"Whiterun - Textures.bsa",
+                                (char*)"Whiterun.bsa"};
   InitConfig config{1, (char*)directory, bsaHandles.size(), bsaHandles.data()};
   return initTGEditor(&config);
 }
