@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "bse",
+  "builtin-baseline": "75059166857a374297e5edd6e1e7a60912907a46",
   "version": "1.0.0",
   "supports": "windows",
   "license": "Apache-2.0",
@@ -8,8 +9,6 @@
     "glslang",
     "glm",
     "imgui",
-    "vulkan-headers",
-    "rsm-bsa",
-    "nifly"
+    "rsm-bsa"
   ]
 }

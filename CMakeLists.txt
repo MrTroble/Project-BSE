@@ -11,9 +11,12 @@ add_compile_definitions(DEBUG=1)
 endif()
 
 if(false)
-add_compile_options("-fsanitize=address")
-add_link_options("-fsanitize=address")
+add_compile_options("/fsanitize=address")
+add_link_options("/fsanitize=address")
+if(true)
 add_compile_definitions(_DISABLE_VECTOR_ANNOTATION=1)
+add_compile_definitions(_DISABLE_STRING_ANNOTATION=1)
+endif()
 endif()
 
 if(WIN32)
@@ -24,9 +27,9 @@ add_compile_options("-fPIC")
 endif()
 
 add_subdirectory(TGEngine)
+add_subdirectory(nifly)
 
 find_package(bsa CONFIG REQUIRED)
-find_package(nifly CONFIG REQUIRED)
 
 add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp" "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/module/NifLoader.cpp" "interop/InternalInterop.cpp" "application/module/TGAppIO.cpp") 
 target_include_directories(TGInterOp PUBLIC "TGEngine/TGEngine/public" "$ENV{VULKAN_DIR}")

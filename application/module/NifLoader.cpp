@@ -1,14 +1,14 @@
 #include "NifLoader.hpp"
 
-#include <NifFile.hpp>
+#include <algorithm>
+#include <filesystem>
+#include <sstream>
+//
 #include <TGEngine.hpp>
 #include <Util.hpp>
-#include <algorithm>
-#include <bsa/bsa.hpp>
-#include <filesystem>
 #include <graphics/vulkan/VulkanShaderPipe.hpp>
-#include <sstream>
-#include <string>
+#include <bsa/tes4.hpp>
+#include <NifFile.hpp>
 
 namespace tge::nif {
 
@@ -20,10 +20,13 @@ NifModule* nifModule = new nif::NifModule();
 
 static std::vector<bsa::tes4::archive> archivesLoaded;
 
-std::vector<char> resolveFromArchives(const std::filesystem::path& fullpath) {
-  const bsa::tes4::directory::key dictionaryKey(
-      fullpath.parent_path().string());
-  const bsa::tes4::file::key fileKey(fullpath.filename().string());
+std::vector<char> resolveFromArchives(const std::string inputPathName) {
+  const std::filesystem::path fullpath(inputPathName);
+  const std::string value = fullpath.parent_path().string();
+  const bsa::tes4::directory::key dictionaryKey(std::move(value));
+  const std::string file = fullpath.filename().string();
+  const bsa::tes4::file::key fileKey(std::move(file));
+
   for (const auto& archive : archivesLoaded) {
     const auto reference = archive[dictionaryKey][fileKey];
     if (!reference) continue;
@@ -127,7 +130,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
         return {};
       }
     } else {
-      const auto& data = resolveFromArchives(fullpath);
+      const auto& data = resolveFromArchives(loads[i].file);
       if (!data.empty()) {
         const std::string stringInput(data.data(), data.data() + data.size());
         std::istringstream stream(stringInput, std::ios_base::binary);

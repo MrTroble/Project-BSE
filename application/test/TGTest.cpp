@@ -54,19 +54,19 @@ void test() {
   loadBSARef[0].path = "meshes\\survival\\maginvhungerpenaltyspellart.nif";
   loadBSARef[0].transform = TGE_DEFAULT_TRANSFORM;
   loadBSARef[0].transform.translation.x = -300;
-  loadBSARef[0].transform.scale = vec3(0.3, 0.3, 0.3);
+  loadBSARef[0].transform.scale = { 0.3f, 0.3f, 0.3f };
 
   loadBSARef[1].formKey = "testBSACompressedWithTexturesForm";
   loadBSARef[1].path = "meshes\\architecture\\whiterun\\wrhouse02.nif";
   loadBSARef[1].transform = TGE_DEFAULT_TRANSFORM;
   loadBSARef[1].transform.translation.x = -500;
-  loadBSARef[1].transform.scale = vec3(0.1, 0.1, 0.1);
+  loadBSARef[1].transform.scale = { 0.1f, 0.1f, 0.1f };
 
   loadBSARef[2].formKey = "testProblemNifForm";
   loadBSARef[2].path = "dwerubblecolumn02.nif";
   loadBSARef[2].transform = TGE_DEFAULT_TRANSFORM;
   loadBSARef[2].transform.translation.x = -400;
-  loadBSARef[2].transform.scale = vec3(0.1, 0.1, 0.1);
+  loadBSARef[2].transform.scale = { 0.1f, 0.1f, 0.1f };
   loadReferences(3, loadBSARef);
 }
 
