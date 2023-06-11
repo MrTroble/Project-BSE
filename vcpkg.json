@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "bse",
-  "builtin-baseline": "75059166857a374297e5edd6e1e7a60912907a46",
+  "builtin-baseline": "63366443439398a62afc9a63b34b9a3ba63b1cae",
   "version": "1.0.0",
   "supports": "windows",
   "license": "Apache-2.0",
