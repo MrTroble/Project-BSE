@@ -1,5 +1,6 @@
 #include "InternalInterop.hpp"
 
+#include <Util.hpp>
 #include <TGEngine.hpp>
 #include <mutex>
 #include <thread>
@@ -71,7 +72,13 @@ bool hide(const uint count, const FormKey* keys, const bool hide) {
 bool remove(const uint count, const FormKey* keys) {
   std::vector<size_t> ids(count);
   for (size_t i = 0; i < count; i++) {
-    ids[i] = REFERENCE_MAP[keys[i]];
+    const auto iterator = REFERENCE_MAP.find(keys[i]);
+    if (iterator == std::end(REFERENCE_MAP)) {
+      PLOG(plog::debug) << "Reference is not found name=" << keys[i] << std::endl;
+      ids[i] = SIZE_MAX;
+      continue;
+    }
+    ids[i] = iterator->second;
   }
   tge::nif::nifModule->remove(ids.size(), ids.data());
   return true;

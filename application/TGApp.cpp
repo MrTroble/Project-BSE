@@ -33,17 +33,21 @@ bool finishedLoading = false;
 std::mutex waitMutex;
 
 int initTGEditor(const InitConfig* config) {
-  if (config == nullptr) {
-    printf("[Error] Config must not be null!");
-    return -1;
-  }
-
-  if (config->version != 1) {
-    printf("[Error] Wrong version number in config!");
-    return -1;
-  }
-
   waitMutex.lock();
+  PLOG_DEBUG << config;
+  if (config == nullptr) {
+    PLOG(plog::fatal) << "Config must not be null!" << std::endl;
+    waitMutex.unlock();
+    return -1;
+  }
+
+  if (config->version != 2) {
+    PLOG(plog::fatal) << "Wrong version number in config!" << std::endl;
+    waitMutex.unlock();
+    return -1;
+  }
+
+  PLOG_DEBUG << config->sizeOfBSA;
   lateModules.push_back(guiModul);
   lateModules.push_back(ioModul);
   lateModules.push_back(tge::nif::nifModule);
@@ -52,6 +56,7 @@ int initTGEditor(const InitConfig* config) {
   char** namelist = config->bsaFiles;
   for (auto& name : tge::nif::nifModule->archiveNames) {
     name = std::string(*(namelist++));
+    PLOG_DEBUG << name;
   }
   auto& dir = tge::nif::nifModule->assetDirectory;
   if (dir.back() != END_CHARACTER) dir += END_CHARACTER;
@@ -59,7 +64,7 @@ int initTGEditor(const InitConfig* config) {
   const auto initResult = init();
   waitMutex.unlock();
   if (initResult != main::Error::NONE) {
-    printf("Error in init!");
+    PLOG(plog::fatal) << "Error in init!" << std::endl;
     return -1;
   }
   auto api = getAPILayer();
@@ -80,7 +85,7 @@ int initTGEditor(const InitConfig* config) {
   finishedLoading = true;
   const auto startResult = start();
   if (startResult != main::Error::NONE) {
-    printf("Error in start!");
+    PLOG(plog::fatal) << "Error in start!" << std::endl;
     return -1;
   }
   finishedLoading = false;

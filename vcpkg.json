@@ -9,6 +9,7 @@
     "glslang",
     "glm",
     "imgui",
-    "rsm-bsa"
+    "rsm-bsa",
+    "plog"
   ]
 }

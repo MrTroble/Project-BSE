@@ -4,11 +4,11 @@
 #include <filesystem>
 #include <sstream>
 //
+#include <NifFile.hpp>
 #include <TGEngine.hpp>
 #include <Util.hpp>
-#include <graphics/vulkan/VulkanShaderPipe.hpp>
 #include <bsa/tes4.hpp>
-#include <NifFile.hpp>
+#include <graphics/vulkan/VulkanShaderPipe.hpp>
 
 namespace tge::nif {
 
@@ -56,8 +56,8 @@ Error NifModule::init() {
 
   ggm->addAssetResolver(
       [sizeOfAssetsDir = this->assetDirectory.size()](const std::string& name) {
-    return resolveFromArchives(name.substr(sizeOfAssetsDir));
-  });
+        return resolveFromArchives(name.substr(sizeOfAssetsDir));
+      });
 
   const auto api = ggm->getAPILayer();
   SamplerInfo samplerInfo{FilterSetting::LINEAR, FilterSetting::LINEAR,
@@ -71,7 +71,8 @@ Error NifModule::init() {
     auto& archive = archivesLoaded[next++];
     archive.read(this->assetDirectory + name);
     if (archive.empty()) {
-      printf("[WARN] Archive empty after load [%s] !\n", name.c_str());
+      PLOG(plog::warning) << "Archive empty after load " << name << "!"
+                          << std::endl;
       return Error::NOT_INITIALIZED;
     }
   }
@@ -82,7 +83,12 @@ void NifModule::remove(const size_t size, const size_t* ids) {
   std::vector<TRenderHolder> values;
   values.resize(size);
   for (size_t i = 0; i < size; i++) {
-    values[i] = nodeIdToRender[ids[i]];
+    const size_t currentID = ids[i];
+    const auto iterator = nodeIdToRender.find(currentID);
+    if (iterator == std::end(nodeIdToRender)) {
+      PLOG(plog::debug) << "Current ID: " << currentID;
+    }
+    values[i] = iterator->second;
   }
   const auto api = getAPILayer();
   api->removeRender(values.size(), values.data());
@@ -106,7 +112,7 @@ static std::unordered_map<std::string, nifly::NifFile> filesByName;
 std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
                                     void* shaderPipe) {
   if (!finishedLoading) {
-    printf("[WARN] Call nif before loaded!\n");
+    PLOG(plog::warning) << "Call nif before loaded!" << std::endl;
     return {};
   }
   const auto api = getAPILayer();
@@ -125,8 +131,8 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     nifly::NifFile file;
     if (std::filesystem::exists(assetPath)) {
       if (file.Load(assetPath) != 0) {
-        printf("[WARN] Found nif but failed to open %s!\n",
-               loads[i].file.c_str());
+        PLOG(plog::warning)
+            << "Found nif but failed to open " << loads[i].file << "!" << std::endl;
         return {};
       }
     } else {
@@ -135,14 +141,16 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
         const std::string stringInput(data.data(), data.data() + data.size());
         std::istringstream stream(stringInput, std::ios_base::binary);
         if (file.Load(stream) != 0) {
-          printf("[WARN] Found nif %s in archive but could not open it!\n",
-                 loads[i].file.c_str());
+          PLOG(plog::warning)
+              << "Found nif " << loads[i].file
+              << " in archive but could not open it!" << std::endl;
           return {};
         }
       }
 
       if (!file.IsValid()) {
-        printf("[WARN] Could not find nif file %s\n", loads[i].file.c_str());
+        PLOG(plog::warning)
+            << "Could not find nif file " << loads[i].file << std::endl;
         return {};
       }
     }
@@ -162,7 +170,8 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
   texturePaths.resize(textureNames.size());
   std::transform(begin(textureNames), end(textureNames), begin(texturePaths),
                  [&](auto& str) { return this->assetDirectory + str; });
-  const auto& values = ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
+  const auto& values =
+      ggm->loadTextures(texturePaths, tge::graphics::LoadType::DDSPP);
 
   std::vector<BufferInfo> dataInfos;
   dataInfos.reserve(count * count);
@@ -194,7 +203,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     for (auto shape : shapes) {
       nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
       if (!bishape) {
-        printf("[WARN]: No BSTriShape!\n");
+        PLOG(plog::warning) << "No BSTriShape!";
         continue;
       }
       RenderInfo info;
