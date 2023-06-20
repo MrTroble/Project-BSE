@@ -78,5 +78,5 @@ int main(int argv, const char** in) {
                                 (char*)"Whiterun - Textures.bsa",
                                 (char*)"Whiterun.bsa"};
   InitConfig config{1, (char*)directory };
-  return initTGEditor(&config, bsaHandles.data(), bsaHandles.size());
+  return initTGEditor(&config, (const char**)bsaHandles.data(), bsaHandles.size());
 }
