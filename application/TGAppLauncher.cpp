@@ -3,5 +3,5 @@
 
 int main(const int count, const char** strings) {
 	const InitConfig config{ 1, (char*)"assets\\" };
-	return initTGEditor(&config);
+	return initTGEditor(&config, nullptr, 0);
 }
