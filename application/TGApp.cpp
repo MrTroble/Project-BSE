@@ -32,7 +32,8 @@ using namespace tge;
 bool finishedLoading = false;
 std::mutex waitMutex;
 
-int initTGEditor(const InitConfig* config) {
+int initTGEditor(const InitConfig* config, const char** bsaFiles,
+                 const size_t sizeOfBSAs) {
   waitMutex.lock();
   PLOG_DEBUG << config;
   if (config == nullptr) {
@@ -47,13 +48,12 @@ int initTGEditor(const InitConfig* config) {
     return -1;
   }
 
-  PLOG_DEBUG << config->sizeOfBSA;
   lateModules.push_back(guiModul);
   lateModules.push_back(ioModul);
   lateModules.push_back(tge::nif::nifModule);
   tge::nif::nifModule->assetDirectory = config->assetDirectory;
-  tge::nif::nifModule->archiveNames.resize(config->sizeOfBSA);
-  char** namelist = config->bsaFiles;
+  tge::nif::nifModule->archiveNames.resize(sizeOfBSAs);
+  const char** namelist = bsaFiles;
   for (auto& name : tge::nif::nifModule->archiveNames) {
     name = std::string(*(namelist++));
     PLOG_DEBUG << name;
