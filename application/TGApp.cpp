@@ -37,13 +37,13 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   waitMutex.lock();
   PLOG_DEBUG << config;
   if (config == nullptr) {
-    PLOG(plog::fatal) << "Config must not be null!" << std::endl;
+    std::cerr << "Config must not be null!" << std::endl;
     waitMutex.unlock();
     return -1;
   }
 
   if (config->version != 2) {
-    PLOG(plog::fatal) << "Wrong version number in config!" << std::endl;
+    std::cerr << "Wrong version number in config!" << std::endl;
     waitMutex.unlock();
     return -1;
   }
@@ -56,7 +56,6 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   const char** namelist = bsaFiles;
   for (auto& name : tge::nif::nifModule->archiveNames) {
     name = std::string(*(namelist++));
-    PLOG_DEBUG << name;
   }
   auto& dir = tge::nif::nifModule->assetDirectory;
   if (dir.back() != END_CHARACTER) dir += END_CHARACTER;
@@ -64,7 +63,7 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   const auto initResult = init();
   waitMutex.unlock();
   if (initResult != main::Error::NONE) {
-    PLOG(plog::fatal) << "Error in init!" << std::endl;
+    PLOG_FATAL << "Error in init!";
     return -1;
   }
   auto api = getAPILayer();
@@ -85,7 +84,7 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   finishedLoading = true;
   const auto startResult = start();
   if (startResult != main::Error::NONE) {
-    PLOG(plog::fatal) << "Error in start!" << std::endl;
+    PLOG_FATAL << "Error in start!";
     return -1;
   }
   finishedLoading = false;
