@@ -71,8 +71,7 @@ Error NifModule::init() {
     auto& archive = archivesLoaded[next++];
     archive.read(this->assetDirectory + name);
     if (archive.empty()) {
-      PLOG(plog::warning) << "Archive empty after load " << name << "!"
-                          << std::endl;
+      PLOG_WARNING << "Archive empty after load " << name << "!";
       return Error::NOT_INITIALIZED;
     }
   }
@@ -86,7 +85,8 @@ void NifModule::remove(const size_t size, const size_t* ids) {
     const size_t currentID = ids[i];
     const auto iterator = nodeIdToRender.find(currentID);
     if (iterator == std::end(nodeIdToRender)) {
-      PLOG(plog::debug) << "Current ID: " << currentID;
+      PLOG_DEBUG << "Could not find " << currentID << " in translation table!";
+      return;
     }
     values[i] = iterator->second;
   }
@@ -112,7 +112,7 @@ static std::unordered_map<std::string, nifly::NifFile> filesByName;
 std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
                                     void* shaderPipe) {
   if (!finishedLoading) {
-    PLOG(plog::warning) << "Call nif before loaded!" << std::endl;
+    std::cerr << "Call nif before loaded!";
     return {};
   }
   const auto api = getAPILayer();
@@ -131,8 +131,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     nifly::NifFile file;
     if (std::filesystem::exists(assetPath)) {
       if (file.Load(assetPath) != 0) {
-        PLOG(plog::warning)
-            << "Found nif but failed to open " << loads[i].file << "!" << std::endl;
+        PLOG_WARNING << "Found nif but failed to open " << loads[i].file << "!";
         return {};
       }
     } else {
@@ -141,16 +140,14 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
         const std::string stringInput(data.data(), data.data() + data.size());
         std::istringstream stream(stringInput, std::ios_base::binary);
         if (file.Load(stream) != 0) {
-          PLOG(plog::warning)
-              << "Found nif " << loads[i].file
-              << " in archive but could not open it!" << std::endl;
+          PLOG_WARNING << "Found nif " << loads[i].file
+                       << " in archive but could not open it!";
           return {};
         }
       }
 
       if (!file.IsValid()) {
-        PLOG(plog::warning)
-            << "Could not find nif file " << loads[i].file << std::endl;
+        PLOG_WARNING << "Could not find nif file " << loads[i].file;
         return {};
       }
     }
@@ -203,7 +200,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     for (auto shape : shapes) {
       nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
       if (!bishape) {
-        PLOG(plog::warning) << "No BSTriShape!";
+        PLOG_WARNING << "No BSTriShape!";
         continue;
       }
       RenderInfo info;

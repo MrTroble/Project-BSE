@@ -47,8 +47,10 @@ jobs:
         with:
           name: TGAppWindows
           path: |
-            ${{github.workspace}}\build\Release\TG*
-            ${{github.workspace}}\build\Release\assets
+            ${{github.workspace}}\build\Release\TGA*
+            ${{github.workspace}}\build\Release\TGI*
+            ${{github.workspace}}\build\Release\assets\*.frag
+            ${{github.workspace}}\build\Release\assets\*.vert
           if-no-files-found: error
           
   build_linux:

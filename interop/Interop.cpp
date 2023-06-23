@@ -27,7 +27,8 @@ std::vector<LoadFinishedCallback> loadFinished{};
   return true;
 
 #define ASSERT_VALID_POINTER(cCount, cPointer) \
-  if (cPointer == nullptr && cCount > 0) return false;
+  if (cPointer == nullptr && cCount > 0) return false;\
+  if (cCount == 0) return true;
 
 bool addLoadCallback(LoadCallback callback) {
   ADD_OR_RETURN_ON_FAIL(loadCallbacks, callback);

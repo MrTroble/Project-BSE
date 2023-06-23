@@ -74,7 +74,7 @@ bool remove(const uint count, const FormKey* keys) {
   for (size_t i = 0; i < count; i++) {
     const auto iterator = REFERENCE_MAP.find(keys[i]);
     if (iterator == std::end(REFERENCE_MAP)) {
-      PLOG(plog::debug) << "Reference is not found name=" << keys[i] << std::endl;
+      PLOG_DEBUG << "Reference is not found name=" << keys[i];
       ids[i] = SIZE_MAX;
       continue;
     }

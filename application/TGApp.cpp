@@ -83,10 +83,6 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
 
   finishedLoading = true;
   const auto startResult = start();
-  if (startResult != main::Error::NONE) {
-    PLOG_FATAL << "Error in start!";
-    return -1;
-  }
   finishedLoading = false;
   return (uint32_t)startResult;
 }
