@@ -69,7 +69,12 @@ Error NifModule::init() {
   size_t next = 0;
   for (const auto& name : archiveNames) {
     auto& archive = archivesLoaded[next++];
-    archive.read(this->assetDirectory + name);
+    try {
+      archive.read(this->assetDirectory + name);
+    } catch (...) {
+      PLOG_ERROR << "Archive loading failed for " << name << "!";
+      return Error::NOT_INITIALIZED;
+    }
     if (archive.empty()) {
       PLOG_WARNING << "Archive empty after load " << name << "!";
       return Error::NOT_INITIALIZED;
