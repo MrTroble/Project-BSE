@@ -310,3 +310,10 @@ dependencies/deps.zip
 /out/install/x64-Debug
 /out
 /vcpkg_installed
+
+/application/assets/ccQDRSSE001-SurvivalMode.bsa
+/application/assets/dwerubblecolumn02.nif
+/application/assets/textures/architecture/whiterun
+/application/assets/Whiterun - Textures.bsa
+/application/assets/Whiterun.bsa
+/application/assets/wrhouse02.nif
