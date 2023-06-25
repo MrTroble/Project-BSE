@@ -86,7 +86,7 @@ bool remove(const uint count, const FormKey* keys) {
 
 bool select(const uint count, const FormKey* keys) {
   for (size_t i = 0; i < count; i++) {
-    printf("%s\n", keys[i]);
+    PLOG_DEBUG << keys[i];
   }
   return true;
 }

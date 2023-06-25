@@ -42,7 +42,7 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
     return -1;
   }
 
-  if (config->version != 2) {
+  if (config->version != CURRENT_INIT_VERSION) {
     std::cerr << "Wrong version number in config!" << std::endl;
     waitMutex.unlock();
     return -1;

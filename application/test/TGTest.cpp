@@ -77,6 +77,6 @@ int main(int argv, const char** in) {
   std::vector<char*> bsaHandles{(char*)"ccQDRSSE001-SurvivalMode.bsa",
                                 (char*)"Whiterun - Textures.bsa",
                                 (char*)"Whiterun.bsa"};
-  InitConfig config{1, (char*)directory };
+  InitConfig config{CURRENT_INIT_VERSION, (char*)directory};
   return initTGEditor(&config, (const char**)bsaHandles.data(), bsaHandles.size());
 }
