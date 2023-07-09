@@ -36,7 +36,7 @@ jobs:
         id: cache-vcpkg
         uses: actions/cache@v1
         with:
-          path: "${{github.workspace}}\vcpkg"
+          path: "${{github.workspace}}\\vcpkg"
           key: vcpkg-cache
       - name: Get VCPKG
         if: steps.cache-vcpkg-sdk.outputs.cache-hit != 'true'
