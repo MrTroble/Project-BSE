@@ -1,14 +1,15 @@
 #include "TGAppIO.hpp"
+#include "TGAppIO.hpp"
 
 #include <TGEngine.hpp>
 #include <graphics/vulkan/VulkanModuleDef.hpp>
 
 #include "../../interop/InternalInterop.hpp"
 
-tge::main::Error TGAppIO::init() {
-  auto api = (tge::graphics::VulkanGraphicsModule*)tge::main::getAPILayer()->backend();
-  this->imageID = api->roughnessMetallicImage;
-  return tge::io::IOModule::init();
+void TGAppIO::getImageIDFromBackend() {
+  auto api =
+      (tge::graphics::VulkanGraphicsModule*)tge::main::getAPILayer()->backend();
+  this->imageID = api->internalImageData[3];
 }
 
 void TGAppIO::selectInternal() {

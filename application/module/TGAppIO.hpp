@@ -13,18 +13,23 @@ class TGAppIO : public tge::io::IOModule {
   std::vector<size_t> selectedIDs;
   tge::graphics::GameGraphicsModule* ggm;
   size_t nodeID;
-  size_t imageID;
+  tge::graphics::TTextureHolder imageID;
+  tge::graphics::TDataHolder dataHolder;
   tge::graphics::NodeTransform transform;
   glm::vec2 vec;
   glm::vec3 cache{};
-  tge::graphics::CacheIndex index;
   bool pressedMiddle = false;
   float scale = 1;
   std::array<bool, 255> stack = {false};
   bool pressedLeft = false;
   bool pressedShift = false;
 
-  tge::main::Error init() override;
+  void getImageIDFromBackend();
+
+  tge::main::Error init() override  {
+    getImageIDFromBackend();
+    return tge::io::IOModule::init();
+  }
 
   void selectInternal();
 
@@ -55,7 +60,8 @@ class TGAppIO : public tge::io::IOModule {
 
     if (pressedLeft) {
       pressedLeft = false;
-      const auto imageData = ggm->getAPILayer()->getImageData(imageID, &index);
+      const auto [imageData, internalDataHolder] = ggm->getAPILayer()->getImageData(imageID, dataHolder);
+      dataHolder = internalDataHolder;
       const auto bounds = ggm->getAPILayer()->getRenderExtent();
       const auto fbuffer = (float*)imageData.data();
       const auto offset = (size_t)(bounds.x * vec.y) + (size_t)vec.x;
@@ -99,7 +105,8 @@ class TGAppIO : public tge::io::IOModule {
     const auto extent = ggm->getAPILayer()->getRenderExtent();
     ggm->updateViewMatrix(glm::perspective(
         glm::radians(45.0f), extent.x / extent.y, 0.01f, 10000.0f));
-    index.buffer = tge::graphics::TDataHolder();
-    // TODO delete old buffer
+    dataHolder = tge::graphics::TDataHolder();
+    getImageIDFromBackend();
+    // TODO Remove buffer;
   }
 };
