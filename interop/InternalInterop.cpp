@@ -91,6 +91,8 @@ bool select(const uint count, const FormKey* keys) {
   return true;
 }
 
+bool terrain(const uint count, const float* keys) { return false; }
+
 bool internalSelect(const size_t count, const size_t* ids) {
   std::vector<FormKey> vector(count);
   std::transform(ids, ids + count, vector.begin(), [](const auto id) {

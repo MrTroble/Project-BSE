@@ -14,6 +14,9 @@ bool hide(const uint count, const FormKey* keys, bool hide);
 bool remove(const uint count, const FormKey* keys);
 
 bool select(const uint count, const FormKey* keys);
- 
+
+bool terrain(const uint count, const float* keys);
+
 bool internalSelect(const size_t count, const size_t* ids);
+
 }  // namespace tge::interop

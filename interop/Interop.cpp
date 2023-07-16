@@ -10,6 +10,7 @@ std::vector<FormKeyCallback> deleteCallbacks{&tge::interop::remove};
 std::vector<UpdateCallback> updateCallbacks{&tge::interop::update};
 std::vector<HideCallback> hideCallbacks{&tge::interop::hide};
 std::vector<FormKeyCallback> selectCallbacks{&tge::interop::select};
+std::vector<TerrainAddCallback> terrainCallbacks{&tge::interop::terrain};
 std::vector<LoadFinishedCallback> loadFinished{};
 
 #define ADD_OR_RETURN_ON_FAIL(cCallbackVector, cCallbackPtr)   \
@@ -26,8 +27,8 @@ std::vector<LoadFinishedCallback> loadFinished{};
     if (!callback(__VA_ARGS__)) return false; \
   return true;
 
-#define ASSERT_VALID_POINTER(cCount, cPointer) \
-  if (cPointer == nullptr && cCount > 0) return false;\
+#define ASSERT_VALID_POINTER(cCount, cPointer)         \
+  if (cPointer == nullptr && cCount > 0) return false; \
   if (cCount == 0) return true;
 
 bool addLoadCallback(LoadCallback callback) {
@@ -54,9 +55,12 @@ bool addSelectCallback(FormKeyCallback callback) {
   ADD_OR_RETURN_ON_FAIL(selectCallbacks, callback);
 }
 
+bool addTerrainCallback(TerrainAddCallback callback) {
+  ADD_OR_RETURN_ON_FAIL(terrainCallbacks, callback);
+}
+
 void callLoadFinishedCallback() {
-  for (auto load : loadFinished) 
-      load();
+  for (auto load : loadFinished) load();
 }
 
 bool loadReferences(uint count, ReferenceLoad* load) {
@@ -72,6 +76,11 @@ bool updateReferences(uint count, ReferenceUpdate* keys) {
 bool hideReferences(uint count, FormKey* keys, bool hide) {
   ASSERT_VALID_POINTER(count, keys);
   CALL_FOR_EACH(hideCallbacks, count, keys, hide);
+}
+
+bool loadTerrain(uint pointSize, float* buffer) {
+  ASSERT_VALID_POINTER(pointSize, buffer);
+  CALL_FOR_EACH(terrainCallbacks, pointSize, buffer);
 }
 
 bool deleteReferences(uint count, FormKey* keys) {

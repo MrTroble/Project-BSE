@@ -50,6 +50,8 @@ typedef bool (*UpdateCallback)(const uint count, const ReferenceUpdate* keys);
 typedef bool (*HideCallback)(const uint count, const FormKey* keys,
                              const bool hide);
 typedef bool (*FormKeyCallback)(const uint count, const FormKey* keys);
+typedef bool (*FormKeyCallback)(const uint count, const FormKey* keys);
+typedef bool (*TerrainAddCallback)(const uint pointSize, const float* buffer);
 typedef bool (*LoadFinishedCallback)(void);
 
 /*
@@ -70,15 +72,17 @@ TGE_DLLEXPORT bool deleteReferences(uint count, FormKey* keys);
 
 TGE_DLLEXPORT bool selectReferences(uint count, FormKey* keys);
 
+TGE_DLLEXPORT bool loadTerrain(uint pointSize, float* buffer);
+
 /*
  * With the add[...]Callback functions you can add your callback functions to
- * the system Those are called when the according event occures
+ * the system Those are called when the according event occurs
  *
  * returns true if and only if the callback was actually added.
  * callbacks cannot be added more then once hence this method returns false if
  * the callback was already added
  *
- * Implicite: callback might not be null
+ * Implicit: callback might not be null
  */
 TGE_DLLEXPORT bool addLoadCallback(LoadCallback callback);
 
@@ -91,5 +95,7 @@ TGE_DLLEXPORT bool addDeleteCallback(FormKeyCallback callback);
 TGE_DLLEXPORT bool addLoadFinishedCallback(LoadFinishedCallback callback);
 
 TGE_DLLEXPORT bool addSelectCallback(FormKeyCallback callback);
+
+TGE_DLLEXPORT bool addTerrainCallback(TerrainAddCallback callback);
 
 void callLoadFinishedCallback();
