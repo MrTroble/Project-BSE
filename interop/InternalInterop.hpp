@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+
 #include "Interop.hpp"
 
 namespace tge::interop {
@@ -15,7 +16,7 @@ bool remove(const uint count, const FormKey* keys);
 
 bool select(const uint count, const FormKey* keys);
 
-bool terrain(const uint count, const float* keys);
+bool terrain(const uint count, const TerrainInfo* info, float* buffer);
 
 bool internalSelect(const size_t count, const size_t* ids);
 

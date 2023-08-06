@@ -12,6 +12,7 @@
 
 typedef const char* FormKey;
 typedef unsigned int uint;
+typedef unsigned long ulong;
 
 struct vec3 {
   float x;
@@ -36,6 +37,35 @@ struct ReferenceLoad {
 
 enum class UpdateType { TRANSFORM, PATH };
 
+struct SETextureSet {
+  const char* diffuse;
+  const char* normal;
+  const char* specular;
+  const char* environmentMask;
+  const char* height;
+  const char* environment;
+  const char* multilayer;
+  const char* emissive;
+};
+
+struct TerrainInfo {
+  float x;           // Local editor space offset
+  float y;           // Local editor space offset
+  ulong point_size;  // Length of one cell = 33
+
+  ulong positionBegin;  // first index of the positional data in buffer of this
+                        // cell
+  // normal data and color data is passed as 3 floats per point to build the
+  // coresponding vec
+  ulong normalBegin;  // first index of the normal data in buffer of this cell
+  ulong colorBegin;   // first index of the color data in buffer of this cell
+
+  SETextureSet topLeft;
+  SETextureSet bottomLeft;
+  SETextureSet topRight;
+  SETextureSet bottomRight;
+};
+
 struct ReferenceUpdate {
   FormKey formKey;
   UpdateType update;
@@ -51,7 +81,8 @@ typedef bool (*HideCallback)(const uint count, const FormKey* keys,
                              const bool hide);
 typedef bool (*FormKeyCallback)(const uint count, const FormKey* keys);
 typedef bool (*FormKeyCallback)(const uint count, const FormKey* keys);
-typedef bool (*TerrainAddCallback)(const uint pointSize, const float* buffer);
+typedef bool (*TerrainAddCallback)(const uint count, const TerrainInfo* info,
+                                   float* buffer);
 typedef bool (*LoadFinishedCallback)(void);
 
 /*
@@ -72,7 +103,7 @@ TGE_DLLEXPORT bool deleteReferences(uint count, FormKey* keys);
 
 TGE_DLLEXPORT bool selectReferences(uint count, FormKey* keys);
 
-TGE_DLLEXPORT bool loadTerrain(uint pointSize, float* buffer);
+TGE_DLLEXPORT bool loadTerrain(uint count, TerrainInfo* info, float* buffer);
 
 /*
  * With the add[...]Callback functions you can add your callback functions to

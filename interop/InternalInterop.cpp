@@ -1,7 +1,8 @@
 #include "InternalInterop.hpp"
 
-#include <Util.hpp>
 #include <TGEngine.hpp>
+#include <Util.hpp>
+#include <array>
 #include <mutex>
 #include <thread>
 #include <unordered_map>
@@ -91,7 +92,31 @@ bool select(const uint count, const FormKey* keys) {
   return true;
 }
 
-bool terrain(const uint count, const float* keys) { return false; }
+bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
+  using namespace tge::graphics;
+  std::vector<BufferInfo> bufferHolder;
+  std::vector<std::vector<uint32_t>> indexBufferHolder;
+  bufferHolder.reserve(count * 4);
+  indexBufferHolder.resize(count);
+  for (size_t i = 0; i < count; i++) {
+    const TerrainInfo& info = infos[i];
+    const auto pointCount = info.point_size * info.point_size;
+    auto& indexes = indexBufferHolder[i];
+    indexes.reserve(pointCount);
+    const auto byteSize = pointCount * sizeof(float);
+    bufferHolder.push_back(BufferInfo{bufferIn + info.positionBegin, byteSize,
+                                      tge::graphics::DataType::VertexData});
+    bufferHolder.emplace_back(bufferIn + info.normalBegin, byteSize * 3,
+                              tge::graphics::DataType::VertexData);
+    bufferHolder.emplace_back(bufferIn + info.colorBegin, byteSize * 3,
+                              tge::graphics::DataType::VertexData);
+    bufferHolder.emplace_back(indexes.data(), indexes.size(),
+                              tge::graphics::DataType::IndexData);
+  }
+  auto api = tge::main::getAPILayer();
+  api->pushData(bufferHolder.size(), bufferHolder.data());
+  return true;
+}
 
 bool internalSelect(const size_t count, const size_t* ids) {
   std::vector<FormKey> vector(count);

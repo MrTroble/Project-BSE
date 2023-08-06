@@ -78,9 +78,10 @@ bool hideReferences(uint count, FormKey* keys, bool hide) {
   CALL_FOR_EACH(hideCallbacks, count, keys, hide);
 }
 
-bool loadTerrain(uint pointSize, float* buffer) {
-  ASSERT_VALID_POINTER(pointSize, buffer);
-  CALL_FOR_EACH(terrainCallbacks, pointSize, buffer);
+bool loadTerrain(uint count, TerrainInfo* info, float* buffer) {
+  ASSERT_VALID_POINTER(count, buffer);
+  ASSERT_VALID_POINTER(count, info);
+  CALL_FOR_EACH(terrainCallbacks, count, info, buffer);
 }
 
 bool deleteReferences(uint count, FormKey* keys) {
