@@ -92,29 +92,77 @@ bool select(const uint count, const FormKey* keys) {
   return true;
 }
 
+constexpr size_t AMOUNT_OF = 64;
+
 bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
   using namespace tge::graphics;
   std::vector<BufferInfo> bufferHolder;
+  std::vector<std::vector<glm::vec3>> positionHolder;
   std::vector<std::vector<uint32_t>> indexBufferHolder;
   bufferHolder.reserve(count * 4);
   indexBufferHolder.resize(count);
+  positionHolder.resize(count);
   for (size_t i = 0; i < count; i++) {
     const TerrainInfo& info = infos[i];
     const auto pointCount = info.point_size * info.point_size;
     auto& indexes = indexBufferHolder[i];
     indexes.reserve(pointCount);
+    auto& positions = positionHolder[i];
+    positions.resize(pointCount);
+
+    auto heights = bufferIn + info.positionBegin;
+    for (size_t x = 0; x < info.point_size; x++) {
+      for (size_t y = 0; y < info.point_size; y++) {
+        const auto value = x + y * info.point_size;
+        positions[value] = glm::vec3(x * AMOUNT_OF + info.x, heights[value],
+                                     y * AMOUNT_OF + info.y);
+      }
+    }
+
+    for (size_t x = 0; x < info.point_size - 1; x++) {
+      for (size_t y = 0; y < info.point_size - 1; y++) {
+        const auto next = y * info.point_size;
+        const auto nextLine = (y + 1) * info.point_size;
+        indexes.push_back(x + next);
+        indexes.push_back(x + nextLine);
+        indexes.push_back(x + nextLine + 1);
+        indexes.push_back(x + next + 1);
+      }
+    }
+
     const auto byteSize = pointCount * sizeof(float);
-    bufferHolder.push_back(BufferInfo{bufferIn + info.positionBegin, byteSize,
-                                      tge::graphics::DataType::VertexData});
+    bufferHolder.emplace_back(positions.data(), byteSize, DataType::VertexData);
     bufferHolder.emplace_back(bufferIn + info.normalBegin, byteSize * 3,
-                              tge::graphics::DataType::VertexData);
+                              DataType::VertexData);
     bufferHolder.emplace_back(bufferIn + info.colorBegin, byteSize * 3,
-                              tge::graphics::DataType::VertexData);
+                              DataType::VertexData);
     bufferHolder.emplace_back(indexes.data(), indexes.size(),
-                              tge::graphics::DataType::IndexData);
+                              DataType::IndexData);
   }
   auto api = tge::main::getAPILayer();
-  api->pushData(bufferHolder.size(), bufferHolder.data());
+
+  auto data = api->pushData(bufferHolder.size(), bufferHolder.data());
+
+  std::thread thread(
+      [dataHolder = std::move(data),
+       terrains = std::vector(infos, infos + count), api = api]() {
+        const auto ggm = api->getGraphicsModule();
+        auto iterator = dataHolder.begin();
+        std::vector<RenderInfo> info;
+        info.resize(terrains.size());
+        auto render = info.begin();
+        for (const auto& terrain : terrains) {
+          auto& renderInfo = *render;
+          renderInfo.vertexBuffer = std::vector(iterator, iterator + 3);
+          renderInfo.indexBuffer = iterator[3];
+          renderInfo.indexCount =
+              (terrain.point_size - 1) * (terrain.point_size - 1);
+          renderInfo.materialId = ggm->defaultMaterial;
+          iterator += 4;
+        }
+        api->pushRender(info.size(), info.data());
+      });
+  thread.detach();
   return true;
 }
 

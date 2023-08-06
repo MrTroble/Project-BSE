@@ -49,9 +49,9 @@ struct SETextureSet {
 };
 
 struct TerrainInfo {
-  float x;           // Local editor space offset
-  float y;           // Local editor space offset
-  ulong point_size;  // Length of one cell = 33
+  float x = 0;           // Local editor space offset
+  float y = 0;           // Local editor space offset
+  ulong point_size = 33;  // Length of one cell = 33
 
   ulong positionBegin;  // first index of the positional data in buffer of this
                         // cell

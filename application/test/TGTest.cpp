@@ -54,20 +54,44 @@ void test() {
   loadBSARef[0].path = "meshes\\survival\\maginvhungerpenaltyspellart.nif";
   loadBSARef[0].transform = TGE_DEFAULT_TRANSFORM;
   loadBSARef[0].transform.translation.x = -300;
-  loadBSARef[0].transform.scale = { 0.3f, 0.3f, 0.3f };
+  loadBSARef[0].transform.scale = {0.3f, 0.3f, 0.3f};
 
   loadBSARef[1].formKey = "testBSACompressedWithTexturesForm";
   loadBSARef[1].path = "meshes\\architecture\\whiterun\\wrhouse02.nif";
   loadBSARef[1].transform = TGE_DEFAULT_TRANSFORM;
   loadBSARef[1].transform.translation.x = -500;
-  loadBSARef[1].transform.scale = { 0.1f, 0.1f, 0.1f };
+  loadBSARef[1].transform.scale = {0.1f, 0.1f, 0.1f};
 
   loadBSARef[2].formKey = "testProblemNifForm";
   loadBSARef[2].path = "dwerubblecolumn02.nif";
   loadBSARef[2].transform = TGE_DEFAULT_TRANSFORM;
   loadBSARef[2].transform.translation.x = -400;
-  loadBSARef[2].transform.scale = { 0.1f, 0.1f, 0.1f };
+  loadBSARef[2].transform.scale = {0.1f, 0.1f, 0.1f};
   loadReferences(3, loadBSARef);
+
+  std::vector<float> buffer;
+  buffer.resize(33 * 33 * 7);
+  auto position = buffer.begin();
+  auto normal = position + 33 * 33;
+  auto color = position + 33 * 33 * 4;
+  for (size_t x = 0; x < 33; x++) {
+    for (size_t y = 0; y < 33; y++) {
+      const auto value = x / 66.0f + y / 66.0f;
+      *position = value;
+      color[0] = value;
+      color[1] = value;
+      color[2] = value;
+      normal += 3;
+      color += 3;
+      position++;
+    }
+  }
+  TerrainInfo info;
+  info.positionBegin = 0;
+  info.colorBegin = 33 * 33 * 4;
+  info.normalBegin = 33 * 33;
+  info.point_size = 33;
+  loadTerrain(1, &info, buffer.data());
 }
 
 int main(int argv, const char** in) {
@@ -78,5 +102,6 @@ int main(int argv, const char** in) {
                                 (char*)"Whiterun - Textures.bsa",
                                 (char*)"Whiterun.bsa"};
   InitConfig config{CURRENT_INIT_VERSION, (char*)directory};
-  return initTGEditor(&config, (const char**)bsaHandles.data(), bsaHandles.size());
+  return initTGEditor(&config, (const char**)bsaHandles.data(),
+                      bsaHandles.size());
 }
