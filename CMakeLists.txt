@@ -31,7 +31,7 @@ add_subdirectory(nifly)
 
 find_package(bsa CONFIG REQUIRED)
 
-add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp" "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/module/NifLoader.cpp" "interop/InternalInterop.cpp" "application/module/TGAppIO.cpp") 
+add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp" "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/module/NifLoader.cpp" "interop/InternalInterop.cpp" "application/module/TGAppIO.cpp" "application/module/TerrainModule.cpp") 
 target_include_directories(TGInterOp PUBLIC "TGEngine/TGEngine/public" "$ENV{VULKAN_DIR}")
 target_link_libraries(TGInterOp PUBLIC tc::TGEngine)
 target_link_libraries(TGInterOp PRIVATE bsa::bsa nifly)

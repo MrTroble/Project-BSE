@@ -21,6 +21,7 @@
 #include "module/NifLoader.hpp"
 #include "module/TGAppGUI.hpp"
 #include "module/TGAppIO.hpp"
+#include "module/TerrainModule.hpp"
 
 #undef min
 #undef max
@@ -35,7 +36,7 @@ std::mutex waitMutex;
 int initTGEditor(const InitConfig* config, const char** bsaFiles,
                  const size_t sizeOfBSAs) {
   waitMutex.lock();
-  PLOG_DEBUG << config;
+
   if (config == nullptr) {
     std::cerr << "Config must not be null!" << std::endl;
     waitMutex.unlock();
@@ -51,6 +52,8 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   lateModules.push_back(guiModul);
   lateModules.push_back(ioModul);
   lateModules.push_back(tge::nif::nifModule);
+  lateModules.push_back(terrainModule);
+  terrainModule->api = getAPILayer();
   tge::nif::nifModule->assetDirectory = config->assetDirectory;
   tge::nif::nifModule->archiveNames.resize(sizeOfBSAs);
   const char** namelist = bsaFiles;

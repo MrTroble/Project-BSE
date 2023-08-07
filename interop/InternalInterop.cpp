@@ -8,7 +8,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../application/TGApp.hpp"
 #include "../application/module/NifLoader.hpp"
+#include "../application/module/TerrainModule.hpp"
 
 namespace tge::interop {
 
@@ -102,6 +104,8 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
   bufferHolder.reserve(count * 4);
   indexBufferHolder.resize(count);
   positionHolder.resize(count);
+  std::vector<TerrainInfoInternal> cornerSets;
+  cornerSets.resize(count);
   for (size_t i = 0; i < count; i++) {
     const TerrainInfo& info = infos[i];
     const auto pointCount = info.point_size * info.point_size;
@@ -109,6 +113,8 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
     indexes.reserve(pointCount);
     auto& positions = positionHolder[i];
     positions.resize(pointCount);
+
+    cornerSets[i] = {info.cornerSets, info.point_size};
 
     auto heights = bufferIn + info.positionBegin;
     for (size_t x = 0; x < info.point_size; x++) {
@@ -143,25 +149,8 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
 
   auto data = api->pushData(bufferHolder.size(), bufferHolder.data());
 
-  std::thread thread(
-      [dataHolder = std::move(data),
-       terrains = std::vector(infos, infos + count), api = api]() {
-        const auto ggm = api->getGraphicsModule();
-        auto iterator = dataHolder.begin();
-        std::vector<RenderInfo> info;
-        info.resize(terrains.size());
-        auto render = info.begin();
-        for (const auto& terrain : terrains) {
-          auto& renderInfo = *render;
-          renderInfo.vertexBuffer = std::vector(iterator, iterator + 3);
-          renderInfo.indexBuffer = iterator[3];
-          renderInfo.indexCount =
-              (terrain.point_size - 1) * (terrain.point_size - 1);
-          renderInfo.materialId = ggm->defaultMaterial;
-          iterator += 4;
-        }
-        api->pushRender(info.size(), info.data());
-      });
+  std::thread thread(&TerrainModule::loadTerrainSE, terrainModule, cornerSets,
+                     data);
   thread.detach();
   return true;
 }

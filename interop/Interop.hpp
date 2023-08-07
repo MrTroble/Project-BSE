@@ -10,6 +10,8 @@
 #define TGE_DLLEXPORT extern "C"
 #endif
 
+#include "SETextureset.hpp"
+
 typedef const char* FormKey;
 typedef unsigned int uint;
 typedef unsigned long ulong;
@@ -37,16 +39,6 @@ struct ReferenceLoad {
 
 enum class UpdateType { TRANSFORM, PATH };
 
-struct SETextureSet {
-  const char* diffuse;
-  const char* normal;
-  const char* specular;
-  const char* environmentMask;
-  const char* height;
-  const char* environment;
-  const char* multilayer;
-  const char* emissive;
-};
 
 struct TerrainInfo {
   float x = 0;           // Local editor space offset
@@ -60,10 +52,7 @@ struct TerrainInfo {
   ulong normalBegin;  // first index of the normal data in buffer of this cell
   ulong colorBegin;   // first index of the color data in buffer of this cell
 
-  SETextureSet topLeft;
-  SETextureSet bottomLeft;
-  SETextureSet topRight;
-  SETextureSet bottomRight;
+  SECornerSets cornerSets;
 };
 
 struct ReferenceUpdate {

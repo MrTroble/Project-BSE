@@ -80,7 +80,6 @@ bool hideReferences(uint count, FormKey* keys, bool hide) {
 
 bool loadTerrain(uint count, TerrainInfo* info, float* buffer) {
   ASSERT_VALID_POINTER(count, buffer);
-  ASSERT_VALID_POINTER(count, info);
   CALL_FOR_EACH(terrainCallbacks, count, info, buffer);
 }
 
