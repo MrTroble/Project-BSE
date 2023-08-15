@@ -52,7 +52,8 @@ class TerrainModule : public tge::main::Module {
       renderInfo.bindingID = binding;
       renderInfo.vertexBuffer = std::vector(iterator, iterator + 3);
       renderInfo.indexBuffer = iterator[3];
-      renderInfo.indexCount = (terrain.pointSize - 1) * (terrain.pointSize - 1);
+      renderInfo.indexSize = IndexSize::UINT16;
+      renderInfo.indexCount = (terrain.pointSize - 1) * (terrain.pointSize - 1) * 6;
       renderInfo.materialId = materialHolder;
       iterator += 4;
       nodeInfos.emplace_back(binding);

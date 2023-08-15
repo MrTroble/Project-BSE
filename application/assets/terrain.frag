@@ -31,17 +31,20 @@
 		},
 		{
 			"code": [
+				"$next_in vec3 NORMALIN;",
+				"$next_in vec3 COLORIN;",
+				"$next_in vec2 UVIN;",
+
 				"layout(location=0) out vec4 COLOR;",
 				"layout(location=1) out vec4 NORMAL;",
 				"layout(location=2) out float ROUGHNESS;",
 				"layout(location=3) out float METALLIC;",
-				"layout(push_constant) uniform constants { uint id; } pushConst;",
-				"layout(binding=5) uniform block { float id; } currentSelectID;",
+
 				"void main() {",
-				"   ROUGHNESS = pushConst.id;",
+				"   ROUGHNESS = 1.0f / 0.0f;",
 				"   METALLIC = 0;",
 				"   NORMAL = vec4(1, 1, 1, 1);",
-				"   COLOR = vec4(1, 1, 1, 1);"
+				"   COLOR = vec4(COLORIN, 1);"
 			]
 		},
 		{
@@ -50,18 +53,6 @@
 				"   NORMAL = texture(sampler2D(normalTexture, samplertex), UVIN);"
 			],
 			"dependsOn": [ "UV", "TEXTURES" ]
-		},
-		{
-			"code": [
-				"   COLOR *= COLORIN;"
-			],
-			"dependsOn": [ "COLOR" ]
-		},
-		{
-			"code": [
-				"   NORMAL *= vec4(NORMALIN, 1);"
-			],
-			"dependsOn": [ "NORMAL" ]
 		},
 		{
 			"code": [
