@@ -41,7 +41,7 @@
 				"layout(location=3) out float METALLIC;",
 
 				"void main() {",
-				"   ROUGHNESS = 1.0f / 0.0f;",
+				"   ROUGHNESS = 10000000000000000.0f;",
 				"   METALLIC = 0;",
 				"   NORMAL = vec4(1, 1, 1, 1);",
 				"   COLOR = vec4(COLORIN, 1);"

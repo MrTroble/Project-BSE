@@ -41,6 +41,7 @@ void test() {
       translate.y += 8 * toMeter;
       translate.x = 0;
     }
+    load.transform.rotations.z = translate.x;
     loads.push_back(load);
     current++;
   }

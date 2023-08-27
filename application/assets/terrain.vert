@@ -8,6 +8,7 @@
 				"$next_in vec3 POSITION;",
 				"layout(binding=2) uniform MVP {",
 				"   mat4 matrix;",
+				"   mat4 adjoint;",
 				"} mvp;",
 				"layout(binding=3) uniform PROJ {",
 				"   mat4 proj;",
@@ -24,7 +25,7 @@
 				"void main() {",
 				"   gl_Position = proj.proj * mvp.matrix * vec4(POSITION, 1);",
 				"   UVOUT = vec2(0, 0);",
-				"   NORMALOUT = NORMALIN;",
+				"   NORMALOUT = normalize((mvp.adjoint * vec4(NORMALIN, 1)).xyz);",
 				"   COLOROUT = COLORIN;",
 				"}"
 			]
