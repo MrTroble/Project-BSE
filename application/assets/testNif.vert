@@ -8,7 +8,6 @@
 				"$next_in vec3 POSITION;",
 				"layout(binding=2) uniform MVP {",
 				"   mat4 matrix;",
-				"   mat4 adjoint;",
 				"} mvp;",
 				"layout(binding=3) uniform PROJ {",
 				"   mat4 proj;",
@@ -53,8 +52,7 @@
 		},
 		{
 			"code": [
-				"   vec4 offsetPosition = mvp.adjoint * vec4(POSITION, 1);",
-				"   NORMALOUT = normalize((mvp.adjoint * vec4(NORMALIN + POSITION, 1) - offsetPosition).xyz);"
+				"   NORMALOUT = NORMALIN;"
 			],
 			"dependsOn": [ "NORMAL" ]
 		},
