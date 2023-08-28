@@ -8,7 +8,6 @@
 				"$next_in vec3 POSITION;",
 				"layout(binding=2) uniform MVP {",
 				"   mat4 matrix;",
-				"   mat4 adjoint;",
 				"} mvp;",
 				"layout(binding=3) uniform PROJ {",
 				"   mat4 proj;",
