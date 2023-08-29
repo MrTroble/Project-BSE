@@ -24,7 +24,7 @@
 				"void main() {",
 				"   gl_Position = proj.proj * mvp.matrix * vec4(POSITION, 1);",
 				"   UVOUT = vec2(0, 0);",
-				"   NORMALOUT = normalize((mvp.adjoint * vec4(NORMALIN, 1)).xyz);",
+				"   NORMALOUT = NORMALIN;",
 				"   COLOROUT = COLORIN;",
 				"}"
 			]
