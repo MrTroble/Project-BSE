@@ -94,7 +94,8 @@ bool select(const uint count, const FormKey* keys) {
   return true;
 }
 
-constexpr float AMOUNT_OF = 64 * 0.00142875f;
+constexpr float AMOUNT_FINAL = 0.00142875f;
+constexpr float AMOUNT_OF = 128 * AMOUNT_FINAL;
 
 bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
   using namespace tge::graphics;
@@ -118,12 +119,12 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
 
     auto heights = bufferIn + info.positionBegin;
     for (size_t y = 0; y < info.point_size; y++) {
-      const auto yAmount = y * AMOUNT_OF + info.y;
+      const auto yAmount = y * 128 + info.y;
       const auto yConst = y * info.point_size;
       for (size_t x = 0; x < info.point_size; x++) {
         const auto value = x + yConst;
         positions[value] =
-            glm::vec3(x * AMOUNT_OF + info.x, yAmount, heights[value]);
+            glm::vec3(x * 128 + info.x, yAmount, heights[value]) * AMOUNT_FINAL;
       }
     }
 
