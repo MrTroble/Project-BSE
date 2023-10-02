@@ -122,7 +122,8 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
       const auto yConst = y * info.point_size;
       for (size_t x = 0; x < info.point_size; x++) {
         const auto value = x + yConst;
-        positions[value] = glm::vec3(x * AMOUNT_OF + info.x, yAmount, heights[value]);
+        positions[value] =
+            glm::vec3(x * AMOUNT_OF + info.x, yAmount, heights[value]);
       }
     }
 
@@ -134,12 +135,12 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
         const auto topRight = topLeft + 1;
         const auto bottomRight = bottomLeft + 1;
 
-        indexes.push_back(bottomLeft);
+        indexes.push_back(topRight);
         indexes.push_back(topLeft);
-        indexes.push_back(topRight);
-        indexes.push_back(topRight);
-        indexes.push_back(bottomRight);
         indexes.push_back(bottomLeft);
+        indexes.push_back(bottomLeft);
+        indexes.push_back(bottomRight);
+        indexes.push_back(topRight);
       }
     }
 

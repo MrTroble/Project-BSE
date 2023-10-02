@@ -28,8 +28,10 @@ class TerrainModule : public tge::main::Module {
     ggm = tge::main::getGameGraphicsModule();
     api = ggm->getAPILayer();
     auto shaderApi = api->getShaderAPI();
+    tge::shader::ShaderCreateInfo createInfo;
+    createInfo.inputLayoutTranslation = [](auto in) { return in; };
     const auto shader = shaderApi->loadShaderPipeAndCompile(
-        {"assets/terrain.vert", "assets/terrain.frag"});
+        {"assets/terrain.vert", "assets/terrain.frag"}, createInfo);
     binding = shaderApi->createBindings(shader);
     Material material(shader);
     const std::vector materials{material};
