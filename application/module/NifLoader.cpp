@@ -285,6 +285,8 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       info.materialId = materialId[i];
       info.bindingID = sha->createBindings(materials[i].costumShaderData, 1);
       const auto translate = shape->transform.translation;
+      const auto scale = shape->transform.scale;
+      const auto rotate = shape->transform.rotation;
       auto& nodeInfo = nodeInfos[i + 1];
 
       nodeInfo.parent = nextNodeID;
@@ -295,6 +297,11 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       nodeInfo.bindingID = info.bindingID;
       nodeInfo.transforms.translation =
           glm::vec3(translate.x, translate.y, translate.z);
+      nodeInfo.transforms.scale = glm::vec3(scale);
+      glm::vec3 rotationVector;
+      rotate.ToEulerAngles(rotationVector.x, rotationVector.y,
+                           rotationVector.z);
+      nodeInfo.transforms.rotation = glm::quat(rotationVector);
 
       auto shaderData = file.GetShader(shape);
       if (shaderData) {
