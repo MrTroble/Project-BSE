@@ -22,9 +22,9 @@ static std::vector<bsa::tes4::archive> archivesLoaded;
 std::vector<char> resolveFromArchives(const std::string inputPathName) {
   const std::filesystem::path fullpath(inputPathName);
   const std::string value = fullpath.parent_path().string();
-  const bsa::tes4::directory::key dictionaryKey(std::move(value));
+  const bsa::tes4::directory::key dictionaryKey(value);
   const std::string file = fullpath.filename().string();
-  const bsa::tes4::file::key fileKey(std::move(file));
+  const bsa::tes4::file::key fileKey(file);
 
   for (const auto& archive : archivesLoaded) {
     const auto reference = archive[dictionaryKey][fileKey];
@@ -105,10 +105,11 @@ struct UpdateInfo {
 
 template <typename Type>
 inline void updateOn(const UpdateInfo& info, const std::string& name,
-                     std::vector<Type>& uvData) {
+                     const std::vector<Type>* uvData) {
+  if (uvData == nullptr || uvData->empty()) return;
   info.cacheString.push_back(name);
-  info.dataInfo.push_back(
-      {uvData.data(), uvData.size() * sizeof(Type), DataType::VertexData});
+  info.dataInfo.emplace_back(uvData->data(), uvData->size() * sizeof(Type),
+                             DataType::VertexData);
 }
 
 static std::unordered_map<std::string, nifly::NifFile> filesByName;
@@ -183,11 +184,14 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
   std::vector<size_t> allNodes;
   allNodes.resize(count);
 
-  std::vector<std::vector<std::Triangle>> allTriangleLists;
+  std::vector<std::vector<nifly::Triangle>> allTriangleLists;
   allTriangleLists.reserve(count * count);
 
+  std::vector<std::vector<nifly::Vector3>> vertexHolder;
+  vertexHolder.reserve(count * count);
+
   for (size_t i = 0; i < count; i++) {
-    const auto& file = filesByName[loads[i].file];
+    auto& file = filesByName[loads[i].file];
     const auto& shapes = file.GetShapes();
     size_t current = 0;
 
@@ -202,64 +206,53 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     const auto nextNodeID = ggm->nextNodeID();
 
     for (auto shape : shapes) {
-      nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
       RenderInfo info;
       size_t vertexSize = 0;
-
-      if (!bishape) {
-        PLOG_WARNING << "No BSTriShape!";
-        nifly::NiGeometry* geometry = dynamic_cast<nifly::NiGeometry*>(shape);
-        if (!geometry) {
-          PLOG_WARNING << "No NiGeometry!";
-          continue;
-        }
+      const auto vertices = file.GetVertsForShape(shape);
+      if (vertices == nullptr) {
+        PLOG_WARNING << "Vertex Data is nullptr please investigate!";
         continue;
-      } else {
-        const auto oldSize = dataInfos.size();
-        std::vector<nifly::Vector3>&  vertices = bishape->UpdateRawVertices();
-        vertexSize = vertices.size();
-        dataInfos.push_back({vertices.data(),
-                             vertices.size() * sizeof(nifly::Vector3),
-                             DataType::VertexData});
-
-        std::vector<std::string> cacheString;
-        const auto shader = file.GetShader(shape);
-        auto shaderData = file.GetShader(shape);
-        if (shaderData && shader->HasTextureSet()) {
-          const auto indexTexData = shaderData->TextureSetRef();
-          const auto ref = file.GetHeader().GetBlock(indexTexData);
-          if (ref != nullptr && ref->textures.size() > 1) {
-            cacheString.push_back("TEXTURES");
-          }
-        }
-        cacheString.reserve(10);
-        UpdateInfo updateInfo = {cacheString, dataInfos};
-
-        if (bishape->HasUVs()) {
-          updateOn(updateInfo, "UV", bishape->UpdateRawUvs());
-        }
-        if (bishape->HasNormals()) {
-          updateOn(updateInfo, "NORMAL", bishape->UpdateRawNormals());
-        }
-        if (bishape->HasVertexColors()) {
-          updateOn(updateInfo, "COLOR", bishape->UpdateRawColors());
-        }
-        info.vertexBuffer.resize(dataInfos.size() - oldSize);
-
-        std::lock_guard guard(shaderCacheMutex);
-        auto foundItr = shaderCache.find(cacheString);
-        if (foundItr == end(shaderCache)) {
-          ShaderCreateInfo createInfo = {[](size_t input) { return input; }};
-          const auto pipe =
-              sha->compile({{ShaderType::VERTEX, vertexFile, cacheString},
-                            {ShaderType::FRAGMENT, fragmentsFile, cacheString}},
-                           createInfo);
-          shaderCache[cacheString] = pipe;
-          foundItr = shaderCache.find(cacheString);
-        }
-        void* ptr = foundItr->second;
-        materials.push_back(Material(ptr));
       }
+      const auto oldSize = dataInfos.size();
+      dataInfos.emplace_back(vertices->data(),
+                             vertices->size() * sizeof(nifly::Vector3),
+                             DataType::VertexData);
+
+      std::vector<std::string> cacheString;
+      const auto shader = file.GetShader(shape);
+      auto shaderData = file.GetShader(shape);
+      if (shaderData && shader->HasTextureSet()) {
+        const auto indexTexData = shaderData->TextureSetRef();
+        const auto ref = file.GetHeader().GetBlock(indexTexData);
+        if (ref != nullptr && ref->textures.size() > 1) {
+          cacheString.push_back("TEXTURES");
+        }
+      }
+      cacheString.reserve(10);
+      UpdateInfo updateInfo = {cacheString, dataInfos};
+
+      auto uv = file.GetUvsForShape(shape);
+      updateOn(updateInfo, "UV", uv);
+      auto normal = file.GetNormalsForShape(shape);
+      updateOn(updateInfo, "NORMAL", normal);
+      auto color = file.GetColorsForShape(shape);
+      updateOn(updateInfo, "COLOR", color);
+
+      info.vertexBuffer.resize(dataInfos.size() - oldSize);
+
+      std::lock_guard guard(shaderCacheMutex);
+      auto foundItr = shaderCache.find(cacheString);
+      if (foundItr == end(shaderCache)) {
+        ShaderCreateInfo createInfo = {[](size_t input) { return input; }};
+        const auto pipe =
+            sha->compile({{ShaderType::VERTEX, vertexFile, cacheString},
+                          {ShaderType::FRAGMENT, fragmentsFile, cacheString}},
+                         createInfo);
+        shaderCache[cacheString] = pipe;
+        foundItr = shaderCache.find(cacheString);
+      }
+      void* ptr = foundItr->second;
+      materials.push_back(Material(ptr));
 
       auto& triangles = allTriangleLists.emplace_back();
       shape->GetTriangles(triangles);
