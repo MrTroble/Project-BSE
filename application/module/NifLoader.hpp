@@ -45,6 +45,7 @@ class NifModule : public tge::main::Module {
   std::vector<char> fragmentsFile;
   std::string assetDirectory;
   std::vector<std::string> archiveNames;
+  std::mutex shaderCacheMutex;
   std::unordered_map<std::vector<std::string>, void*> shaderCache;
   std::unordered_map<std::string, LoadedModelInformation> loadInformation;
   float translationFactor = 0.00142875f;

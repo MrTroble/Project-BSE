@@ -8,7 +8,6 @@
 #include <TGEngine.hpp>
 #include <Util.hpp>
 #include <bsa/tes4.hpp>
-#include <graphics/vulkan/VulkanShaderPipe.hpp>
 
 namespace tge::nif {
 
@@ -204,76 +203,65 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
 
     for (auto shape : shapes) {
       nifly::BSTriShape* bishape = dynamic_cast<nifly::BSTriShape*>(shape);
+      RenderInfo info;
+      size_t vertexSize = 0;
+
       if (!bishape) {
         PLOG_WARNING << "No BSTriShape!";
+        nifly::NiGeometry* geometry = dynamic_cast<nifly::NiGeometry*>(shape);
+        if (!geometry) {
+          PLOG_WARNING << "No NiGeometry!";
+          continue;
+        }
         continue;
-      }
-      RenderInfo info;
+      } else {
+        const auto oldSize = dataInfos.size();
+        std::vector<nifly::Vector3>&  vertices = bishape->UpdateRawVertices();
+        vertexSize = vertices.size();
+        dataInfos.push_back({vertices.data(),
+                             vertices.size() * sizeof(nifly::Vector3),
+                             DataType::VertexData});
 
-      const auto oldSize = dataInfos.size();
-      auto& verticies = bishape->UpdateRawVertices();
-      dataInfos.push_back({verticies.data(),
-                           verticies.size() * sizeof(nifly::Vector3),
-                           DataType::VertexData});
-
-      std::vector<std::string> cacheString;
-      const auto shader = file.GetShader(shape);
-      auto shaderData = file.GetShader(shape);
-      if (shaderData && shader->HasTextureSet()) {
-        const auto indexTexData = shaderData->TextureSetRef();
-        const auto ref = file.GetHeader().GetBlock(indexTexData);
-        if (ref != nullptr && ref->textures.size() > 1) {
-          cacheString.push_back("TEXTURES");
+        std::vector<std::string> cacheString;
+        const auto shader = file.GetShader(shape);
+        auto shaderData = file.GetShader(shape);
+        if (shaderData && shader->HasTextureSet()) {
+          const auto indexTexData = shaderData->TextureSetRef();
+          const auto ref = file.GetHeader().GetBlock(indexTexData);
+          if (ref != nullptr && ref->textures.size() > 1) {
+            cacheString.push_back("TEXTURES");
+          }
         }
-      }
-      cacheString.reserve(10);
-      UpdateInfo updateInfo = {cacheString, dataInfos};
+        cacheString.reserve(10);
+        UpdateInfo updateInfo = {cacheString, dataInfos};
 
-      size_t bindingCount = 0;
-      if (bishape->HasUVs()) {
-        updateOn(updateInfo, "UV", bishape->UpdateRawUvs());
-        bindingCount++;
-      }
-      if (bishape->HasNormals()) {
-        updateOn(updateInfo, "NORMAL", bishape->UpdateRawNormals());
-        bindingCount++;
-      }
-      if (bishape->HasVertexColors()) {
-        updateOn(updateInfo, "COLOR", bishape->UpdateRawColors());
-        bindingCount++;
-      }
-      info.vertexBuffer.resize(dataInfos.size() - oldSize);
-
-      auto foundItr = shaderCache.find(cacheString);
-      if (foundItr == end(shaderCache)) {
-        const auto pipe =
-            sha->compile({{ShaderType::VERTEX, vertexFile, cacheString},
-                          {ShaderType::FRAGMENT, fragmentsFile, cacheString}});
-        shaderCache[cacheString] = pipe;
-        foundItr = shaderCache.find(cacheString);
-        tge::shader::VulkanShaderPipe* ptr =
-            (tge::shader::VulkanShaderPipe*)foundItr->second;
-        ptr->vertexInputBindings.clear();
-        ptr->vertexInputBindings.resize(bindingCount + 1);
-        ptr->vertexInputBindings[0] = vk::VertexInputBindingDescription(0, 12);
-        for (auto& attribute : ptr->vertexInputAttributes) {
-          attribute.binding = attribute.location;
-          attribute.offset = 0;
-          ptr->vertexInputBindings[attribute.location] =
-              vk::VertexInputBindingDescription(
-                  attribute.binding,
-                  tge::shader::getSizeFromFormat(attribute.format));
+        if (bishape->HasUVs()) {
+          updateOn(updateInfo, "UV", bishape->UpdateRawUvs());
         }
-        ptr->inputStateCreateInfo.pVertexBindingDescriptions =
-            ptr->vertexInputBindings.data();
-        ptr->inputStateCreateInfo.vertexBindingDescriptionCount =
-            ptr->vertexInputBindings.size();
-      }
-      void* ptr = foundItr->second;
-      materials.push_back(Material(ptr));
+        if (bishape->HasNormals()) {
+          updateOn(updateInfo, "NORMAL", bishape->UpdateRawNormals());
+        }
+        if (bishape->HasVertexColors()) {
+          updateOn(updateInfo, "COLOR", bishape->UpdateRawColors());
+        }
+        info.vertexBuffer.resize(dataInfos.size() - oldSize);
 
-      allTriangleLists.push_back({});
-      auto& triangles = allTriangleLists.back();
+        std::lock_guard guard(shaderCacheMutex);
+        auto foundItr = shaderCache.find(cacheString);
+        if (foundItr == end(shaderCache)) {
+          ShaderCreateInfo createInfo = {[](size_t input) { return input; }};
+          const auto pipe =
+              sha->compile({{ShaderType::VERTEX, vertexFile, cacheString},
+                            {ShaderType::FRAGMENT, fragmentsFile, cacheString}},
+                           createInfo);
+          shaderCache[cacheString] = pipe;
+          foundItr = shaderCache.find(cacheString);
+        }
+        void* ptr = foundItr->second;
+        materials.push_back(Material(ptr));
+      }
+
+      auto& triangles = allTriangleLists.emplace_back();
       shape->GetTriangles(triangles);
       if (!triangles.empty()) {
         dataInfos.push_back({triangles.data(),
@@ -282,7 +270,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
         info.indexCount = triangles.size() * 3;
         info.indexSize = IndexSize::UINT16;
       } else {
-        info.indexCount = verticies.size();
+        info.indexCount = vertexSize;
         info.indexSize = IndexSize::NONE;
       }
       renderInfos.push_back(info);
