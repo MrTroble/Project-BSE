@@ -1,63 +1,91 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
-struct SETextureSet {
-  const char* diffuse = nullptr;
-  const char* normal = nullptr;
-  const char* specular = nullptr;
-  const char* environmentMask = nullptr;
-  const char* height = nullptr;
-  const char* environment = nullptr;
-  const char* multilayer = nullptr;
-  const char* emissive = nullptr;
+#define SkyrimSE 1
+
+using ushort = unsigned short;
+using ubyte = unsigned char;
+
+inline std::string toInternal(const char* string) { return ""; }
+
+#if SkyrimSE
+template <class Type>
+struct TextureSetInternal {
+  Type Diffuse;
+  Type Normal;
+  Type Specular;
+  Type EnvironmentMask;
+  Type Height;
+  Type Environment;
+  Type Multilayer;
+  Type Emissive;
 };
 
-inline std::string toInternal(const char* string) {
-  return "";
+template <class Type>
+inline TextureSetInternal<std::string> toInternal(
+    const TextureSetInternal<Type>& sets) {
+  return TextureSetInternal<std::string>{
+      toInternal(sets.Diffuse),    toInternal(sets.Normal),
+      toInternal(sets.Specular),   toInternal(sets.EnvironmentMask),
+      toInternal(sets.Height),     toInternal(sets.Environment),
+      toInternal(sets.Multilayer), toInternal(sets.Emissive)};
+}
+#endif
+
+struct AlphaData {
+  float Opacity = 0;
+  ushort Position = 0;
+};
+
+template <class TextureSet>
+struct AlphaLayer {
+  TextureSet TextureSet;
+  AlphaData* Data = nullptr;  // max 289 (pass by pointer)
+  ushort DataLength = 0;
+};
+
+inline AlphaLayer<TextureSetInternal<std::string>> toInternal(
+    const AlphaLayer<TextureSetInternal<const char*>>& string) {
+  return {toInternal(string.TextureSet), string.Data, string.DataLength};
 }
 
-struct SETextureSetInternal {
-  std::string diffuse;
-  std::string normal;
-  std::string specular;
-  std::string environmentMask;
-  std::string height;
-  std::string environment;
-  std::string multilayer;
-  std::string emissive;
-
-  SETextureSetInternal() = default;
-
-  SETextureSetInternal(const SETextureSet& sets)
-      : diffuse(toInternal(sets.diffuse)),
-        normal(toInternal(sets.normal)),
-        specular(toInternal(sets.specular)),
-        environmentMask(toInternal(sets.environmentMask)),
-        height(toInternal(sets.height)),
-        environment(toInternal(sets.environment)),
-        multilayer(toInternal(sets.multilayer)),
-        emissive(toInternal(sets.emissive)) {}
+struct Quadrant {
+  TextureSetInternal<const char*> BaseLayer;
+  AlphaLayer<TextureSetInternal<const char*>>* AlphaLayers =
+      nullptr;  // max 8 layers (pass by pointer)
+  ubyte AlphaLayersLength = 0;
 };
 
-struct SECornerSets {
-  SETextureSet topRight;
-  SETextureSet bottomRight;
-  SETextureSet topLeft;
-  SETextureSet bottomLeft;
+using AlphaLayers = std::vector<AlphaLayer<TextureSetInternal<std::string>>>;
+
+struct QuadrantInternal {
+  TextureSetInternal<std::string> BaseLayer;
+  AlphaLayers AlphaLayers;
 };
 
-struct SECornerSetsInternal {
-  SETextureSetInternal topRight;
-  SETextureSetInternal bottomRight;
-  SETextureSetInternal topLeft;
-  SETextureSetInternal bottomLeft;
+inline QuadrantInternal toInternal(const Quadrant& string) {
+  AlphaLayers layers(string.AlphaLayersLength);
+  const auto end = string.AlphaLayersLength + string.AlphaLayers;
+  auto output = layers.begin();
+  for (auto iter = string.AlphaLayers; iter != end; iter++, output++) {
+    *output = toInternal(*iter);
+  }
+  return {toInternal(string.BaseLayer), layers};
+}
 
-  SECornerSetsInternal() = default;
-
-  SECornerSetsInternal(const SECornerSets& sets)
-      : topRight(sets.topRight),
-        bottomRight(sets.bottomRight),
-        topLeft(sets.topLeft),
-        bottomLeft(sets.bottomLeft) {}
+template <class Quadrant>
+struct CornerSets {
+  Quadrant TopRight;
+  Quadrant BottomRight;
+  Quadrant TopLeft;
+  Quadrant BottomLeft;
 };
+using CornerSetsDefault = CornerSets<Quadrant>;
+using CornerSetsInternal = CornerSets<QuadrantInternal>;
+
+inline CornerSetsInternal toInternal(const CornerSetsDefault& string) {
+  return {toInternal(string.TopRight), toInternal(string.BottomRight),
+          toInternal(string.TopLeft), toInternal(string.BottomLeft)};
+}

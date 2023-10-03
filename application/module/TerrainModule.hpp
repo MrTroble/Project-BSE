@@ -12,7 +12,7 @@
 DEFINE_HOLDER(Terrain);
 
 struct TerrainInfoInternal {
-  SECornerSetsInternal cornerSet;
+  CornerSetsInternal cornerSet;
   size_t pointSize;
 };
 

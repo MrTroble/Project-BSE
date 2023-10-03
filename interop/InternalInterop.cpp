@@ -115,7 +115,7 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
     auto& positions = positionHolder[i];
     positions.resize(pointCount);
 
-    cornerSets[i] = {info.cornerSets, info.point_size};
+    cornerSets[i] = {toInternal(info.cornerSets), info.point_size};
 
     auto heights = bufferIn + info.positionBegin;
     for (size_t y = 0; y < info.point_size; y++) {

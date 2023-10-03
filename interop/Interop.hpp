@@ -52,7 +52,7 @@ struct TerrainInfo {
   ulong normalBegin;  // first index of the normal data in buffer of this cell
   ulong colorBegin;   // first index of the color data in buffer of this cell
 
-  SECornerSets cornerSets;
+  CornerSetsDefault cornerSets;
 };
 
 struct ReferenceUpdate {
