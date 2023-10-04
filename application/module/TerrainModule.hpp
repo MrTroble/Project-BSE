@@ -22,7 +22,7 @@ class TerrainModule : public tge::main::Module {
   tge::graphics::GameGraphicsModule* ggm;
   size_t binding;
   tge::graphics::TPipelineHolder materialHolder;
-  size_t basicNode;
+  tge::graphics::TNodeHolder basicNode;
 
   tge::main::Error init() override {
     using namespace tge::graphics;
@@ -39,7 +39,7 @@ class TerrainModule : public tge::main::Module {
     materialHolder = api->pushMaterials(materials)[0];
     std::vector<NodeInfo> nodeInfos(1);
     nodeInfos[0].bindingID = binding;
-    basicNode = ggm->addNode(nodeInfos);
+    basicNode = ggm->addNode(nodeInfos)[0];
     return tge::main::Error::NONE;
   }
 

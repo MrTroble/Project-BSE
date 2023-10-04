@@ -1,12 +1,11 @@
 #pragma once
 
+#include <Module.hpp>
+#include <cinttypes>
+#include <graphics/GameGraphicsModule.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <cinttypes>
-
-#include <Module.hpp>
-#include <graphics/GameGraphicsModule.hpp>
 
 namespace std {
 template <>
@@ -49,16 +48,19 @@ class NifModule : public tge::main::Module {
   std::unordered_map<std::vector<std::string>, void*> shaderCache;
   std::unordered_map<std::string, LoadedModelInformation> loadInformation;
   float translationFactor = 0.00142875f;
-  uint32_t basicNifNode;
+  graphics::TNodeHolder basicNifNode;
   graphics::TSamplerHolder samplerID;
-  std::unordered_map<size_t, graphics::TRenderHolder> nodeIdToRender;
+  std::unordered_map<graphics::TNodeHolder, graphics::TRenderHolder>
+      nodeIdToRender;
 
   tge::main::Error init();
 
-  std::vector<size_t> load(const size_t count, const LoadNif* loads,
-              void* shaderPipe = nullptr);
+  std::vector<std::vector<graphics::TNodeHolder>> load(
+      const size_t count,
+                                             const LoadNif* loads,
+                                             void* shaderPipe = nullptr);
 
-  void remove(const size_t size, const size_t* ids);
+  void remove(const size_t size, const graphics::TNodeHolder* ids);
 };
 
 extern nif::NifModule* nifModule;

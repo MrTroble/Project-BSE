@@ -11,11 +11,13 @@
 #include "../application/TGApp.hpp"
 #include "../application/module/NifLoader.hpp"
 #include "../application/module/TerrainModule.hpp"
+#include "../public/graphics/ElementHolder.hpp"
 
 namespace tge::interop {
 
-std::unordered_map<std::string, size_t> REFERENCE_MAP;
-std::unordered_map<size_t, std::string> REFERENCE_MAP_TO_STRING;
+std::unordered_map<std::string, std::vector<tge::graphics::TNodeHolder>>
+    REFERENCE_MAP;
+std::unordered_map<tge::graphics::TNodeHolder, std::string> REFERENCE_MAP_TO_STRING;
 std::mutex loadMutex;
 
 inline glm::vec3 vectors(const vec3& vec3) {
@@ -56,9 +58,9 @@ bool load(const uint count, const ReferenceLoad* loads) {
         const auto nodeIDs = nif->load(nifLoadings.size(), nifLoadings.data());
         for (size_t i = 0; i < nodeIDs.size(); i++) {
           const auto& formKey = loadList[i].formKey;
-          const auto id = nodeIDs[i];
-          REFERENCE_MAP[formKey] = id;
-          REFERENCE_MAP_TO_STRING[id] = formKey;
+          const auto key = nodeIDs[i][0];
+          REFERENCE_MAP[formKey] = nodeIDs[i];
+          REFERENCE_MAP_TO_STRING[key] = formKey;
         }
         callLoadFinishedCallback();
       });
@@ -73,7 +75,7 @@ bool hide(const uint count, const FormKey* keys, const bool hide) {
 }
 
 bool remove(const uint count, const FormKey* keys) {
-  std::vector<size_t> ids(count);
+  std::vector<graphics::TNodeHolder> ids(count);
   for (size_t i = 0; i < count; i++) {
     const auto iterator = REFERENCE_MAP.find(keys[i]);
     if (iterator == std::end(REFERENCE_MAP)) {
@@ -81,7 +83,7 @@ bool remove(const uint count, const FormKey* keys) {
       ids[i] = SIZE_MAX;
       continue;
     }
-    ids[i] = iterator->second;
+    ids[i] = iterator->second[0];
   }
   tge::nif::nifModule->remove(ids.size(), ids.data());
   return true;

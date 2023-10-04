@@ -51,7 +51,7 @@ Error NifModule::init() {
   const auto ggm = getGameGraphicsModule();
   tge::graphics::NodeInfo nodeInfo;
   nodeInfo.transforms.scale *= this->translationFactor;
-  basicNifNode = ggm->addNode(&nodeInfo, 1);
+  basicNifNode = ggm->addNode(&nodeInfo, 1)[0];
 
   ggm->addAssetResolver(
       [sizeOfAssetsDir = this->assetDirectory.size()](const std::string& name) {
@@ -82,14 +82,14 @@ Error NifModule::init() {
   return Error::NONE;
 }
 
-void NifModule::remove(const size_t size, const size_t* ids) {
+void NifModule::remove(const size_t size, const TNodeHolder* ids) {
   std::vector<TRenderHolder> values;
   values.resize(size);
   for (size_t i = 0; i < size; i++) {
-    const size_t currentID = ids[i];
+    const TNodeHolder currentID = ids[i];
     const auto iterator = nodeIdToRender.find(currentID);
     if (iterator == std::end(nodeIdToRender)) {
-      PLOG_DEBUG << "Could not find " << currentID << " in translation table!";
+      PLOG_DEBUG << "Could not find " << currentID.internalHandle << " in translation table!";
       return;
     }
     values[i] = iterator->second;
@@ -114,7 +114,8 @@ inline void updateOn(const UpdateInfo& info, const std::string& name,
 
 static std::unordered_map<std::string, nifly::NifFile> filesByName;
 
-std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
+std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
+                                                      const LoadNif* loads,
                                     void* shaderPipe) {
   if (!finishedLoading) {
     std::cerr << "Call nif before loaded!";
@@ -123,7 +124,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
   const auto api = getAPILayer();
   const auto ggm = getGameGraphicsModule();
   const auto sha = api->getShaderAPI();
-  std::vector<size_t> nodeCache;
+  std::vector<std::vector<TNodeHolder>> nodeCache;
   nodeCache.reserve(count);
 
   std::unordered_set<std::string> textureNames;
@@ -181,7 +182,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
   std::vector<std::vector<RenderInfo>> allRenderInfos;
   allRenderInfos.resize(count);
 
-  std::vector<size_t> allNodes;
+  std::vector<TNodeHolder> allNodes;
   allNodes.resize(count);
 
   std::vector<std::vector<nifly::Triangle>> allTriangleLists;
@@ -202,8 +203,6 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
 
     std::vector<Material> materials;
     materials.reserve(shapes.size());
-
-    const auto nextNodeID = ggm->nextNodeID();
 
     for (auto shape : shapes) {
       RenderInfo info;
@@ -278,7 +277,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     std::vector<tge::graphics::NodeInfo> nodeInfos;
     nodeInfos.resize(shapeIndex.size() + 1);
     nodeInfos[0].transforms = loads[i].transform;
-    nodeInfos[0].parent = basicNifNode;
+    nodeInfos[0].parentHolder = basicNifNode;
     for (size_t i = 0; i < shapeIndex.size(); i++) {
       const auto shape = shapes[shapeIndex[i]];
       auto& info = renderInfos[i];
@@ -289,11 +288,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       const auto rotate = shape->transform.rotation;
       auto& nodeInfo = nodeInfos[i + 1];
 
-      nodeInfo.parent = nextNodeID;
-      std::vector<char> pushData;
-      pushData.resize(sizeof(uint32_t));
-      memcpy(pushData.data(), &nextNodeID, pushData.size());
-      info.constRanges.push_back({pushData, shader::ShaderType::FRAGMENT});
+      nodeInfo.parent = 0;
       nodeInfo.bindingID = info.bindingID;
       nodeInfo.transforms.translation =
           glm::vec3(translate.x, translate.y, translate.z);
@@ -332,7 +327,7 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
     }
 
     const auto nodes = ggm->addNode(nodeInfos.data(), nodeInfos.size());
-    allNodes[i] = nodes;
+    allNodes[i] = nodes[0];
     sha->bindData(bindingInfos.data(), bindingInfos.size());
     allRenderInfos[i] = renderInfos;
     nodeCache.push_back(nodes);
@@ -348,6 +343,10 @@ std::vector<size_t> NifModule::load(const size_t count, const LoadNif* loads,
       for (auto& index : info.vertexBuffer) {
         index = *(startPointer++);
       }
+      std::vector<char> pushData;
+      pushData.resize(sizeof(uint32_t));
+      memcpy(pushData.data(), &startPointer->internalHandle, pushData.size());
+      info.constRanges.push_back({pushData, shader::ShaderType::FRAGMENT});
       info.indexBuffer = *(startPointer++);
     }
 
