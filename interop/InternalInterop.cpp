@@ -126,7 +126,7 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
       for (size_t x = 0; x < info.point_size; x++) {
         const auto value = x + yConst;
         positions[value] =
-            glm::vec3(x * 128 + info.x, yAmount, heights[value]) * AMOUNT_FINAL;
+            glm::vec3(x * 128 + info.x, yAmount, heights[value]);
       }
     }
 

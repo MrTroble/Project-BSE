@@ -78,16 +78,17 @@ void test() {
   for (size_t x = 0; x < 33; x++) {
     for (size_t y = 0; y < 33; y++) {
       const auto value = x / 66.0f + y / 66.0f;
-      *position = value;
+      *position = value * 20;
       color[0] = value;
-      color[1] = value;
-      color[2] = value;
+      color[1] = 0;
+      color[2] = 1 - value;
       normal += 3;
       color += 3;
       position++;
     }
   }
   TerrainInfo info;
+  info.x = -5000;
   info.positionBegin = 0;
   info.colorBegin = 33 * 33 * 4;
   info.normalBegin = 33 * 33;
