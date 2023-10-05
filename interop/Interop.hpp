@@ -14,7 +14,7 @@
 
 typedef const char* FormKey;
 typedef unsigned int uint;
-typedef unsigned long ulong;
+typedef unsigned long long ulong;
 
 struct vec3 {
   float x;
