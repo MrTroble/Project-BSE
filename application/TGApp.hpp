@@ -22,3 +22,19 @@ TGE_DLLEXPORT int initTGEditor(const InitConfig* config, const char** bsaFiles,
 TGE_DLLEXPORT bool isFinished();
 
 TGE_DLLEXPORT void waitFinishedInit();
+
+struct SizeInformation {
+  size_t sizeInformationStruct = sizeof(SizeInformation);
+  size_t initConfigStruct = sizeof(InitConfig);
+  size_t referenceTransformStruct = sizeof(ReferenceTransform);
+  size_t referenceLoadStruct = sizeof(ReferenceLoad);
+  size_t referenceUpdateStruct = sizeof(ReferenceUpdate);
+  size_t textureSetStruct = sizeof(TextureSetInternal<const char*>);
+  size_t alphaDataStruct = sizeof(AlphaData);
+  size_t alphaLayerStruct = sizeof(AlphaLayer<TextureSetInternal<const char*>>);
+  size_t quadrantStruct = sizeof(Quadrant);
+  size_t cornerSetsStruct = sizeof(CornerSetsDefault);
+  size_t terrainInfoStruct = sizeof(TerrainInfo);
+};
+
+TGE_DLLEXPORT SizeInformation getSizeInfo();

@@ -99,3 +99,5 @@ void waitFinishedInit() {
     std::lock_guard aquired(waitMutex);
   } while (!isFinished());
 }
+
+TGE_DLLEXPORT SizeInformation getSizeInfo() { return {}; }
