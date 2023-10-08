@@ -20,6 +20,7 @@
 				"$next_out vec3 NORMALOUT;",
 				"$next_in vec3 COLORIN;",
 				"$next_out vec3 COLOROUT;",
+				"$next_in vec2 UVIN;",
 				"$next_out vec2 UVOUT;",
 				"void main() {",
 				"   gl_Position = proj.proj * mvp.matrix * vec4(POSITION, 1);",

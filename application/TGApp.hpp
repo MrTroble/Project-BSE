@@ -7,7 +7,7 @@
 extern TGAppGUI* guiModul;
 extern TGAppIO* ioModul;
 
-constexpr uint32_t CURRENT_INIT_VERSION = 2;
+constexpr uint32_t CURRENT_INIT_VERSION = 3;
 
 struct InitConfig {
   uint32_t version = CURRENT_INIT_VERSION;

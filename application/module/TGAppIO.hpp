@@ -17,12 +17,15 @@ class TGAppIO : public tge::io::IOModule {
   tge::graphics::TDataHolder dataHolder;
   tge::graphics::NodeTransform transform;
   glm::vec2 vec;
+  glm::vec2 deltaMouse{};
   glm::vec3 cache{};
-  bool pressedMiddle = false;
   float scale = 1;
   std::array<bool, 255> stack = {false};
   bool pressedLeft = false;
+  bool pressedMiddle = false;
   bool pressedShift = false;
+  glm::vec3 inputRotationX = glm::vec3(1, 0, 0);
+  glm::vec3 inputRotationY = glm::vec3(0, 1, 0);
 
   void getImageIDFromBackend();
 
@@ -36,16 +39,16 @@ class TGAppIO : public tge::io::IOModule {
   void tick(double deltatime) override {
     const float actualOffset = (float)(offset * deltatime);
     if (stack['W']) {
-      cache.y += actualOffset;
+      cache += inputRotationY * actualOffset;
     }
     if (stack['S']) {
-      cache.y -= actualOffset;
+      cache -= inputRotationY * actualOffset;
     }
     if (stack['A']) {
-      cache.x += actualOffset;
+      cache += inputRotationX * actualOffset;
     }
     if (stack['D']) {
-      cache.x -= actualOffset;
+      cache -= inputRotationX * actualOffset;
     }
     if (stack['Q']) {
       cache.z += actualOffset;
@@ -56,6 +59,8 @@ class TGAppIO : public tge::io::IOModule {
 
     if (stack['R']) {
       cache = glm::vec3(0);
+      inputRotationX = glm::vec3(1, 0, 0);
+      inputRotationY = glm::vec3(0, 1, 0);
     }
 
     if (pressedLeft) {
@@ -64,10 +69,10 @@ class TGAppIO : public tge::io::IOModule {
           ggm->getAPILayer()->getImageData(imageID, dataHolder);
       dataHolder = internalDataHolder;
       const auto bounds = ggm->getAPILayer()->getRenderExtent();
-      const auto fbuffer = (float *)imageData.data();
+      const auto dataBuffer = (float *)imageData.data();
       const auto offset = (size_t)(bounds.x * vec.y) + (size_t)vec.x;
       if (imageData.size() > offset * sizeof(float)) {
-        const size_t idSelected = static_cast<size_t>(fbuffer[offset]);
+        const size_t idSelected = static_cast<size_t>(dataBuffer[offset]);
         if (!pressedShift) {
           selectedIDs.clear();
           pressedLeft = false;
@@ -80,18 +85,43 @@ class TGAppIO : public tge::io::IOModule {
       }
     }
     std::fill(begin(stack), end(stack), false);
+
     ggm->updateCameraMatrix(
-        glm::lookAt(cache, glm::vec3(0, 1, 0) + cache, glm::vec3(0, 0, -1)));
+        glm::lookAt(cache, inputRotationY + cache, glm::vec3(0, 0, -1)));
   }
 
   void mouseEvent(const tge::io::MouseEvent &event) override {
-    if (event.pressed == 1) {
-      if (event.pressMode == tge::io::PressMode::CLICKED) {
+    using namespace tge::io;
+    if (event.pressMode == PressMode::CLICKED) {
+      if (!pressedMiddle) vec = glm::vec2(event.x, event.y);
+      if (event.pressed == 1) {
         pressedLeft = true;
-        vec = glm::vec2(event.x, event.y);
-        if (event.additional & 8) {
-          pressedShift = true;
-        }
+      } else if (event.pressed == 3) {
+        pressedMiddle = true;
+      }
+      if (event.additional & 8) {
+        pressedShift = true;
+      }
+    } else if (event.pressMode == PressMode::RELEASED) {
+      if (event.pressed == 3) {
+        pressedMiddle = false;
+      }
+    }
+    constexpr auto MODIFER = 0.001f;
+    if (pressedMiddle) {
+      switch (event.pressMode) {
+        case PressMode::HOLD:
+          glm::vec2 newPos(event.x, event.y);
+          auto currentDelta = (newPos - vec);
+          deltaMouse += currentDelta * MODIFER;
+          vec = newPos;
+          glm::quat xRotation(glm::vec3(0, 0, deltaMouse.x));
+          glm::quat yRotation(glm::vec3(-deltaMouse.y, 0, 0));
+          inputRotationX = glm::rotate(
+              yRotation, glm::rotate(xRotation, glm::vec3(1, 0, 0)));
+          inputRotationY = glm::rotate(
+              yRotation, glm::rotate(xRotation, glm::vec3(0, 1, 0)));
+          break;
       }
     }
   }
