@@ -85,6 +85,11 @@ struct CornerSets {
 using CornerSetsDefault = CornerSets<Quadrant>;
 using CornerSetsInternal = CornerSets<QuadrantInternal>;
 
+template <class Quadrant>
+inline auto forEachCorner(const CornerSets<Quadrant>& set) {
+  return std::array{set.TopRight, set.BottomRight, set.TopLeft, set.BottomLeft};
+}
+
 inline CornerSetsInternal toInternal(const CornerSetsDefault& string) {
   return {toInternal(string.TopRight), toInternal(string.BottomRight),
           toInternal(string.TopLeft), toInternal(string.BottomLeft)};
