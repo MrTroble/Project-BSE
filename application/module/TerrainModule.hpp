@@ -2,12 +2,14 @@
 
 #include <Module.hpp>
 #include <TGEngine.hpp>
+#include <array>
 #include <graphics/APILayer.hpp>
 #include <graphics/ElementHolder.hpp>
 #include <graphics/Material.hpp>
 #include <span>
-#include <array>
 #include <vector>
+#include <concepts>
+#include <tuple>
 
 #include "../../interop/SETextureset.hpp"
 
@@ -31,6 +33,18 @@ struct TerrainTextureInfo {
 constexpr auto TF = sizeof(TerrainTextureInfo);
 
 constexpr size_t MAX_IMAGES = 192;
+
+namespace std {
+template <class Left, class Right>
+struct hash<std::pair<Left, Right>> {
+  [[nodiscard]] inline std::size_t operator()(
+      const std::pair<Left, Right>& s) const noexcept {
+    const std::hash<Left> leftHash;
+    const std::hash<Right> rightHash;
+    return leftHash(s.first) | (rightHash(s.second) << 1);
+  }
+};
+}  // namespace std
 
 class TerrainModule : public tge::main::Module {
  public:
@@ -133,6 +147,7 @@ class TerrainModule : public tge::main::Module {
 
       auto arrayID = 0;
       BindingInfo info;
+      info.data.texture.sampler = sampler;
       info.binding = 1;
       info.bindingSet = renderInfo.bindingID;
       info.type = BindingType::Texture;
@@ -141,9 +156,10 @@ class TerrainModule : public tge::main::Module {
         auto loadedTextures = ggm->loadTextures(
             {corner.BaseLayer.Diffuse, corner.BaseLayer.Normal},
             LoadType::DDSPP);
+        size_t index = 0;
         for (const auto texture : loadedTextures) {
           info.data.texture.texture = texture;
-          info.arrayID = arrayID;
+          info.arrayID = arrayID + index++;
           bindingInfos.push_back(info);
         }
         textureData.quadrants[cornerID].Diffuse = arrayID++;
@@ -159,19 +175,21 @@ class TerrainModule : public tge::main::Module {
       BindingInfo samplerInfo;
       samplerInfo.binding = 0;
       samplerInfo.bindingSet = renderInfo.bindingID;
-      samplerInfo.type = BindingType::Sampler;
       samplerInfo.data.texture.sampler = sampler;
+      samplerInfo.data.texture.texture = TTextureHolder();
+      samplerInfo.type = BindingType::Sampler;
       bindingInfos.push_back(samplerInfo);
     }
 
     const auto dataHolderCreated = api->pushData(bufferInfos);
-    for (size_t i = 0; i < dataHolder.size(); i++) {
+    for (size_t i = 0; i < dataHolderCreated.size(); i++) {
       BindingInfo info;
       info.binding = 4;
       info.bindingSet = bindings + i;
       info.type = BindingType::UniformBuffer;
       info.data.buffer.dataID = dataHolderCreated[i];
       info.data.buffer.size = sizeof(TerrainTextureInfo);
+      info.data.buffer.offset = 0;
       bindingInfos.push_back(info);
     }
 
