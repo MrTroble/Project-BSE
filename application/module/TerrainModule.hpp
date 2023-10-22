@@ -3,13 +3,13 @@
 #include <Module.hpp>
 #include <TGEngine.hpp>
 #include <array>
+#include <concepts>
 #include <graphics/APILayer.hpp>
 #include <graphics/ElementHolder.hpp>
 #include <graphics/Material.hpp>
 #include <span>
-#include <vector>
-#include <concepts>
 #include <tuple>
+#include <vector>
 
 #include "../../interop/SETextureset.hpp"
 
@@ -29,8 +29,6 @@ struct TerrainTextureInfo {
   TextureSetInternal<uint32_t> quadrants[4];
   float maxUV;
 };
-
-constexpr auto TF = sizeof(TerrainTextureInfo);
 
 constexpr size_t MAX_IMAGES = 192;
 
@@ -77,16 +75,22 @@ class TerrainModule : public tge::main::Module {
   inline auto createCache(const TerrainInfoInternal& terrain) {
     using namespace tge::graphics;
     std::vector<glm::vec2> uvs(terrain.pointSize * terrain.pointSize);
+    std::vector<uint32_t> quadrants(terrain.pointSize * terrain.pointSize);
     const float uvRatio = terrain.maxUV / (float)terrain.pointSize;
     for (size_t y = 0; y < terrain.pointSize; y++) {
       const auto yConst = y * terrain.pointSize;
       for (size_t x = 0; x < terrain.pointSize; x++) {
         const auto index = x + yConst;
         uvs[index] = {x * uvRatio, y * uvRatio};
+        quadrants[index] = (uint32_t)(x * 2 / terrain.pointSize) +
+                           (uint32_t)(y * 2 / terrain.pointSize) * 2;
       }
     }
-    const std::array bufferInfo{BufferInfo{
-        uvs.data(), uvs.size() * sizeof(glm::vec2), DataType::VertexData}};
+    const std::array bufferInfo{
+        BufferInfo{uvs.data(), uvs.size() * sizeof(glm::vec2),
+                   DataType::VertexData},
+        BufferInfo{quadrants.data(), quadrants.size() * sizeof(uint32_t),
+                   DataType::VertexData}};
 
     TerrainCache cache;
     cache.data = api->pushData(bufferInfo);
@@ -128,7 +132,9 @@ class TerrainModule : public tge::main::Module {
       const auto& terrainCache = uvIterator->second;
       renderInfo.bindingID = bindingIterator++;
 
-      renderInfo.vertexBuffer.push_back(terrainCache.data[0]);
+      renderInfo.vertexBuffer.insert(std::end(renderInfo.vertexBuffer),
+                                     std::begin(terrainCache.data),
+                                     std::end(terrainCache.data));
       renderInfo.indexBuffer = iterator[3];
       renderInfo.indexSize = IndexSize::UINT16;
       renderInfo.indexCount =
@@ -144,6 +150,7 @@ class TerrainModule : public tge::main::Module {
       buffer.type = DataType::Uniform;
 
       TerrainTextureInfo& textureData = *textureInfo++;
+      textureData.maxUV = terrain.maxUV;
 
       auto arrayID = 0;
       BindingInfo info;
@@ -153,9 +160,10 @@ class TerrainModule : public tge::main::Module {
       info.type = BindingType::Texture;
       size_t cornerID = 0;
       for (const auto& corner : forEachCorner(terrain.cornerSet)) {
+        const auto diffuse = corner.BaseLayer.Diffuse;
         auto loadedTextures = ggm->loadTextures(
-            {corner.BaseLayer.Diffuse, corner.BaseLayer.Normal},
-            LoadType::DDSPP);
+            {diffuse, corner.BaseLayer.Normal},
+            diffuse.ends_with(".png") ? LoadType::STBI : LoadType::DDSPP);
         size_t index = 0;
         for (const auto texture : loadedTextures) {
           info.data.texture.texture = texture;
@@ -164,6 +172,7 @@ class TerrainModule : public tge::main::Module {
         }
         textureData.quadrants[cornerID].Diffuse = arrayID++;
         textureData.quadrants[cornerID].Normal = arrayID++;
+        cornerID++;
       }
 
       info.data.texture.texture = ggm->defaultTextureID;

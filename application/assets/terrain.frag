@@ -25,15 +25,10 @@
         "  float maxUV;",
         "} Quadrants;",
 
-        "uint getQuadrant(vec2 uv) {",
-        "  uint x = uint(floor(uv.x * 2.0f / Quadrants.maxUV));",
-        "  uint y = uint(floor(uv.y * 2.0f / Quadrants.maxUV));",
-        "  return x + y * uint(2);",
-        "}",
-
         "$next_in vec3 NORMALIN;",
         "$next_in vec3 COLORIN;",
         "$next_in vec2 UVIN;",
+        "$next_in flat uint INDEX;",
 
         "layout(location=0) out vec4 COLOR;",
         "layout(location=1) out vec4 NORMAL;",
@@ -42,16 +37,15 @@
         "layout(binding=0) uniform sampler samplertex;",
         "layout(binding=1) uniform texture2D colorTextures[192];",
 
-        "vec4 colorFromQuadrant(uint select) {",
-        "  Quadrant quadrant = Quadrants.quadrants[select];",
+        "vec4 colorFromQuadrant() {",
+        "  Quadrant quadrant = Quadrants.quadrants[INDEX];",
         "  return texture(sampler2D(colorTextures[quadrant.base.Diffuse], samplertex), UVIN);",
         "}",
 
         "void main() {",
-        "   ROUGHNESS = 10000000000000000.0f;",
-        "   METALLIC = 0;",
-        "   uint index = getQuadrant(UVIN);",
-        "   COLOR = vec4(COLORIN, 1) * colorFromQuadrant(index);",
+        "   ROUGHNESS = ~0;",
+        "   METALLIC = ~0;",
+        "   COLOR = vec4(COLORIN, 1) * colorFromQuadrant();",
         "   NORMAL = vec4(NORMALIN, 1);",
         "}"
       ]

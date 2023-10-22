@@ -21,8 +21,8 @@ layout(binding=4) uniform QuadrantsBlock {
 } Quadrants;
 
 uint getQuadrant(vec2 uv) {
-	uint x = uint(floor(uv.x * 2.0f / Quadrants.maxUV));
-    uint y = uint(floor(uv.y * 2.0f / Quadrants.maxUV));
+	uint x = uint(round(uv.x * 2.0f / Quadrants.maxUV));
+    uint y = uint(round(uv.y * 2.0f / Quadrants.maxUV));
 	return x + y * uint(2);
 }
 

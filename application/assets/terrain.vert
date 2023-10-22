@@ -22,9 +22,13 @@
         "$next_out vec3 COLOROUT;",
         "$next_in vec2 UVIN;",
         "$next_out vec2 UVOUT;",
+        "$next_in uint INDEXIN;",
+        "flat $next_out uint INDEX;",
+
         "void main() {",
         "   gl_Position = proj.proj * mvp.matrix * vec4(POSITION, 1);",
-        "   UVOUT = vec2(0, 0);",
+        "   UVOUT = UVIN;",
+        "   INDEX = INDEXIN;",
         "   NORMALOUT = NORMALIN;",
         "   COLOROUT = COLORIN;",
         "}"
