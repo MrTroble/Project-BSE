@@ -28,7 +28,8 @@
         "$next_in vec3 NORMALIN;",
         "$next_in vec3 COLORIN;",
         "$next_in vec2 UVIN;",
-        "$next_in flat uint INDEX;",
+        "$next_in float INDEXX;",
+        "$next_in float INDEXY;",
 
         "layout(location=0) out vec4 COLOR;",
         "layout(location=1) out vec4 NORMAL;",
@@ -38,14 +39,20 @@
         "layout(binding=1) uniform texture2D colorTextures[192];",
 
         "vec4 colorFromQuadrant() {",
-        "  Quadrant quadrant = Quadrants.quadrants[INDEX];",
+        "  int x = clamp(0, 1, int(round(INDEXX)));",
+        "  int y = clamp(0, 1, int(round(INDEXY)));",
+        "  return vec4(INDEXX, INDEXY, 0, 1);",
+        "  int quadrantID = x+2*y;",
+        "  const Quadrant quadrant = Quadrants.quadrants[quadrantID];",
+        "  //return vec4(vec3(0.25) * float(quadrantID), 1);",
         "  return texture(sampler2D(colorTextures[quadrant.base.Diffuse], samplertex), UVIN);",
         "}",
 
         "void main() {",
-        "   ROUGHNESS = ~0;",
-        "   METALLIC = ~0;",
-        "   COLOR = vec4(COLORIN, 1) * colorFromQuadrant();",
+        "   ROUGHNESS = 0;",
+        "   METALLIC = 0;",
+        "   COLOR = colorFromQuadrant();",
+        "   //COLOR = vec4(colorFromQuadrant().r * vec3(1), 1);",
         "   NORMAL = vec4(NORMALIN, 1);",
         "}"
       ]

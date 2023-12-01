@@ -68,6 +68,7 @@ class TerrainModule : public tge::main::Module {
     SamplerInfo info;
     info.uMode = AddressMode::REPEAT;
     info.vMode = AddressMode::REPEAT;
+    info.anisotropy = ggm->features.anisotropicfiltering;
     sampler = api->pushSampler(info);
     return tge::main::Error::NONE;
   }
@@ -108,7 +109,7 @@ class TerrainModule : public tge::main::Module {
     auto render = info.begin();
     auto shader = api->getShaderAPI();
     const auto bindings = shader->createBindings(shaderPipe, cornerSets.size());
-    auto bindingIterator = bindings;
+    auto bindingIterator = bindings.begin();
 
     std::vector<NodeInfo> nodeInfos;
     nodeInfos.reserve(cornerSets.size());
@@ -130,7 +131,7 @@ class TerrainModule : public tge::main::Module {
         uvIterator = createCache(terrain);
       }
       const auto& terrainCache = uvIterator->second;
-      renderInfo.bindingID = bindingIterator++;
+      renderInfo.bindingID = *bindingIterator++;
 
       renderInfo.vertexBuffer.insert(std::end(renderInfo.vertexBuffer),
                                      std::begin(terrainCache.data),
@@ -194,7 +195,7 @@ class TerrainModule : public tge::main::Module {
     for (size_t i = 0; i < dataHolderCreated.size(); i++) {
       BindingInfo info;
       info.binding = 4;
-      info.bindingSet = bindings + i;
+      info.bindingSet = bindings[i];
       info.type = BindingType::UniformBuffer;
       info.data.buffer.dataID = dataHolderCreated[i];
       info.data.buffer.size = sizeof(TerrainTextureInfo);

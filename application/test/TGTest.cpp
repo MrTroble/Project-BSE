@@ -96,9 +96,9 @@ void test() {
   info.colorBegin = 33 * 33 * 4;
   info.normalBegin = 33 * 33;
   info.point_size = 33;
-  info.cornerSets.TopLeft.BaseLayer.Diffuse = "assets\\textures\\Leftupper.png";
-  info.cornerSets.TopRight.BaseLayer.Diffuse = "assets\\textures\\Rightupper.png";
-  info.cornerSets.BottomRight.BaseLayer.Diffuse = "assets\\textures\\Rightlower.png";
+  info.cornerSets.TopLeft.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
+  info.cornerSets.TopRight.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
+  info.cornerSets.BottomRight.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
   info.cornerSets.BottomLeft.BaseLayer.Diffuse = "assets\\textures\\Leftlower.png";
   loadTerrain(1, &info, buffer.data());
 }

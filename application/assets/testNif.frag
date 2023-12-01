@@ -36,7 +36,7 @@
         "layout(location=2) out float ROUGHNESS;",
         "layout(location=3) out float METALLIC;",
         "layout(push_constant) uniform constants { uint id; } pushConst;",
-        "layout(binding=5) uniform block { float id; } currentSelectID;",
+        "",
         "void main() {",
         "   ROUGHNESS = pushConst.id;",
         "   METALLIC = 0;",
