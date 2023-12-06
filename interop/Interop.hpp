@@ -118,4 +118,6 @@ TGE_DLLEXPORT bool addSelectCallback(FormKeyCallback callback);
 
 TGE_DLLEXPORT bool addTerrainCallback(TerrainAddCallback callback);
 
+TGE_DLLEXPORT void* getMainWindowHandle();
+
 void callLoadFinishedCallback();

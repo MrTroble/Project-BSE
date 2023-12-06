@@ -59,6 +59,11 @@ bool addTerrainCallback(TerrainAddCallback callback) {
   ADD_OR_RETURN_ON_FAIL(terrainCallbacks, callback);
 }
 
+void* getMainWindowHandle()
+{
+    return tge::interop::getMainWindowHandle();
+}
+
 void callLoadFinishedCallback() {
   for (auto load : loadFinished) load();
 }

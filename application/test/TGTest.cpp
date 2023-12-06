@@ -111,6 +111,7 @@ int main(int argv, const char** in) {
                                 (char*)"Whiterun - Textures.bsa",
                                 (char*)"Whiterun.bsa"};
   InitConfig config{CURRENT_INIT_VERSION, (char*)directory};
+  config.featureSet.mipMapLevels = INVALID_UINT32;
   return initTGEditor(&config, (const char**)bsaHandles.data(),
                       bsaHandles.size());
 }

@@ -41,10 +41,10 @@
         "vec4 colorFromQuadrant() {",
         "  int x = clamp(0, 1, int(round(INDEXX)));",
         "  int y = clamp(0, 1, int(round(INDEXY)));",
-        "  return vec4(INDEXX, INDEXY, 0, 1);",
+        "  //return vec4(INDEXX, INDEXY, 0, 1);",
         "  int quadrantID = x+2*y;",
         "  const Quadrant quadrant = Quadrants.quadrants[quadrantID];",
-        "  //return vec4(vec3(0.25) * float(quadrantID), 1);",
+        "  //return vec4(UVIN, 1, 1);",
         "  return texture(sampler2D(colorTextures[quadrant.base.Diffuse], samplertex), UVIN);",
         "}",
 

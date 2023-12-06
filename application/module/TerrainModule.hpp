@@ -68,6 +68,8 @@ class TerrainModule : public tge::main::Module {
     SamplerInfo info;
     info.uMode = AddressMode::REPEAT;
     info.vMode = AddressMode::REPEAT;
+    info.magFilter = FilterSetting::NEAREST;
+    info.minFilter = FilterSetting::NEAREST;
     info.anisotropy = ggm->features.anisotropicfiltering;
     sampler = api->pushSampler(info);
     return tge::main::Error::NONE;

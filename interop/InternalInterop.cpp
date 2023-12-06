@@ -175,4 +175,9 @@ bool internalSelect(const size_t count, const size_t* ids) {
   return true;
 }
 
+void* getMainWindowHandle()
+{
+    return tge::main::getMainWindowHandle();
+}
+
 }  // namespace tge::interop

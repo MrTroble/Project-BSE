@@ -63,7 +63,7 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   auto& dir = tge::nif::nifModule->assetDirectory;
   if (dir.back() != END_CHARACTER) dir += END_CHARACTER;
 
-  const auto initResult = init();
+  const auto initResult = init(config->featureSet);
   waitMutex.unlock();
   if (initResult != main::Error::NONE) {
     PLOG_FATAL << "Error in init!";

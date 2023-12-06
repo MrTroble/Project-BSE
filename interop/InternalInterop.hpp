@@ -20,4 +20,6 @@ bool terrain(const uint count, const TerrainInfo* info, float* buffer);
 
 bool internalSelect(const size_t count, const size_t* ids);
 
+void* getMainWindowHandle();
+
 }  // namespace tge::interop
