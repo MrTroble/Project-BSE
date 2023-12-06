@@ -82,6 +82,9 @@ void test() {
       color[0] = value;
       color[1] = 0;
       color[2] = 1 - value;
+      normal[0] = 0;
+      normal[1] = 1;
+      normal[2] = 0;
       normal += 3;
       color += 3;
       position++;
@@ -93,6 +96,10 @@ void test() {
   info.colorBegin = 33 * 33 * 4;
   info.normalBegin = 33 * 33;
   info.point_size = 33;
+  info.cornerSets.TopLeft.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
+  info.cornerSets.TopRight.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
+  info.cornerSets.BottomRight.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
+  info.cornerSets.BottomLeft.BaseLayer.Diffuse = "assets\\textures\\Leftlower.png";
   loadTerrain(1, &info, buffer.data());
 }
 
@@ -104,6 +111,7 @@ int main(int argv, const char** in) {
                                 (char*)"Whiterun - Textures.bsa",
                                 (char*)"Whiterun.bsa"};
   InitConfig config{CURRENT_INIT_VERSION, (char*)directory};
+  config.featureSet.mipMapLevels = INVALID_UINT32;
   return initTGEditor(&config, (const char**)bsaHandles.data(),
                       bsaHandles.size());
 }

@@ -7,13 +7,14 @@
 extern TGAppGUI* guiModul;
 extern TGAppIO* ioModul;
 
-constexpr uint32_t CURRENT_INIT_VERSION = 3;
+constexpr uint32_t CURRENT_INIT_VERSION = 4;
 
 struct InitConfig {
   uint32_t version = CURRENT_INIT_VERSION;
   char* assetDirectory = nullptr;
   size_t sizeOfWindowHandles = 0;
   void** windowHandles = nullptr;
+  tge::graphics::FeatureSet featureSet{};
 };
 
 TGE_DLLEXPORT int initTGEditor(const InitConfig* config, const char** bsaFiles,
@@ -35,6 +36,7 @@ struct SizeInformation {
   size_t quadrantStruct = sizeof(Quadrant);
   size_t cornerSetsStruct = sizeof(CornerSetsDefault);
   size_t terrainInfoStruct = sizeof(TerrainInfo);
+  size_t featureStruct = sizeof(tge::graphics::FeatureSet);
 };
 
 TGE_DLLEXPORT SizeInformation getSizeInfo();

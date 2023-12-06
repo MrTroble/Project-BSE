@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <span>
 #include <sstream>
 //
 #include <NifFile.hpp>
@@ -84,15 +85,17 @@ Error NifModule::init() {
 
 void NifModule::remove(const size_t size, const TNodeHolder* ids) {
   std::vector<TRenderHolder> values;
-  values.resize(size);
+  values.reserve(2 * size);
   for (size_t i = 0; i < size; i++) {
     const TNodeHolder currentID = ids[i];
     const auto iterator = nodeIdToRender.find(currentID);
     if (iterator == std::end(nodeIdToRender)) {
-      PLOG_DEBUG << "Could not find " << currentID.internalHandle << " in translation table!";
+      PLOG_DEBUG << "Could not find " << currentID.internalHandle
+                 << " in translation table!";
       return;
     }
-    values[i] = iterator->second;
+    values.push_back(iterator->second.first);
+    values.push_back(iterator->second.second);
   }
   const auto api = getAPILayer();
   api->removeRender(values.size(), values.data());
@@ -101,6 +104,127 @@ void NifModule::remove(const size_t size, const TNodeHolder* ids) {
 struct UpdateInfo {
   std::vector<std::string>& cacheString;
   std::vector<BufferInfo>& dataInfo;
+};
+
+struct SupportStruct {
+  nifly::NiShape* shape;
+  void* shader;
+  size_t begin;
+};
+
+struct FinishInfo {
+  tge::shader::ShaderAPI* api;
+  std::string assetDirectory;
+  tge::graphics::GameGraphicsModule* ggm;
+  TNodeHolder basicNode;
+};
+
+inline void createFromTextures(TBindingHolder holder, TSamplerHolder samplerID,
+                               TTextureHolder albedoID, TTextureHolder normalID,
+                               std::vector<BindingInfo>& bindingInfos) {
+  BindingInfo binding;
+  binding.bindingSet = holder;
+  binding.type = BindingType::Texture;
+  binding.data.texture.sampler = samplerID;
+  binding.data.texture.texture = albedoID;
+  binding.binding = 1;
+  bindingInfos.push_back(binding);
+  binding.data.texture.texture = normalID;
+  binding.binding = 4;
+  bindingInfos.push_back(binding);
+  binding.data.texture.texture = TTextureHolder();
+  binding.type = BindingType::Sampler;
+  binding.binding = 0;
+  bindingInfos.push_back(binding);
+}
+
+struct RenderInfoHolder {
+  std::vector<RenderInfo> infoOpaque;
+  std::vector<RenderInfo> infoNoneOpaque;
+  std::vector<SupportStruct> supportOpaque;
+  std::vector<SupportStruct> supportNoneOpaque;
+  std::vector<size_t> supportSizeOpaque;
+  std::vector<size_t> supportSizeNoneOpaque;
+
+  std::vector<BindingInfo> bindingInfos;
+  std::vector<tge::graphics::NodeInfo> nodeInfos;
+  size_t shapeCount = 0;
+
+  inline void reserve(size_t size) {
+    supportOpaque.reserve(size);
+    supportNoneOpaque.reserve(size);
+    infoOpaque.reserve(size);
+    infoNoneOpaque.reserve(size);
+    supportSizeOpaque.reserve(size);
+    supportSizeNoneOpaque.reserve(size);
+  }
+
+  inline void pushBack(nifly::NiShape* shape, void* shader, size_t begin,
+                       const RenderInfo& renderInfo) {
+    if (shape->HasAlphaProperty()) {
+      supportNoneOpaque.emplace_back(shape, shader, begin);
+      supportSizeNoneOpaque.push_back(begin);
+      infoNoneOpaque.push_back(renderInfo);
+    } else {
+      supportOpaque.emplace_back(shape, shader, begin);
+      supportSizeOpaque.push_back(begin);
+      infoOpaque.push_back(renderInfo);
+    }
+    shapeCount++;
+  }
+
+  inline void finish(const tge::graphics::NodeTransform& transform,
+                     nifly::NifFile& file, TSamplerHolder samplerID,
+                     FinishInfo& finishInfo) {
+    bindingInfos.reserve(shapeCount * 3);
+    nodeInfos.resize(shapeCount + 1);
+    nodeInfos[0].transforms = transform;
+    nodeInfos[0].parentHolder = finishInfo.basicNode;
+    auto nodeIterator = nodeInfos.begin() + 1;
+    for (auto& [infoIn, support] :
+         {std::make_pair(std::span(infoOpaque), std::span(supportOpaque)),
+          std::make_pair(std::span(infoNoneOpaque),
+                         std::span(supportNoneOpaque))}) {
+      for (size_t i = 0; i < infoIn.size(); i++) {
+        const auto shape = support[i].shape;
+        auto& info = infoIn[i];
+        info.bindingID = finishInfo.api->createBindings(support[i].shader)[0];
+        const auto translate = shape->transform.translation;
+        const auto scale = shape->transform.scale;
+        const auto rotate = shape->transform.rotation;
+        auto& nodeInfo = *nodeIterator++;
+
+        nodeInfo.parent = 0;
+        nodeInfo.bindingID = info.bindingID;
+        nodeInfo.transforms.translation =
+            glm::vec3(translate.x, translate.y, translate.z);
+        nodeInfo.transforms.scale = glm::vec3(scale);
+        glm::vec3 rotationVector;
+        rotate.ToEulerAngles(rotationVector.x, rotationVector.y,
+                             rotationVector.z);
+        nodeInfo.transforms.rotation = glm::quat(rotationVector);
+
+        auto shaderData = file.GetShader(shape);
+        if (shaderData) {
+          const auto indexTexData = shaderData->TextureSetRef();
+          const auto ref = file.GetHeader().GetBlock(indexTexData);
+          if (ref != nullptr && ref->textures.size() > 1) {
+            const auto base =
+                finishInfo.assetDirectory + ref->textures[0].get();
+            const auto normal =
+                finishInfo.assetDirectory + ref->textures[1].get();
+            std::lock_guard guard(finishInfo.ggm->protectTexture);
+            const auto albedoID = finishInfo.ggm->textureMap[base];
+            const auto normalID = finishInfo.ggm->textureMap[normal];
+            createFromTextures(info.bindingID, samplerID, albedoID, normalID,
+                               bindingInfos);
+            continue;
+          }
+        }
+      }
+    }
+    return;
+  }
 };
 
 template <typename Type>
@@ -114,9 +238,16 @@ inline void updateOn(const UpdateInfo& info, const std::string& name,
 
 static std::unordered_map<std::string, nifly::NifFile> filesByName;
 
+struct HelperNoneOpaque {
+  std::vector<RenderInfo> opaque;
+  std::vector<RenderInfo> noneOpaque;
+  std::vector<size_t> beginOpaque;
+  std::vector<size_t> beginNoneOpaque;
+};
+
 std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
                                                       const LoadNif* loads,
-                                    void* shaderPipe) {
+                                                      void* shaderPipe) {
   if (!finishedLoading) {
     std::cerr << "Call nif before loaded!";
     return {};
@@ -179,7 +310,7 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
   std::vector<BufferInfo> dataInfos;
   dataInfos.reserve(count * count);
 
-  std::vector<std::vector<RenderInfo>> allRenderInfos;
+  std::vector<HelperNoneOpaque> allRenderInfos;
   allRenderInfos.resize(count);
 
   std::vector<TNodeHolder> allNodes;
@@ -191,18 +322,15 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
   std::vector<std::vector<nifly::Vector3>> vertexHolder;
   vertexHolder.reserve(count * count);
 
+  FinishInfo finInfo = {sha, assetDirectory, ggm, basicNifNode};
+
   for (size_t i = 0; i < count; i++) {
     auto& file = filesByName[loads[i].file];
     const auto& shapes = file.GetShapes();
     size_t current = 0;
 
-    std::vector<RenderInfo> renderInfos;
-    renderInfos.reserve(shapes.size());
-    std::vector<size_t> shapeIndex;
-    shapeIndex.reserve(shapes.size());
-
-    std::vector<Material> materials;
-    materials.reserve(shapes.size());
+    RenderInfoHolder holder;
+    holder.reserve(shapes.size());
 
     for (auto shape : shapes) {
       RenderInfo info;
@@ -247,11 +375,12 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
             sha->compile({{ShaderType::VERTEX, vertexFile, cacheString},
                           {ShaderType::FRAGMENT, fragmentsFile, cacheString}},
                          createInfo);
-        shaderCache[cacheString] = pipe;
-        foundItr = shaderCache.find(cacheString);
+        const Material material(pipe);
+        const auto materialId = api->pushMaterials(1, &material);
+        foundItr =
+            shaderCache.emplace(cacheString, std::pair(materialId[0], pipe))
+                .first;
       }
-      void* ptr = foundItr->second;
-      materials.push_back(Material(ptr));
 
       auto& triangles = allTriangleLists.emplace_back();
       shape->GetTriangles(triangles);
@@ -265,71 +394,21 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
         info.indexCount = vertexSize;
         info.indexSize = IndexSize::NONE;
       }
-      renderInfos.push_back(info);
-      shapeIndex.push_back(current);
+
+      info.materialId = foundItr->second.first;
+      holder.pushBack(shape, foundItr->second.second, oldSize, info);
       current++;
     }
-    const auto materialId =
-        api->pushMaterials(materials.size(), materials.data());
 
-    std::vector<BindingInfo> bindingInfos;
-    bindingInfos.reserve(shapes.size() * 3);
-    std::vector<tge::graphics::NodeInfo> nodeInfos;
-    nodeInfos.resize(shapeIndex.size() + 1);
-    nodeInfos[0].transforms = loads[i].transform;
-    nodeInfos[0].parentHolder = basicNifNode;
-    for (size_t i = 0; i < shapeIndex.size(); i++) {
-      const auto shape = shapes[shapeIndex[i]];
-      auto& info = renderInfos[i];
-      info.materialId = materialId[i];
-      info.bindingID = sha->createBindings(materials[i].costumShaderData, 1);
-      const auto translate = shape->transform.translation;
-      const auto scale = shape->transform.scale;
-      const auto rotate = shape->transform.rotation;
-      auto& nodeInfo = nodeInfos[i + 1];
+    holder.finish(loads[i].transform, file, samplerID, finInfo);
 
-      nodeInfo.parent = 0;
-      nodeInfo.bindingID = info.bindingID;
-      nodeInfo.transforms.translation =
-          glm::vec3(translate.x, translate.y, translate.z);
-      nodeInfo.transforms.scale = glm::vec3(scale);
-      glm::vec3 rotationVector;
-      rotate.ToEulerAngles(rotationVector.x, rotationVector.y,
-                           rotationVector.z);
-      nodeInfo.transforms.rotation = glm::quat(rotationVector);
-
-      auto shaderData = file.GetShader(shape);
-      if (shaderData) {
-        const auto indexTexData = shaderData->TextureSetRef();
-        const auto ref = file.GetHeader().GetBlock(indexTexData);
-        if (ref != nullptr && ref->textures.size() > 1) {
-          const auto base = assetDirectory + ref->textures[0].get();
-          const auto normal = assetDirectory + ref->textures[1].get();
-          std::lock_guard guard(ggm->protectTexture);
-          const auto albedoID = ggm->textureMap[base];
-          const auto normalID = ggm->textureMap[normal];
-          BindingInfo binding;
-          binding.bindingSet = nodeInfo.bindingID;
-          binding.type = BindingType::Texture;
-          binding.data.texture.sampler = samplerID;
-          binding.data.texture.texture = albedoID;
-          binding.binding = 1;
-          bindingInfos.push_back(binding);
-          binding.data.texture.texture = normalID;
-          binding.binding = 4;
-          bindingInfos.push_back(binding);
-          binding.data.texture.texture = TTextureHolder();
-          binding.type = BindingType::Sampler;
-          binding.binding = 0;
-          bindingInfos.push_back(binding);
-        }
-      }
-    }
-
-    const auto nodes = ggm->addNode(nodeInfos.data(), nodeInfos.size());
+    const auto nodes = ggm->addNode(holder.nodeInfos);
     allNodes[i] = nodes[0];
-    sha->bindData(bindingInfos.data(), bindingInfos.size());
-    allRenderInfos[i] = renderInfos;
+    sha->bindData(holder.bindingInfos);
+    allRenderInfos[i] = {std::move(holder.infoOpaque),
+                         std::move(holder.infoNoneOpaque),
+                         std::move(holder.supportSizeOpaque),
+                         std::move(holder.supportSizeNoneOpaque)};
     nodeCache.push_back(nodes);
   }
 
@@ -337,23 +416,40 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
 
   auto startPointer = indexBufferID.data();
   for (size_t i = 0; i < count; i++) {
-    auto& renderInfos = allRenderInfos[i];
-    if (renderInfos.empty()) continue;
-    for (auto& info : renderInfos) {
-      for (auto& index : info.vertexBuffer) {
-        index = *(startPointer++);
+    auto& renderInfoTuple = allRenderInfos[i];
+
+    const auto process = [&](auto& renderInfos, auto& begins) {
+      auto beginIterator = begins.begin();
+      auto internalStart = startPointer;
+      for (auto& info : renderInfos) {
+        internalStart = startPointer + *beginIterator;
+        for (auto& index : info.vertexBuffer) {
+          index = *(internalStart++);
+        }
+        std::vector<char> pushData;
+        pushData.resize(sizeof(uint32_t));
+        memcpy(pushData.data(), &internalStart->internalHandle,
+               pushData.size());
+        info.constRanges.push_back({pushData, shader::ShaderType::FRAGMENT});
+        info.indexBuffer = *(internalStart++);
+        beginIterator++;
       }
-      std::vector<char> pushData;
-      pushData.resize(sizeof(uint32_t));
-      memcpy(pushData.data(), &startPointer->internalHandle, pushData.size());
-      info.constRanges.push_back({pushData, shader::ShaderType::FRAGMENT});
-      info.indexBuffer = *(startPointer++);
-    }
+    };
 
-    const auto pushRender =
-        api->pushRender(renderInfos.size(), renderInfos.data());
+    process(renderInfoTuple.opaque, renderInfoTuple.beginOpaque);
+    process(renderInfoTuple.noneOpaque, renderInfoTuple.beginNoneOpaque);
 
-    this->nodeIdToRender[allNodes[i]] = pushRender;
+    const auto pushRenderOpaque = renderInfoTuple.opaque.empty()
+                                      ? TRenderHolder{}
+                                      : api->pushRender(renderInfoTuple.opaque);
+    const auto pushRenderNoneOpaque =
+        renderInfoTuple.noneOpaque.empty()
+            ? TRenderHolder{}
+            : api->pushRender(renderInfoTuple.noneOpaque, {},
+                              RenderTarget::TRANSLUCENT_TARGET);
+
+    this->nodeIdToRender[allNodes[i]] =
+        std::make_pair(pushRenderOpaque, pushRenderNoneOpaque);
   }
 
   return nodeCache;

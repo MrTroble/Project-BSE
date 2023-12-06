@@ -45,20 +45,21 @@ class NifModule : public tge::main::Module {
   std::string assetDirectory;
   std::vector<std::string> archiveNames;
   std::mutex shaderCacheMutex;
-  std::unordered_map<std::vector<std::string>, void*> shaderCache;
+  std::unordered_map<std::vector<std::string>,
+                     std::pair<tge::graphics::TPipelineHolder, void*>>
+      shaderCache;
   std::unordered_map<std::string, LoadedModelInformation> loadInformation;
   float translationFactor = 0.00142875f;
   graphics::TNodeHolder basicNifNode;
   graphics::TSamplerHolder samplerID;
-  std::unordered_map<graphics::TNodeHolder, graphics::TRenderHolder>
+  std::unordered_map<graphics::TNodeHolder, std::pair<graphics::TRenderHolder,
+                                                      graphics::TRenderHolder>>
       nodeIdToRender;
 
   tge::main::Error init();
 
   std::vector<std::vector<graphics::TNodeHolder>> load(
-      const size_t count,
-                                             const LoadNif* loads,
-                                             void* shaderPipe = nullptr);
+      const size_t count, const LoadNif* loads, void* shaderPipe = nullptr);
 
   void remove(const size_t size, const graphics::TNodeHolder* ids);
 };

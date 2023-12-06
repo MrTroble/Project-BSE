@@ -8,19 +8,21 @@
 using ushort = unsigned short;
 using ubyte = unsigned char;
 
-inline std::string toInternal(const char* string) { return ""; }
+inline std::string toInternal(const char* string) {
+  return string == nullptr ? "" : string;
+}
 
 #if SkyrimSE
 template <class Type>
 struct TextureSetInternal {
-  Type Diffuse;
-  Type Normal;
-  Type Specular;
-  Type EnvironmentMask;
-  Type Height;
-  Type Environment;
-  Type Multilayer;
-  Type Emissive;
+  Type Diffuse = {};
+  Type Normal = {};
+  Type Specular = {};
+  Type EnvironmentMask = {};
+  Type Height = {};
+  Type Environment = {};
+  Type Multilayer = {};
+  Type Emissive = {};
 };
 
 template <class Type>
@@ -84,6 +86,11 @@ struct CornerSets {
 };
 using CornerSetsDefault = CornerSets<Quadrant>;
 using CornerSetsInternal = CornerSets<QuadrantInternal>;
+
+template <class Quadrant>
+inline auto forEachCorner(const CornerSets<Quadrant>& set) {
+  return std::array{set.TopRight, set.BottomRight, set.TopLeft, set.BottomLeft};
+}
 
 inline CornerSetsInternal toInternal(const CornerSetsDefault& string) {
   return {toInternal(string.TopRight), toInternal(string.BottomRight),
