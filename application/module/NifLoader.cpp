@@ -118,6 +118,7 @@ namespace tge::nif {
 		nifly::NiShape* shape;
 		void* shader;
 		size_t begin;
+		size_t parent;
 	};
 
 	struct FinishInfo {
@@ -182,14 +183,50 @@ namespace tge::nif {
 			shapeCount++;
 		}
 
+		inline void addToNode(NodeInfo& nodeInfo, nifly::NiAVObject* shape) {
+			const auto translate = shape->transform.translation;
+			const auto scale = shape->transform.scale;
+			const auto rotate = shape->transform.rotation;
+
+			nodeInfo.transforms.translation =
+				glm::vec3(translate.x, translate.y, translate.z);
+			nodeInfo.transforms.scale = glm::vec3(scale);
+			glm::vec3 rotationVector{};
+			rotate.MakeRotation(rotationVector.x, rotationVector.y,
+				rotationVector.z);
+			nodeInfo.transforms.rotation = glm::quat(rotationVector);
+		}
+
 		inline void finish(const tge::graphics::NodeTransform& transform,
 			nifly::NifFile& file, TSamplerHolder samplerID,
 			FinishInfo& finishInfo) {
 			bindingInfos.reserve(shapeCount * 3);
-			nodeInfos.resize(shapeCount + 1);
+			nodeInfos.reserve(shapeCount + 1);
+			nodeInfos.emplace_back();
 			nodeInfos[0].transforms = transform;
 			nodeInfos[0].parentHolder = finishInfo.basicNode;
-			auto nodeIterator = nodeInfos.begin() + 1;
+
+			std::unordered_map<nifly::NiAVObject*, size_t> shapeToParent;
+			for (auto node : file.GetNodes())
+			{
+				size_t nodeID = nodeInfos.size();
+				auto& nodeInfo = nodeInfos.emplace_back();
+				const auto parent = shapeToParent.find(node);
+				nodeInfo.parent = parent != std::end(shapeToParent) ? parent->second : 0;
+				addToNode(nodeInfo, node);
+				const auto& children = file.GetChildren<nifly::NiAVObject>(node);
+				for (const auto child : children)
+				{
+					shapeToParent[child] = nodeID;
+				}
+#ifdef DEBUG
+				auto debugNodeInfo = std::make_shared<NodeDebugInfo>();
+				debugNodeInfo->name = node->name.get() + "[" + std::string(node->GetBlockName()) + "]";
+				debugNodeInfo->data = node;
+				nodeInfo.debugInfo = debugNodeInfo;
+#endif // DEBUG
+			}
+
 			for (auto& [infoIn, support] :
 				{ std::make_pair(std::span(infoOpaque), std::span(supportOpaque)),
 				 std::make_pair(std::span(infoNoneOpaque),
@@ -198,20 +235,18 @@ namespace tge::nif {
 					const auto shape = support[i].shape;
 					auto& info = infoIn[i];
 					info.bindingID = finishInfo.api->createBindings(support[i].shader)[0];
-					const auto translate = shape->transform.translation;
-					const auto scale = shape->transform.scale;
-					const auto rotate = shape->transform.rotation;
-					auto& nodeInfo = *nodeIterator++;
 
-					nodeInfo.parent = 0;
+					auto& nodeInfo = nodeInfos.emplace_back();
+					const auto parent = shapeToParent.find(shape);
+					nodeInfo.parent = parent != std::end(shapeToParent) ? parent->second : 0;
 					nodeInfo.bindingID = info.bindingID;
-					nodeInfo.transforms.translation =
-						glm::vec3(translate.x, translate.y, translate.z);
-					nodeInfo.transforms.scale = glm::vec3(scale);
-					glm::vec3 rotationVector;
-					rotate.ToEulerAngles(rotationVector.x, rotationVector.y,
-						rotationVector.z);
-					nodeInfo.transforms.rotation = glm::quat(rotationVector);
+					addToNode(nodeInfo, shape);
+#ifdef DEBUG
+					auto debugNodeInfo = std::make_shared<NodeDebugInfo>();
+					debugNodeInfo->name = shape->name.get() + "[" + std::string(shape->GetBlockName()) + "]";
+					info.debugName = debugNodeInfo->name;
+					nodeInfo.debugInfo = debugNodeInfo;
+#endif // DEBUG
 
 					auto shaderData = file.GetShader(shape);
 					if (shaderData) {
