@@ -31,12 +31,19 @@
     },
     {
       "code": [
+        "struct ValueSystem {",
+        "   mat4 model;",
+        "   mat4 normalModel;",
+        "   vec4 color;",
+        "   vec4 padding[7];",
+        "};",
+        "layout(binding=2) uniform _system { ValueSystem values; } system;",
+
         "layout(location=0) out vec4 COLOR;",
         "layout(location=1) out vec4 NORMAL;",
         "layout(location=2) out float ROUGHNESS;",
         "layout(location=3) out float METALLIC;",
         "layout(push_constant) uniform constants { uint id; } pushConst;",
-        "",
         "void main() {",
         "   ROUGHNESS = pushConst.id;",
         "   METALLIC = 0;",
@@ -46,16 +53,16 @@
     },
     {
       "code": [
-        "   COLOR = texture(sampler2D(colorTexture, samplertex), UVIN);",
-        "   NORMAL = texture(sampler2D(normalTexture, samplertex), UVIN);"
+        "   COLOR = COLORIN;"
       ],
-      "dependsOn": [ "UV", "TEXTURES" ]
+      "dependsOn": [ "COLOR" ]
     },
     {
       "code": [
-        "   COLOR *= COLORIN;"
+        "   COLOR *= texture(sampler2D(colorTexture, samplertex), UVIN);",
+        "   NORMAL = texture(sampler2D(normalTexture, samplertex), UVIN);"
       ],
-      "dependsOn": [ "COLOR" ]
+      "dependsOn": [ "UV", "TEXTURES" ]
     },
     {
       "code": [
@@ -65,6 +72,8 @@
     },
     {
       "code": [
+        "   NORMAL = system.values.normalModel * NORMAL;",
+        "   if(COLOR.a < 1) discard;",
         "}"
       ]
     }

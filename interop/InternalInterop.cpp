@@ -25,7 +25,9 @@ inline glm::vec3 vectors(const vec3& vec3) {
 }
 
 inline glm::quat quats(const vec3& vec3) { 
-    return glm::quat(glm::vec3(vec3.x, vec3.y, vec3.z));
+    auto vector = vectors(vec3);
+    vector *= -1;
+    return glm::quat(vector);
 }
 
 inline tge::graphics::NodeTransform transformFromInput(

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <span>
+#include <ranges>
 #include <sstream>
 //
 #include <NifFile.hpp>
@@ -53,6 +54,7 @@ namespace tge::nif {
 		const auto ggm = getGameGraphicsModule();
 		tge::graphics::NodeInfo nodeInfo;
 		nodeInfo.transforms.scale *= this->translationFactor;
+		nodeInfo.transforms.scale.y *= -1;
 		basicNifNode = ggm->addNode(&nodeInfo, 1)[0];
 
 		ggm->addAssetResolver(
@@ -191,9 +193,9 @@ namespace tge::nif {
 			nodeInfo.transforms.translation =
 				glm::vec3(translate.x, translate.y, translate.z);
 			nodeInfo.transforms.scale = glm::vec3(scale);
-			glm::vec3 rotationVector{};
-			rotate.MakeRotation(rotationVector.x, rotationVector.y,
-				rotationVector.z);
+			const auto vector = nifly::RotMatToVec(rotate);
+			glm::vec3 rotationVector(vector.x, vector.y, vector.z);
+			rotationVector *= -1;
 			nodeInfo.transforms.rotation = glm::quat(rotationVector);
 		}
 
@@ -207,7 +209,8 @@ namespace tge::nif {
 			nodeInfos[0].parentHolder = finishInfo.basicNode;
 
 			std::unordered_map<nifly::NiAVObject*, size_t> shapeToParent;
-			for (auto node : file.GetNodes())
+			// Need to drop BSFadeNode as it has no impact on the scene graph
+			for (auto node : file.GetNodes() | std::views::drop(1))
 			{
 				size_t nodeID = nodeInfos.size();
 				auto& nodeInfo = nodeInfos.emplace_back();
@@ -420,7 +423,8 @@ namespace tge::nif {
 						sha->compile({ {ShaderType::VERTEX, vertexFile, cacheString},
 									  {ShaderType::FRAGMENT, fragmentsFile, cacheString} },
 							createInfo);
-					const Material material(pipe);
+					Material material(pipe);
+					material.clockwise = true;
 					const auto materialId = api->pushMaterials(1, &material);
 					foundItr =
 						shaderCache.emplace(cacheString, std::pair(materialId[0], pipe))
