@@ -16,6 +16,7 @@
             "   mat4 proj;",
             "} proj;",
             "$next_in vec3 POSITION;",
+            "$next_out vec4 POSITIONOUT;",
             "out gl_PerVertex {",
             "   vec4 gl_Position;",
             "};"
@@ -49,10 +50,11 @@
             ]
         },
         {
-            "code": [
-                "void main() {",
-                "   gl_Position = proj.proj * system.values.model * vec4(POSITION, 1);"
-            ]
+          "code": [
+            "void main() {",
+            "   POSITIONOUT = system.values.model * vec4(POSITION, 1);",
+            "   gl_Position = proj.proj * POSITIONOUT;"
+          ]
         },
         {
             "code": [

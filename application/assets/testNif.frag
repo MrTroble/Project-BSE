@@ -5,6 +5,11 @@
   "codes": [
     {
       "code": [
+        "$next_in vec4 POSITION;"
+      ]
+    },
+    {
+      "code": [
         "$next_in vec2 UVIN;"
       ],
       "dependsOn": [ "UV" ]
@@ -42,11 +47,11 @@
         "layout(location=0) out vec4 COLOR;",
         "layout(location=1) out vec4 NORMAL;",
         "layout(location=2) out float ROUGHNESS;",
-        "layout(location=3) out float METALLIC;",
+        "layout(location=3) out vec4 POSOUT;",
         "layout(push_constant) uniform constants { uint id; } pushConst;",
         "void main() {",
         "   ROUGHNESS = pushConst.id;",
-        "   METALLIC = 0;",
+        "   POSOUT = POSITION;",
         "   NORMAL = vec4(1, 1, 1, 1);",
         "   COLOR = vec4(1, 1, 1, 1);"
       ]
