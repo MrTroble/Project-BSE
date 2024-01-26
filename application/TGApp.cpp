@@ -82,6 +82,7 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   light.color = glm::vec3(1, 1, 1);
   light.pos = glm::vec3(0, 10, 0);
   light.intensity = 1.0f;
+  light.minRatio = 0.6f;
   guiModul->lightID = api->pushLights(1, &light);
 
   finishedLoading = true;

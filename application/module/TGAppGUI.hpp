@@ -8,6 +8,7 @@
 #include <graphics/GUIModule.hpp>
 #include <graphics/GameGraphicsModule.hpp>
 #include <graphics/PerformanceTestAPI.hpp>
+#include <TGEngine/TGEngine/public/graphics/ShaderUI.hpp>
 
 class TGAppGUI : public tge::gui::GUIModule {
 public:
@@ -19,13 +20,16 @@ public:
 	bool focused = false;
 	char search[101] = { 0 };
 	std::unordered_set<size_t> extended;
+	ShaderUI shaderUI;
 
 	void renderGUI() override {
+		if(api != nullptr)
+			shaderUI.renderGUI(api->getShaderAPI());
 		if (ImGui::Begin("test")) {
-			if (ImGui::SliderFloat3("Light", (float*)&light.pos, -10.0f, 10.0f) ||  //
-				ImGui::SliderFloat("Intesity", (float*)&light.intensity, -10.0f,
-					10.0f)  //
-				) {
+			const bool lightBool = ImGui::SliderFloat3("Light", (float*)&light.pos, -10.0f, 10.0f);
+			const bool intensityBool = ImGui::SliderFloat("Intesity", (float*)&light.intensity, -10.0f, 10.0f);
+			const bool valueBool = ImGui::SliderFloat("Min Ratio", (float*)&light.minRatio, 0.0f, 1.0f);
+			if (lightBool || intensityBool || valueBool) {
 				lightID = api->pushLights(1, &light);
 			}
 			if (api != nullptr) {

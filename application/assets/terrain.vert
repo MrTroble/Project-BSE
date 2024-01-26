@@ -17,12 +17,13 @@
         "};",
 
         "$next_in vec3 NORMALIN;",
-        "$next_out vec3 NORMALOUT;",
         "$next_in vec3 COLORIN;",
-        "$next_out vec3 COLOROUT;",
         "$next_in vec2 UVIN;",
-        "$next_out vec2 UVOUT;",
         "$next_in uint INDEXIN;",
+
+        "$next_out vec3 NORMALOUT;",
+        "$next_out vec3 COLOROUT;",
+        "$next_out vec2 UVOUT;",
         "$next_out float INDEXX;",
         "$next_out float INDEXY;",
 

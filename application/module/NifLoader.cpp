@@ -420,8 +420,8 @@ namespace tge::nif {
 				if (foundItr == end(shaderCache)) {
 					ShaderCreateInfo createInfo = { [](size_t input) { return input; } };
 					const auto pipe =
-						sha->compile({ {ShaderType::VERTEX, vertexFile, cacheString},
-									  {ShaderType::FRAGMENT, fragmentsFile, cacheString} },
+						sha->compile({ {ShaderType::VERTEX, vertexFile, cacheString, "assets/testNif.vert"},
+									  {ShaderType::FRAGMENT, fragmentsFile, cacheString, "assets/testNif.frag"} },
 							createInfo);
 					Material material(pipe);
 					material.clockwise = true;
@@ -466,8 +466,11 @@ namespace tge::nif {
 		const auto indexBufferID = api->pushData(dataInfos.size(), dataInfos.data());
 
 		auto startPointer = indexBufferID.data();
+		auto nodeStart = nodeCache.begin();
 		for (size_t i = 0; i < count; i++) {
 			auto& renderInfoTuple = allRenderInfos[i];
+			const auto& nodeList = *(nodeStart++);
+			const uint32_t value = nodeList[0].internalHandle;
 
 			const auto process = [&](auto& renderInfos, auto& begins) {
 				auto beginIterator = begins.begin();
@@ -477,11 +480,7 @@ namespace tge::nif {
 					for (auto& index : info.vertexBuffer) {
 						index = *(internalStart++);
 					}
-					std::vector<char> pushData;
-					pushData.resize(sizeof(uint32_t));
-					memcpy(pushData.data(), &internalStart->internalHandle,
-						pushData.size());
-					info.constRanges.push_back({ pushData, shader::ShaderType::FRAGMENT });
+					info.constRanges.emplace_back(std::span((std::byte*)&value, sizeof(uint32_t)), shader::ShaderType::FRAGMENT);
 					info.indexBuffer = *(internalStart++);
 					beginIterator++;
 				}
