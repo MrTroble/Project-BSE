@@ -94,8 +94,36 @@ bool remove(const uint count, const FormKey* keys) {
 }
 
 bool select(const uint count, const FormKey* keys) {
+  auto api = tge::main::getAPILayer();
+  auto ggm = api->getGraphicsModule();
+  glm::vec4 color(0.5f, 0, 0, 1.0f);
+  auto& internalValues = ggm->nodeHolder.internalValues;
+  auto& transform = ggm->nodeHolder.translationTable;
+  auto& statusValues = std::get<4>(internalValues);
+  auto& shaderValues = std::get<5>(internalValues);
+  auto& childValues = std::get<6>(internalValues);
   for (size_t i = 0; i < count; i++) {
-    PLOG_DEBUG << keys[i];
+    const auto formKey = keys[i];
+    PLOG_DEBUG << formKey;
+    const auto iterator = REFERENCE_MAP.find(formKey);
+    if (iterator == std::end(REFERENCE_MAP))
+        continue;
+    const auto rootNode = iterator->second[0];
+    std::vector<size_t> nodes = { rootNode.internalHandle };
+    std::lock_guard guard(ggm->nodeHolder.mutex);
+    while (!nodes.empty()) {
+        const auto node = nodes.back();
+        nodes.pop_back();
+        const auto pos = transform[node];
+        if (statusValues[pos])
+            continue;
+        shaderValues[pos].color = color;
+        statusValues[pos] = 1;
+        const auto& childs = childValues[pos];
+        const auto oldSize = nodes.size();
+        nodes.resize(childs.size() + oldSize);
+        nodes.insert(nodes.begin() + oldSize, childs.begin(), childs.end());
+    }
   }
   return true;
 }
