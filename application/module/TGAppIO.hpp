@@ -99,9 +99,6 @@ class TGAppIO : public tge::io::IOModule {
       } else if (event.pressed == 3) {
         pressedMiddle = true;
       }
-      if (event.additional & 8) {
-        pressedShift = true;
-      }
     } else if (event.pressMode == PressMode::RELEASED) {
       if (event.pressed == 3) {
         pressedMiddle = false;
@@ -129,6 +126,9 @@ class TGAppIO : public tge::io::IOModule {
   void keyboardEvent(const tge::io::KeyboardEvent &event) override {
     if (event.signal < 255) {
       stack[event.signal] = true;
+    }
+    if (event.signal == tge::io::KC_SHIFT) {
+        pressedShift = event.mode == tge::io::PressMode::CLICKED;
     }
   }
 

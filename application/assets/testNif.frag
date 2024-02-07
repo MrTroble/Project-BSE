@@ -77,9 +77,14 @@
     },
     {
       "code": [
+        "   if(COLOR.a < 1) discard;"
+      ],
+      "dependsOn": ["ALPHATEST"]
+    },
+    {
+      "code": [
         "   NORMAL = system.values.normalModel * NORMAL;",
         "   COLOR.xyz = COLOR.xyz + system.values.color.xyz;",
-        "   if(COLOR.a < 1) discard;",
         "}"
       ]
     }
