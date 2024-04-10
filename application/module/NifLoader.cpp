@@ -54,7 +54,7 @@ Error NifModule::init() {
   tge::graphics::NodeInfo nodeInfo;
   nodeInfo.transforms.scale *= this->translationFactor;
   nodeInfo.transforms.scale.y *= -1;
-  basicNifNode = ggm->addNode(&nodeInfo, 1)[0];
+  basicNifNode = ggm->addNode(&nodeInfo, 1, "Basic Node?")[0];
 
   ggm->addAssetResolver(
       [sizeOfAssetsDir = this->assetDirectory.size()](const std::string& name) {
@@ -306,7 +306,15 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
   std::unordered_set<std::string> textureNames;
   textureNames.reserve(32000);
 
+  std::string allLoads = "";
+  std::unordered_set<std::string> valueSets;
   for (size_t i = 0; i < count; i++) {
+#ifdef DEBUG
+    if (!valueSets.contains(loads[i].file)) {
+      allLoads += loads[i].file + " ";
+      valueSets.insert(loads[i].file);
+    }
+#endif  // DEBUG
     if (filesByName.contains(loads[i].file)) continue;
     const std::filesystem::path fullpath(loads[i].file);
     const std::filesystem::path assetPath(assetDirectory + loads[i].file);
@@ -449,7 +457,7 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
 
     holder.finish(loads[i].transform, file, samplerID, finInfo);
 
-    const auto nodes = ggm->addNode(holder.nodeInfos);
+    const auto nodes = ggm->addNode(holder.nodeInfos, "Node - " + loads[i].file);
     allNodes[i] = nodes[0];
     children[nodes[0]] = nodes;
     sha->bindData(holder.bindingInfos);
@@ -460,7 +468,7 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
     nodeCache.push_back(nodes);
   }
 
-  const auto indexBufferID = api->pushData(dataInfos.size(), dataInfos.data());
+  const auto indexBufferID = api->pushData(dataInfos.size(), dataInfos.data(), allLoads);
 
   auto startPointer = indexBufferID.data();
   auto nodeStart = nodeCache.begin();

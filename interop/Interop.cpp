@@ -64,8 +64,8 @@ void* getMainWindowHandle()
     return tge::interop::getMainWindowHandle();
 }
 
-void callLoadFinishedCallback() {
-  for (auto load : loadFinished) load();
+void callLoadFinishedCallback(const uint count, const ReferenceLoad* ref) {
+  for (auto load : loadFinished) load(count, ref);
 }
 
 bool loadReferences(uint count, ReferenceLoad* load) {

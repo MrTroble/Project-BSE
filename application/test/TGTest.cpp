@@ -8,12 +8,19 @@ using namespace tge::main;
 using namespace tge::graphics;
 
 std::vector<std::string> fromKeys;
+std::unordered_set<std::string> toDeleteMemTest = {
+    "testBSAFormMemTest", "testBSACompressedWithTexturesFormMemTest"};
 
-bool deleteHalf() {
+bool deleteHalf(const uint count, const ReferenceLoad* load) {
   std::vector<FormKey> keys;
-  for (auto& key : fromKeys) {
-    if (rand() % 2 == 0) {
-      keys.push_back(key.c_str());
+  for (auto& key : std::span(load, load + count)) {
+    std::string value(key.formKey);
+    if (toDeleteMemTest.contains(value)) {
+      keys.push_back(key.formKey);
+      continue;
+    }
+    if (value.starts_with("testKey") && rand() % 2 == 0) {
+      keys.push_back(key.formKey);
     }
   }
   return deleteReferences(keys.size(), keys.data());
@@ -70,6 +77,21 @@ void test() {
   loadBSARef[2].transform.scale = {0.1f, 0.1f, 0.1f};
   loadReferences(3, loadBSARef);
 
+  ReferenceLoad loadBSARefMemTest[2];
+  loadBSARefMemTest[0].formKey = "testBSAFormMemTest";
+  loadBSARefMemTest[0].path =
+      "meshes\\survival\\maginvhungerpenaltyspellart.nif";
+  loadBSARefMemTest[0].transform = TGE_DEFAULT_TRANSFORM;
+  loadBSARefMemTest[0].transform.translation.x = -300;
+  loadBSARefMemTest[0].transform.scale = {0.3f, 0.3f, 0.3f};
+
+  loadBSARefMemTest[1].formKey = "testBSACompressedWithTexturesFormMemTest";
+  loadBSARefMemTest[1].path = "meshes\\architecture\\whiterun\\wrhouse02.nif";
+  loadBSARefMemTest[1].transform = TGE_DEFAULT_TRANSFORM;
+  loadBSARefMemTest[1].transform.translation.x = -500;
+  loadBSARefMemTest[1].transform.scale = {0.1f, 0.1f, 0.1f};
+  loadReferences(2, loadBSARefMemTest);
+
   std::vector<float> buffer;
   buffer.resize(33 * 33 * 7);
   auto position = buffer.begin();
@@ -96,10 +118,14 @@ void test() {
   info.colorBegin = 33 * 33 * 4;
   info.normalBegin = 33 * 33;
   info.point_size = 33;
-  info.cornerSets.TopLeft.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
-  info.cornerSets.TopRight.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
-  info.cornerSets.BottomRight.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
-  info.cornerSets.BottomLeft.BaseLayer.Diffuse = "assets\\textures\\Leftlower.png";
+  info.cornerSets.TopLeft.BaseLayer.Diffuse =
+      "assets\\textures\\bsdevorange.dds";
+  info.cornerSets.TopRight.BaseLayer.Diffuse =
+      "assets\\textures\\bsdevorange.dds";
+  info.cornerSets.BottomRight.BaseLayer.Diffuse =
+      "assets\\textures\\bsdevorange.dds";
+  info.cornerSets.BottomLeft.BaseLayer.Diffuse =
+      "assets\\textures\\Leftlower.png";
   loadTerrain(1, &info, buffer.data());
 }
 

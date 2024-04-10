@@ -69,10 +69,10 @@ typedef bool (*UpdateCallback)(const uint count, const ReferenceUpdate* keys);
 typedef bool (*HideCallback)(const uint count, const FormKey* keys,
                              const bool hide);
 typedef bool (*FormKeyCallback)(const uint count, const FormKey* keys);
-typedef bool (*FormKeyCallback)(const uint count, const FormKey* keys);
 typedef bool (*TerrainAddCallback)(const uint count, const TerrainInfo* info,
                                    float* buffer);
-typedef bool (*LoadFinishedCallback)(void);
+typedef bool (*LoadFinishedCallback)(const uint count,
+                                     const ReferenceLoad* load);
 
 /*
  * The given [...]References functions should be called to manipulate the given
@@ -120,4 +120,4 @@ TGE_DLLEXPORT bool addTerrainCallback(TerrainAddCallback callback);
 
 TGE_DLLEXPORT void* getMainWindowHandle();
 
-void callLoadFinishedCallback();
+void callLoadFinishedCallback(const uint count, const ReferenceLoad* load);
