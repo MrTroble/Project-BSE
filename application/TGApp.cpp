@@ -66,9 +66,15 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   const auto initResult = init(config->featureSet);
   waitMutex.unlock();
   if (initResult != main::Error::NONE) {
-    PLOG_FATAL << "Error in init!";
-    return -1;
+      PLOG_FATAL << "Error in init!";
+      return -1;
   }
+  const auto transforms = util::wholeFile("assets/transform.glb");
+  if (transforms.empty())
+      PLOG_WARNING << "Widget could not be found and is not being shown!";
+
+  const auto nodes = getGameGraphicsModule()->loadModel(transforms, true);
+
   auto api = getAPILayer();
 
   ioModul->ggm = getGameGraphicsModule();
