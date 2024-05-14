@@ -22,6 +22,7 @@
 #include "module/TGAppGUI.hpp"
 #include "module/TGAppIO.hpp"
 #include "module/TerrainModule.hpp"
+#include "module/GizmoLibrary.hpp"
 
 #undef min
 #undef max
@@ -49,10 +50,13 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
     return -1;
   }
 
+  gizmo::GizmoLibrary library(tge::nif::nifModule);
+
   lateModules.push_back(guiModul);
   lateModules.push_back(ioModul);
   lateModules.push_back(tge::nif::nifModule);
   lateModules.push_back(terrainModule);
+  lateModules.push_back(&library);
   terrainModule->api = getAPILayer();
   tge::nif::nifModule->assetDirectory = config->assetDirectory;
   tge::nif::nifModule->archiveNames.resize(sizeOfBSAs);
@@ -69,11 +73,6 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
       PLOG_FATAL << "Error in init!";
       return -1;
   }
-  const auto transforms = util::wholeFile("assets/transform.glb");
-  if (transforms.empty())
-      PLOG_WARNING << "Widget could not be found and is not being shown!";
-
-  const auto nodes = getGameGraphicsModule()->loadModel(transforms, true);
 
   auto api = getAPILayer();
 

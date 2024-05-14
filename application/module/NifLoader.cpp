@@ -293,10 +293,6 @@ struct HelperNoneOpaque {
 std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
                                                       const LoadNif* loads,
                                                       void* shaderPipe) {
-  if (!finishedLoading) {
-    std::cerr << "Call nif before loaded!";
-    return {};
-  }
   const auto api = getAPILayer();
   const auto ggm = getGameGraphicsModule();
   const auto sha = api->getShaderAPI();
