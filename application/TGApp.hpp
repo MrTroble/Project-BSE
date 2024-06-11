@@ -7,7 +7,7 @@
 extern TGAppGUI* guiModul;
 extern TGAppIO* ioModul;
 
-constexpr uint32_t CURRENT_INIT_VERSION = 4;
+constexpr uint32_t CURRENT_INIT_VERSION = 5;
 
 struct InitConfig {
   uint32_t version = CURRENT_INIT_VERSION;
@@ -15,6 +15,8 @@ struct InitConfig {
   size_t sizeOfWindowHandles = 0;
   void** windowHandles = nullptr;
   tge::graphics::FeatureSet featureSet{};
+  tge::main::Module** additionalEditor = nullptr;
+  size_t additionalCount = 0;
 };
 
 TGE_DLLEXPORT int initTGEditor(const InitConfig* config, const char** bsaFiles,

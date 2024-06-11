@@ -11,10 +11,33 @@ std::vector<std::string> fromKeys;
 std::unordered_set<std::string> toDeleteMemTest = {
     "testBSAFormMemTest", "testBSACompressedWithTexturesFormMemTest"};
 
+class TestMod : public tge::main::Module {
+public:
+    bool start = false;
+    double test = 0;
+    bool lastStatus = false;
+
+    void tick(double delta) override {
+        if (start) {
+            if (test >= 10) {
+                test = 0;
+                FormKey key = "testBSAForm";
+                lastStatus != lastStatus;
+                hideReferences(1, &key, lastStatus);
+            }
+            test += delta;
+        }
+    }
+};
+TestMod mod;
+
 bool deleteHalf(const uint count, const ReferenceLoad* load) {
   std::vector<FormKey> keys;
   for (auto& key : std::span(load, load + count)) {
     std::string value(key.formKey);
+    if (value == "testBSAForm") {
+        mod.start = true;
+    }
     if (toDeleteMemTest.contains(value)) {
       keys.push_back(key.formKey);
       continue;
@@ -136,8 +159,11 @@ int main(int argv, const char** in) {
   std::vector<char*> bsaHandles{(char*)"ccQDRSSE001-SurvivalMode.bsa",
                                 (char*)"Whiterun - Textures.bsa",
                                 (char*)"Whiterun.bsa"};
+  std::vector<Module*> additional{ &mod };
   InitConfig config{CURRENT_INIT_VERSION, (char*)directory};
   config.featureSet.mipMapLevels = INVALID_UINT32;
+  config.additionalEditor = additional.data();
+  config.additionalCount = additional.size();
   return initTGEditor(&config, (const char**)bsaHandles.data(),
                       bsaHandles.size());
 }

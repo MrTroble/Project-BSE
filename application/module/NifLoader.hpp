@@ -63,6 +63,8 @@ namespace tge::nif {
 			const size_t count, const LoadNif* loads, void* shaderPipe = nullptr);
 
 		void remove(const size_t size, const graphics::TNodeHolder* ids);
+
+		void hide(const std::span<const graphics::TNodeHolder> holder, bool hide);
 	};
 
 	extern nif::NifModule* nifModule;

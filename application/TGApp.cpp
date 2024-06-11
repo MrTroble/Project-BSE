@@ -52,6 +52,8 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
 
   gizmo::GizmoLibrary library(tge::nif::nifModule);
 
+  for (auto x : std::span(config->additionalEditor, config->additionalEditor + config->additionalCount))
+      lateModules.push_back(x);
   lateModules.push_back(guiModul);
   lateModules.push_back(ioModul);
   lateModules.push_back(tge::nif::nifModule);

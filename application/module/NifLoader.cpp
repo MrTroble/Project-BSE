@@ -109,6 +109,14 @@ void NifModule::remove(const size_t size, const TNodeHolder* ids) {
   getGameGraphicsModule()->removeNode(nodeHolder);
 }
 
+void NifModule::hide(const std::span<const graphics::TNodeHolder> holder, bool hide)
+{
+    std::vector<graphics::TRenderHolder> renderHolder(holder.size());
+    std::ranges::transform(holder, renderHolder.begin(), [&](auto& node) { return nodeIdToRender[node].first; });
+    APILayer* layer = getAPILayer();
+    layer->hideRender(renderHolder, hide);
+}
+
 struct UpdateInfo {
   std::vector<std::string>& cacheString;
   std::vector<BufferInfo>& dataInfo;
