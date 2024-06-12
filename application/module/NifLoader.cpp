@@ -413,6 +413,9 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
         }
       }
       cacheString.reserve(10);
+      if (shape->HasAlphaProperty())
+          cacheString.push_back("ALPHA");
+      shape->AlphaPropertyRef()
       UpdateInfo updateInfo = {cacheString, dataInfos};
 
       auto uv = file.GetUvsForShape(shape);
@@ -435,6 +438,7 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
                                        createInfo);
         Material material(pipe);
         material.clockwise = true;
+        material.target = shape->HasAlphaProperty() ? RenderTarget::TRANSLUCENT_TARGET : RenderTarget::OPAQUE_TARGET;
         const auto materialId = api->pushMaterials(1, &material);
         foundItr =
             shaderCache.emplace(cacheString, std::pair(materialId[0], pipe))
