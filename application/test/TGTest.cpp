@@ -23,7 +23,7 @@ void test() {
   waitFinishedInit();
   std::vector<ReferenceLoad> loads;
   std::vector<std::string> names(100);
-  std::fill(begin(names), end(names), "wrhouse02.nif");
+  std::fill(begin(names), end(names), "meshes\\architecture\\whiterun\\wrbuildings\\wrhouse02.nif");
   vec3 translate = {0, 0, 0};
   constexpr auto toMeter = 1.42875f * 100;
 
@@ -104,13 +104,19 @@ void test() {
 }
 
 int main(int argv, const char** in) {
+  std::string directory = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition\\Data";
+  if (argv > 1) {
+      std::string possibleArgument = in[1];
+      if (possibleArgument.starts_with("--skyrimLocation")) {
+        directory = possibleArgument.substr(17);
+      }
+  }
   std::thread thread(&test);
   thread.detach();
-  auto directory = "assets";
   std::vector<char*> bsaHandles{(char*)"ccQDRSSE001-SurvivalMode.bsa",
-                                (char*)"Whiterun - Textures.bsa",
-                                (char*)"Whiterun.bsa"};
-  InitConfig config{CURRENT_INIT_VERSION, (char*)directory};
+                                (char*)"Skyrim - Meshes0.bsa",
+                                (char*)"Skyrim - Textures0.bsa"};
+  InitConfig config{CURRENT_INIT_VERSION, (char*)directory.c_str()};
   config.featureSet.mipMapLevels = INVALID_UINT32;
   return initTGEditor(&config, (const char**)bsaHandles.data(),
                       bsaHandles.size());

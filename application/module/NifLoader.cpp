@@ -69,15 +69,19 @@ Error NifModule::init() {
   size_t next = 0;
   for (const auto& name : archiveNames) {
     auto& archive = archivesLoaded[next++];
+    const auto location = std::filesystem::path(this->assetDirectory) / name;
+    if (!std::filesystem::exists(location)) {
+        PLOG_WARNING << "Archive path does not exist " << location << "! Skipping!";
+        continue;
+    }
     try {
-      archive.read(this->assetDirectory + name);
+      archive.read(location);
     } catch (...) {
-      PLOG_ERROR << "Archive loading failed for " << name << "!";
+      PLOG_ERROR << "Archive loading failed for " << location << "!";
       return Error::NOT_INITIALIZED;
     }
     if (archive.empty()) {
-      PLOG_WARNING << "Archive empty after load " << name << "!";
-      return Error::NOT_INITIALIZED;
+      PLOG_WARNING << "Archive empty after load " << location << "!";
     }
   }
   return Error::NONE;
