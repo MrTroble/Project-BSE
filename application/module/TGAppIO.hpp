@@ -2,6 +2,7 @@
 
 #include <IO/IOModule.hpp>
 #include <array>
+#define GLM_ENABLE_EXPERIMENTAL 1
 #include <glm/gtx/transform.hpp>
 #include <graphics/GameGraphicsModule.hpp>
 #include <vector>

@@ -426,7 +426,7 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
         for (auto& index : info.vertexBuffer) {
           index = *(internalStart++);
         }
-        std::vector<char> pushData;
+        std::vector<std::byte> pushData;
         pushData.resize(sizeof(uint32_t));
         memcpy(pushData.data(), &internalStart->internalHandle,
                pushData.size());
