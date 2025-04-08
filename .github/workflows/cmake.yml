@@ -8,33 +8,33 @@ on:
 
 env:
   BUILD_TYPE: Release
-  VULKAN_SDK: C:/VulkanSDK/1.3.250.1
+  VULKAN_SDK: C:/VulkanSDK/1.4.309.0
 jobs:
   build_win:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
             submodules: recursive
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
            path: ${{github.workspace}}\build\_deps
            key: wincache
       - name: Cache Vulkan SDK
         id: cache-vulkan-sdk
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: "C:\\VulkanSDK"
           key: vulkan-sdk
       - name: Setup Vulkan
         if: steps.cache-vulkan-sdk.outputs.cache-hit != 'true'
         run: |
-            Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.3.250.1/windows/VulkanSDK-1.3.250.1-Installer.exe" -OutFile VulkanSDK.exe
+            Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.4.309.0/windows/VulkanSDK-1.4.309.0-Installer.exe" -OutFile VulkanSDK.exe
             ./VulkanSDK.exe in -c --da --al
       - name: Cache VCPKG
         id: cache-vcpkg
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: "${{github.workspace}}\\vcpkg"
           key: vcpkg-cache
