@@ -50,7 +50,7 @@ jobs:
           xcopy ${{github.workspace}}\application\assets\ ${{github.workspace}}\build\Release\assets\ /S/I/Y
           xcopy ${{github.workspace}}\TGEngine\TGEngine\assets\*.* ${{github.workspace}}\build\Release\assets\ /S/I/Y
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TGAppWindows
           path: |
