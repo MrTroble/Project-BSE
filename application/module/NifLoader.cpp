@@ -434,7 +434,7 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
         pushData.resize(sizeof(uint32_t));
         memcpy(pushData.data(), &internalStart->internalHandle,
                pushData.size());
-        info.constRanges.push_back({pushData, shader::ShaderType::FRAGMENT});
+        info.constRanges.emplace_back(pushData, shader::ShaderType::FRAGMENT);
         info.indexBuffer = *(internalStart++);
         beginIterator++;
       }
