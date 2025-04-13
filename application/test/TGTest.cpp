@@ -58,7 +58,7 @@ void test() {
   loadBSARef[0].transform.scale = {0.3f, 0.3f, 0.3f};
 
   loadBSARef[1].formKey = "testBSACompressedWithTexturesForm";
-  loadBSARef[1].path = "meshes\\architecture\\whiterun\\wrhouse02.nif";
+  loadBSARef[1].path = "meshes\\architecture\\whiterun\\wrbuildings\\wrhouse02.nif";
   loadBSARef[1].transform = TGE_DEFAULT_TRANSFORM;
   loadBSARef[1].transform.translation.x = -500;
   loadBSARef[1].transform.scale = {0.1f, 0.1f, 0.1f};

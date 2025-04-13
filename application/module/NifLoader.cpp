@@ -350,6 +350,11 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
                              DataType::VertexData);
 
       std::vector<std::string> cacheString;
+      RenderTarget target = RenderTarget::OPAQUE_TARGET;
+      if (shape->HasAlphaProperty()) {
+          cacheString.push_back("TRANSLUCENT");
+          target = RenderTarget::TRANSLUCENT_TARGET;
+      }
       const auto shader = file.GetShader(shape);
       auto shaderData = file.GetShader(shape);
       if (shaderData && shader->HasTextureSet()) {
@@ -379,7 +384,8 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
             sha->compile({{ShaderType::VERTEX, vertexFile, cacheString},
                           {ShaderType::FRAGMENT, fragmentsFile, cacheString}},
                          createInfo);
-        const Material material(pipe);
+        Material material(pipe);
+        material.target = target;
         const auto materialId = api->pushMaterials(1, &material);
         foundItr =
             shaderCache.emplace(cacheString, std::pair(materialId[0], pipe))
