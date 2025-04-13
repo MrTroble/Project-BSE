@@ -115,7 +115,7 @@ int main(int argv, const char** in) {
   thread.detach();
   std::vector<char*> bsaHandles{(char*)"ccQDRSSE001-SurvivalMode.bsa",
                                 (char*)"Skyrim - Meshes0.bsa",
-                                (char*)"Skyrim - Textures0.bsa"};
+                                (char*)"Skyrim - Textures1.bsa"};
   InitConfig config{CURRENT_INIT_VERSION, (char*)directory.c_str()};
   config.featureSet.mipMapLevels = INVALID_UINT32;
   return initTGEditor(&config, (const char**)bsaHandles.data(),
