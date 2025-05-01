@@ -73,6 +73,7 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
 
   ioModul->ggm = getGameGraphicsModule();
   guiModul->api = api;
+  guiModul->winModule = ioModul->ggm->getWindowModule();
   guiModul->ggm = ioModul->ggm;
   const auto extent = api->getRenderExtent();
   ioModul->ggm->updateViewMatrix(glm::perspective(

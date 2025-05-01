@@ -8,10 +8,9 @@
 #include <graphics/GameGraphicsModule.hpp>
 #include <graphics/PerformanceTestAPI.hpp>
 
-class TGAppGUI : public tge::gui::GUIModule {
+class TGAppGUI : public tge::gui::DebugGUIModule {
  public:
   tge::graphics::Light light;
-  tge::graphics::APILayer* api = nullptr;
   tge::graphics::GameGraphicsModule* ggm;
   tge::graphics::NodeTransform transformData;
   size_t lightID;
@@ -35,5 +34,5 @@ class TGAppGUI : public tge::gui::GUIModule {
     ImGui::End();
   }
 
-  void recreate() override { tge::gui::GUIModule::recreate(); }
+  void recreate() override { tge::gui::DebugGUIModule::recreate(); }
 };
