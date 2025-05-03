@@ -11,10 +11,11 @@
 class TGAppGUI : public tge::gui::DebugGUIModule {
  public:
   tge::graphics::Light light;
-  tge::graphics::GameGraphicsModule* ggm;
   tge::graphics::NodeTransform transformData;
   size_t lightID;
   bool focused = false;
+
+  TGAppGUI(tge::io::IOModule* io) : tge::gui::DebugGUIModule(io) {}
 
   void renderGUI() override {
     if (ImGui::Begin("test")) {
@@ -33,6 +34,4 @@ class TGAppGUI : public tge::gui::DebugGUIModule {
     focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
     ImGui::End();
   }
-
-  void recreate() override { tge::gui::DebugGUIModule::recreate(); }
 };

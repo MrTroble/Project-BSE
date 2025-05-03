@@ -49,8 +49,8 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
     return -1;
   }
 
-  lateModules.push_back(guiModul);
   lateModules.push_back(ioModul);
+  lateModules.push_back(guiModul);
   lateModules.push_back(tge::nif::nifModule);
   lateModules.push_back(terrainModule);
   terrainModule->api = getAPILayer();
@@ -74,7 +74,6 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   ioModul->ggm = getGameGraphicsModule();
   guiModul->api = api;
   guiModul->winModule = ioModul->ggm->getWindowModule();
-  guiModul->ggm = ioModul->ggm;
   const auto extent = api->getRenderExtent();
   ioModul->ggm->updateViewMatrix(glm::perspective(
       glm::radians(45.0f), extent.x / extent.y, 0.01f, 10000.0f));
