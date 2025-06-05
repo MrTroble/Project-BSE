@@ -71,8 +71,9 @@ Error NifModule::init() {
     auto& archive = archivesLoaded[next++];
     const auto location = std::filesystem::path(this->assetDirectory) / name;
     if (!std::filesystem::exists(location)) {
-        PLOG_WARNING << "Archive path does not exist " << location << "! Skipping!";
-        continue;
+      PLOG_WARNING << "Archive path does not exist " << location
+                   << "! Skipping!";
+      continue;
     }
     try {
       archive.read(location);
@@ -352,8 +353,8 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
       std::vector<std::string> cacheString;
       RenderTarget target = RenderTarget::OPAQUE_TARGET;
       if (shape->HasAlphaProperty()) {
-          cacheString.push_back("TRANSLUCENT");
-          target = RenderTarget::TRANSLUCENT_TARGET;
+        cacheString.push_back("TRANSLUCENT");
+        target = RenderTarget::TRANSLUCENT_TARGET;
       }
       const auto shader = file.GetShader(shape);
       auto shaderData = file.GetShader(shape);
@@ -427,6 +428,7 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
   auto startPointer = indexBufferID.data();
   for (size_t i = 0; i < count; i++) {
     auto& renderInfoTuple = allRenderInfos[i];
+    const uint32_t currentID = (uint32_t)allNodes[i].internalHandle;
 
     const auto process = [&](auto& renderInfos, auto& begins) {
       auto beginIterator = begins.begin();
@@ -438,8 +440,7 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
         }
         std::vector<std::byte> pushData;
         pushData.resize(sizeof(uint32_t));
-        memcpy(pushData.data(), &internalStart->internalHandle,
-               pushData.size());
+        memcpy(pushData.data(), &currentID, pushData.size());
         info.constRanges.emplace_back(pushData, shader::ShaderType::FRAGMENT);
         info.indexBuffer = *(internalStart++);
         beginIterator++;
