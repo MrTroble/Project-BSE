@@ -25,13 +25,14 @@ class TGAppGUI : public tge::gui::GUIModule {
       ) {
         lightID = api->pushLights(1, &light);
       }
-      if (api != nullptr) {
-        const auto debug =
-            ((tge::graphics::PerformanceMessuringAPILayer*)api)->getDebug();
+      auto debugAPI =
+          dynamic_cast<tge::graphics::PerformanceMessuringAPILayer*>(api);
+      if (debugAPI != nullptr) {
+        const auto debug = debugAPI->getDebug();
         ImGui::Text("%s", debug.c_str());
       }
     }
-    focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
+    focused = ImGui::IsWindowFocused();
     ImGui::End();
   }
 
