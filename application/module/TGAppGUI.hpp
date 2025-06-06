@@ -8,14 +8,14 @@
 #include <graphics/GameGraphicsModule.hpp>
 #include <graphics/PerformanceTestAPI.hpp>
 
-class TGAppGUI : public tge::gui::GUIModule {
+class TGAppGUI : public tge::gui::DebugGUIModule {
  public:
   tge::graphics::Light light;
-  tge::graphics::APILayer* api = nullptr;
-  tge::graphics::GameGraphicsModule* ggm;
   tge::graphics::NodeTransform transformData;
   size_t lightID;
   bool focused = false;
+
+  TGAppGUI(tge::io::IOModule* io) : tge::gui::DebugGUIModule(io) {}
 
   void renderGUI() override {
     if (ImGui::Begin("test")) {
@@ -25,15 +25,14 @@ class TGAppGUI : public tge::gui::GUIModule {
       ) {
         lightID = api->pushLights(1, &light);
       }
-      if (api != nullptr) {
-        const auto debug =
-            ((tge::graphics::PerformanceMessuringAPILayer*)api)->getDebug();
+      auto debugAPI =
+          dynamic_cast<tge::graphics::PerformanceMessuringAPILayer*>(api);
+      if (debugAPI != nullptr) {
+        const auto debug = debugAPI->getDebug();
         ImGui::Text("%s", debug.c_str());
       }
     }
-    focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
+    focused = ImGui::IsWindowFocused();
     ImGui::End();
   }
-
-  void recreate() override { tge::gui::GUIModule::recreate(); }
 };
