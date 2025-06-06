@@ -21,12 +21,12 @@ class TGAppIO : public tge::io::IOModule {
   glm::vec2 deltaMouse{};
   glm::vec3 cache{};
   float scale = 1;
+  float speed = 1;
   std::array<bool, 255> stack = {false};
   bool pressedLeft = false;
   bool pressedMiddle = false;
   bool pressedShift = false;
-  glm::vec3 inputRotationX = glm::vec3(1, 0, 0);
-  glm::vec3 inputRotationY = glm::vec3(0, 1, 0);
+  glm::mat4 oldView = glm::identity<glm::mat4>();
 
   void getImageIDFromBackend();
 
@@ -39,19 +39,15 @@ class TGAppIO : public tge::io::IOModule {
 
   void tick(double deltatime) override {
     tge::io::IOModule::tick(deltatime);
-    const float actualOffset = (float)(offset * deltatime);
+    const auto currentVP = glm::inverse(ggm->getVPMatrix());
+    const float actualOffset = (float)(offset * deltatime * speed);
     if (stack['W']) {
-      cache += inputRotationY * actualOffset;
+      scale -= actualOffset;
     }
     if (stack['S']) {
-      cache -= inputRotationY * actualOffset;
+      scale += actualOffset;
     }
-    if (stack['A']) {
-      cache += inputRotationX * actualOffset;
-    }
-    if (stack['D']) {
-      cache -= inputRotationX * actualOffset;
-    }
+
     if (stack['Q']) {
       cache.z += actualOffset;
     }
@@ -61,8 +57,6 @@ class TGAppIO : public tge::io::IOModule {
 
     if (stack['R']) {
       cache = glm::vec3(0);
-      inputRotationX = glm::vec3(1, 0, 0);
-      inputRotationY = glm::vec3(0, 1, 0);
     }
 
     if (pressedLeft) {
@@ -88,13 +82,24 @@ class TGAppIO : public tge::io::IOModule {
       }
     }
     std::fill(begin(stack), end(stack), false);
-
-    ggm->updateCameraMatrix(
-        glm::lookAt(cache, inputRotationY + cache, glm::vec3(0, 0, -1)));
+    float yaw = deltaMouse.y;
+    float pitch = deltaMouse.x;
+    glm::vec3 lookAt;
+    lookAt.x = std::cos(yaw) * std::cos(pitch);
+    lookAt.y = std::sin(pitch);
+    lookAt.z = std::sin(yaw) * std::cos(pitch);
+    lookAt = glm::normalize(lookAt);
+    lookAt *= scale;
+    oldView = glm::lookAt(cache + lookAt, cache, glm::vec3{0.0f, 0.0f, -1.0f});
+    ggm->updateCameraMatrix(oldView);
   }
 
   void mouseEvent(const tge::io::MouseEvent& event) override {
     using namespace tge::io;
+    if (event.pressMode == PressMode::SCROLL) {
+      speed = glm::max(0.05f, glm::min(speed + event.y * 0.2f, 100.0f));
+      PLOG_DEBUG << speed;
+    }
     if (event.pressMode == PressMode::CLICKED) {
       if (!pressedMiddle) vec = glm::vec2(event.x, event.y);
       if (event.pressed == 1) {
@@ -115,15 +120,9 @@ class TGAppIO : public tge::io::IOModule {
       switch (event.pressMode) {
         case PressMode::HOLD:
           glm::vec2 newPos(event.x, event.y);
-          auto currentDelta = (newPos - vec);
-          deltaMouse += currentDelta * MODIFER;
+          auto currentDelta = (newPos - vec) * MODIFER;
+          deltaMouse += currentDelta;
           vec = newPos;
-          glm::quat xRotation(glm::vec3(0, 0, deltaMouse.x));
-          glm::quat yRotation(glm::vec3(-deltaMouse.y, 0, 0));
-          inputRotationX = glm::rotate(
-              yRotation, glm::rotate(xRotation, glm::vec3(1, 0, 0)));
-          inputRotationY = glm::rotate(
-              yRotation, glm::rotate(xRotation, glm::vec3(0, 1, 0)));
           break;
       }
     }
