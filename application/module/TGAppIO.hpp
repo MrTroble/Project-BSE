@@ -44,11 +44,26 @@ public:
 
 	void selectInternal();
 
+	void changeCameraModel(CameraModel newModel) {
+		if (cameraModel == newModel) return;
+		if (newModel._to_integral() == CameraModel::Rotating) {
+			cache = glm::vec3{ 0 };
+			lookAt = glm::vec4{ 0, 1.0, 0, 0 };
+		}
+		else {
+			cache = glm::vec3{ 0 };
+			lookAt = glm::vec4{ 0, 1.0, 0, 0 };
+		}
+		cameraModel = newModel;
+	}
+
 	void tick(double deltatime) override {
 		tge::io::IOModule::tick(deltatime);
 		const auto currentVP = glm::inverse(ggm->getVPMatrix());
 		const float actualOffset = (float)(offset * deltatime * speed);
 
+		glm::vec3 eye;
+		glm::vec3 center;
 		switch (cameraModel)
 		{
 		case CameraModel::Rotating:
@@ -67,11 +82,42 @@ public:
 			if (stack['R']) {
 				cache = glm::vec3(0);
 			}
+			eye = cache + glm::vec3(lookAt * scale);
+			center = cache;
+			break;
+		case CameraModel::Free_Cam:
+			glm::vec3 yDir(glm::normalize(currentVP * glm::vec4(1.0f, 0.0, 0.0, 0.0)) * actualOffset);
+			glm::vec3 xDir(-yDir.y, yDir.x, 0.0f);
+			scale = 1;
+			if (stack['W']) {
+				cache -= xDir;
+			}
+			if (stack['S']) {
+				cache += xDir;
+			}
+			if (stack['A']) {
+				cache -= yDir;
+			}
+			if (stack['D']) {
+				cache += yDir;
+			}
+			if (stack['Q']) {
+				cache.z += actualOffset;
+			}
+			if (stack['E']) {
+				cache.z -= actualOffset;
+			}
+			if (stack['R']) {
+				cache = glm::vec3(0);
+			}
+			eye = cache;
+			center = cache + glm::vec3(lookAt * scale);
 			break;
 		default:
 			break;
 		}
-		oldView = glm::lookAt(cache + glm::vec3(lookAt * scale), cache, glm::vec3{ 0.0f, 0.0f, -1.0f });
+		scale = glm::clamp(scale, 0.001f, 1000.0f);
+		oldView = glm::lookAt(eye, center, glm::vec3{ 0.0f, 0.0f, -1.0f });
 		ggm->updateCameraMatrix(oldView);
 
 		if (pressedLeft) {
@@ -105,7 +151,6 @@ public:
 		using namespace tge::io;
 		if (event.pressMode == PressMode::SCROLL) {
 			speed = glm::max(0.05f, glm::min(speed + event.y * 0.2f, 100.0f));
-			PLOG_DEBUG << speed;
 		}
 		if (event.pressMode == PressMode::CLICKED) {
 			if (!pressedMiddle) vec = glm::vec2(event.x, event.y);

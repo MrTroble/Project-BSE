@@ -20,15 +20,15 @@ public:
 	TGAppGUI(tge::io::IOModule* io) : tge::gui::DebugGUIModule(io) {}
 
 	template<class EnumClass>
-	inline void selectorFor(EnumClass* model, const char* name) {
-		const auto currentPreset = model->_to_string();
+	inline void selectorFor(const EnumClass model, const char* name, std::invocable<EnumClass> auto function) {
+		const auto currentPreset = model._to_string();
 		if (ImGui::BeginCombo(name, currentPreset)) {
 			for (const auto currentType : EnumClass::_values())
 			{
 				const auto name = currentType._to_string();
-				const bool isSelected = (currentType == *model);
+				const bool isSelected = (currentType == model);
 				if (ImGui::Selectable(name, isSelected)) {
-					*model = currentType;
+					function(currentType);
 					break;
 				}
 				if (isSelected) ImGui::SetItemDefaultFocus();
@@ -51,11 +51,12 @@ public:
 				const auto debug = debugAPI->getDebug();
 				ImGui::Text("%s", debug.c_str());
 			}
-		}
-		auto appio =
-			static_cast<TGAppIO*>(io);
 
-		selectorFor(&appio->cameraModel, "Camera Mode");
+			auto appio =
+				static_cast<TGAppIO*>(io);
+
+			selectorFor(appio->cameraModel, "Camera Mode", [=](auto x) { appio->changeCameraModel(x); });
+		}
 
 		focused = ImGui::IsWindowFocused();
 		ImGui::End();
