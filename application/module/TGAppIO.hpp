@@ -6,8 +6,11 @@
 #include <glm/gtx/transform.hpp>
 #include <graphics/GameGraphicsModule.hpp>
 #include <vector>
+#include <headerlibs/enum.h>
 
 constexpr float offset = 2.0f;
+
+BETTER_ENUM(CameraModel, char, Rotating, Free_Cam);
 
 class TGAppIO : public tge::io::IOModule {
 public:
@@ -30,6 +33,7 @@ public:
 	glm::vec4 oldRotX{};
 	glm::vec4 oldRotY{};
 	glm::vec4 lookAt{ 0, 1.0, 0, 0 };
+	CameraModel cameraModel = CameraModel::Rotating;
 
 	void getImageIDFromBackend();
 
@@ -44,23 +48,31 @@ public:
 		tge::io::IOModule::tick(deltatime);
 		const auto currentVP = glm::inverse(ggm->getVPMatrix());
 		const float actualOffset = (float)(offset * deltatime * speed);
-		if (stack['W']) {
-			scale -= actualOffset;
-		}
-		if (stack['S']) {
-			scale += actualOffset;
-		}
 
-		if (stack['Q']) {
-			cache.z += actualOffset;
+		switch (cameraModel)
+		{
+		case CameraModel::Rotating:
+			if (stack['W']) {
+				scale -= actualOffset;
+			}
+			if (stack['S']) {
+				scale += actualOffset;
+			}
+			if (stack['Q']) {
+				cache.z += actualOffset;
+			}
+			if (stack['E']) {
+				cache.z -= actualOffset;
+			}
+			if (stack['R']) {
+				cache = glm::vec3(0);
+			}
+			break;
+		default:
+			break;
 		}
-		if (stack['E']) {
-			cache.z -= actualOffset;
-		}
-
-		if (stack['R']) {
-			cache = glm::vec3(0);
-		}
+		oldView = glm::lookAt(cache + glm::vec3(lookAt * scale), cache, glm::vec3{ 0.0f, 0.0f, -1.0f });
+		ggm->updateCameraMatrix(oldView);
 
 		if (pressedLeft) {
 			pressedLeft = false;
@@ -84,12 +96,9 @@ public:
 				selectInternal();
 			}
 		}
-		std::fill(begin(stack), end(stack), false);
-		float yaw = deltaMouse.y;
-		float pitch = deltaMouse.x;
 
-		oldView = glm::lookAt(cache + glm::vec3(lookAt * scale), cache, glm::vec3{ 0.0f, 0.0f, -1.0f });
-		ggm->updateCameraMatrix(oldView);
+
+		std::fill(begin(stack), end(stack), false);
 	}
 
 	void mouseEvent(const tge::io::MouseEvent& event) override {
