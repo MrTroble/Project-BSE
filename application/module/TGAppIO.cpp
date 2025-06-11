@@ -6,6 +6,11 @@
 
 #include "../../interop/InternalInterop.hpp"
 
+std::array<IOFunctionBinding, IOFunction::_size()> functionBindings = {
+	IOFunctionBinding{IOFunctionBindingType::Scroll, 1},
+	IOFunctionBinding{IOFunctionBindingType::Scroll, -1}
+};
+
 void TGAppIO::getImageIDFromBackend() {
   auto api =
       (tge::graphics::VulkanGraphicsModule*)tge::main::getAPILayer()->backend();

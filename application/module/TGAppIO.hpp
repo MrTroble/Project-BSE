@@ -11,6 +11,15 @@
 constexpr float offset = 2.0f;
 
 BETTER_ENUM(CameraModel, char, Rotating, Free_Cam);
+BETTER_ENUM(IOFunctionBindingType, uint32_t, Keyboard, Mouse, Scroll);
+BETTER_ENUM(IOFunction, uint32_t, Rotating_Forward, Rotating_Backwards);
+
+struct IOFunctionBinding {
+	IOFunctionBindingType type = IOFunctionBindingType::Keyboard;
+	int32_t key = -1;
+};
+
+extern std::array<IOFunctionBinding, IOFunction::_size()> functionBindings;
 
 class TGAppIO : public tge::io::IOModule {
 public:
@@ -34,8 +43,28 @@ public:
 	glm::vec4 oldRotY{};
 	glm::vec4 lookAt{ 0, 1.0, 0, 0 };
 	CameraModel cameraModel = CameraModel::Rotating;
+	double scrollStack = 0;
+	std::array<bool, 16> mouseStack = { false };
 
 	void getImageIDFromBackend();
+
+	inline bool checkForBinding(const IOFunctionBinding binding) {
+		switch (binding.type)
+		{
+		case IOFunctionBindingType::Keyboard:
+			return stack[binding.key];
+		case IOFunctionBindingType::Mouse:
+			return mouseStack[binding.key];
+		case IOFunctionBindingType::Scroll:
+			return scrollStack * binding.key > 0.0;
+		default:
+			return false;
+		}
+	}
+
+	inline bool checkForBinding(const IOFunction function) {
+		return checkForBinding(functionBindings[function._to_index()]);
+	}
 
 	tge::main::Error init() override {
 		getImageIDFromBackend();
@@ -46,14 +75,8 @@ public:
 
 	void changeCameraModel(CameraModel newModel) {
 		if (cameraModel == newModel) return;
-		if (newModel._to_integral() == CameraModel::Rotating) {
-			cache = glm::vec3{ 0 };
-			lookAt = glm::vec4{ 0, 1.0, 0, 0 };
-		}
-		else {
-			cache = glm::vec3{ 0 };
-			lookAt = glm::vec4{ 0, 1.0, 0, 0 };
-		}
+		cache = glm::vec3{ 0 };
+		lookAt = glm::vec4{ 0, 1.0, 0, 0 };
 		cameraModel = newModel;
 	}
 
@@ -67,10 +90,10 @@ public:
 		switch (cameraModel)
 		{
 		case CameraModel::Rotating:
-			if (stack['W']) {
+			if (checkForBinding(IOFunction::Rotating_Forward)) {
 				scale -= actualOffset;
 			}
-			if (stack['S']) {
+			if (checkForBinding(IOFunction::Rotating_Backwards)) {
 				scale += actualOffset;
 			}
 			if (stack['Q']) {
@@ -145,14 +168,18 @@ public:
 
 
 		std::fill(begin(stack), end(stack), false);
+		std::fill(begin(mouseStack), end(mouseStack), false);
+		scrollStack = 0;
 	}
 
 	void mouseEvent(const tge::io::MouseEvent& event) override {
 		using namespace tge::io;
 		if (event.pressMode == PressMode::SCROLL) {
+			scrollStack += event.y;
 			speed = glm::max(0.05f, glm::min(speed + event.y * 0.2f, 100.0f));
 		}
 		if (event.pressMode == PressMode::CLICKED) {
+			mouseStack[event.pressed] = true;
 			if (!pressedMiddle) vec = glm::vec2(event.x, event.y);
 			if (event.pressed == 1) {
 				pressedLeft = true;
