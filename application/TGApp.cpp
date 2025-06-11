@@ -101,3 +101,25 @@ void waitFinishedInit() {
 }
 
 TGE_DLLEXPORT SizeInformation getSizeInfo() { return {}; }
+
+void updateKeybindings(const KeyBindings bindings) {
+    std::copy(std::begin(bindings.bindingList), std::begin(bindings.bindingList) + IOFunction::_size(), functionBindings.data());
+}
+
+void getKeybindings(KeyBindings* bindings) {
+    std::copy(functionBindings.begin(), functionBindings.end(), std::begin(bindings->bindingList));
+}
+
+void enumerateKeyBindingNames(const char** stringsToWrite, size_t* amount) {
+    if (stringsToWrite == nullptr) {
+        *amount = IOFunction::_size();
+        return;
+    }
+    size_t counter = 0;
+    for (const auto function : IOFunction::_values())
+    {
+        *stringsToWrite++ = function._to_string();
+        counter++;
+        if (counter == *amount) break;
+    }
+}

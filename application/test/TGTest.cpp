@@ -101,6 +101,18 @@ void test() {
   info.cornerSets.BottomRight.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
   info.cornerSets.BottomLeft.BaseLayer.Diffuse = "assets\\textures\\Leftlower.png";
   loadTerrain(1, &info, buffer.data());
+
+  size_t numberOfElements = 0;
+  enumerateKeyBindingNames(nullptr, &numberOfElements);
+  if (numberOfElements != IOFunction::_size()) throw std::runtime_error("Number of elements not equal!");
+  std::vector<const char*> useValues(numberOfElements);
+  enumerateKeyBindingNames(useValues.data(), &numberOfElements);
+
+  KeyBindings bindings;
+  getKeybindings(&bindings);
+
+  bindings.bindingList[IOFunction::Rotating_Reset] = { IOFunctionBindingType::Keyboard, 'P' };
+  updateKeybindings(bindings);
 }
 
 int main(int argv, const char** in) {
