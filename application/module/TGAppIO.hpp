@@ -32,39 +32,35 @@ class TGAppIO : public tge::io::IOModule {
 public:
 	std::vector<size_t> selectedIDs;
 	tge::graphics::GameGraphicsModule* ggm;
-	size_t nodeID;
+	size_t nodeID{};
 	tge::graphics::TTextureHolder imageID;
 	tge::graphics::TDataHolder dataHolder;
 	tge::graphics::NodeTransform transform;
-	glm::vec2 vec;
-	glm::vec2 deltaMouse{};
-	glm::vec3 cache{};
+	glm::vec2 oldInputPosition{};
+	glm::vec3 positionVector{};
+	glm::vec4 directionVector{ 0, 1.0, 0, 0 };
 	float scale = 1;
 	float speed = 1;
-	std::array<tge::io::PressMode, 255> stack = { tge::io::PressMode::UNKNOWN };
-	glm::mat4 oldView = glm::identity<glm::mat4>();
-	glm::vec4 oldRotX{};
-	glm::vec4 oldRotY{};
-	glm::vec4 lookAt{ 0, 1.0, 0, 0 };
-	CameraModel cameraModel = CameraModel::Rotating;
-	double scrollStack = 0;
-	std::array<tge::io::PressMode, 16> mouseStack = { tge::io::PressMode::UNKNOWN };
+	std::array<tge::io::PressMode, 255> keyboardPressesCache{};
+	std::array<tge::io::PressMode, 16> mouseButtonsCache{};
+	double scrollCache = 0;
 	std::array<bool, RepressChecks::_size()> repressChecks{ false };
+	CameraModel cameraModel = CameraModel::Rotating;
 
 	void getImageIDFromBackend();
 
 	inline bool checkForBinding(const IOFunctionBinding binding, bool* repressCheck = nullptr) const {
 		// TODO Check binding
 		const auto realKey = std::abs(binding.key);
-		auto iterator = stack.data();
+		auto iterator = keyboardPressesCache.data();
 		switch (binding.type)
 		{
 		case IOFunctionBindingType::Keyboard: break;
 		case IOFunctionBindingType::Mouse:
-			iterator = mouseStack.data();
+			iterator = mouseButtonsCache.data();
 			break;
 		case IOFunctionBindingType::Scroll:
-			return scrollStack * binding.key > 0.0;
+			return scrollCache * binding.key > 0.0;
 		default:
 			return false;
 		}
@@ -89,8 +85,8 @@ public:
 	}
 
 	tge::main::Error init() override {
-		std::fill(begin(mouseStack), end(mouseStack), tge::io::PressMode::RELEASED);
-		std::fill(begin(stack), end(stack), tge::io::PressMode::RELEASED);
+		std::fill(begin(mouseButtonsCache), end(mouseButtonsCache), tge::io::PressMode::RELEASED);
+		std::fill(begin(keyboardPressesCache), end(keyboardPressesCache), tge::io::PressMode::RELEASED);
 		getImageIDFromBackend();
 		return tge::io::IOModule::init();
 	}
@@ -99,8 +95,8 @@ public:
 
 	void changeCameraModel(CameraModel newModel) {
 		if (cameraModel == newModel) return;
-		cache = glm::vec3{ 0 };
-		lookAt = glm::vec4{ 0, 1.0, 0, 0 };
+		positionVector = glm::vec3{ 0 };
+		directionVector = glm::vec4{ 0, 1.0, 0, 0 };
 		cameraModel = newModel;
 	}
 
@@ -127,41 +123,41 @@ public:
 				speed -= SPEED_MULTIPLIER * deltatime;
 			}
 			if (checkForBinding(IOFunction::Rotating_Up)) {
-				cache.z += actualOffset;
+				positionVector.z += actualOffset;
 			}
 			if (checkForBinding(IOFunction::Rotating_Down)) {
-				cache.z -= actualOffset;
+				positionVector.z -= actualOffset;
 			}
 			if (checkForBinding(IOFunction::Rotating_Reset)) {
-				cache = glm::vec3(0);
+				positionVector = glm::vec3(0);
 			}
-			eye = cache + glm::vec3(lookAt * scale);
-			center = cache;
+			eye = positionVector + glm::vec3(directionVector * scale);
+			center = positionVector;
 			break;
 		case CameraModel::Free_Cam:
 			glm::vec3 yDir(glm::normalize(currentVP * glm::vec4(1.0f, 0.0, 0.0, 0.0)) * actualOffset);
 			glm::vec3 xDir(-yDir.y, yDir.x, 0.0f);
 			scale = 1;
 			if (checkForBinding(IOFunction::Free_Forward)) {
-				cache -= xDir;
+				positionVector -= xDir;
 			}
 			if (checkForBinding(IOFunction::Free_Backwards)) {
-				cache += xDir;
+				positionVector += xDir;
 			}
 			if (checkForBinding(IOFunction::Free_Left)) {
-				cache -= yDir;
+				positionVector -= yDir;
 			}
 			if (checkForBinding(IOFunction::Free_Right)) {
-				cache += yDir;
+				positionVector += yDir;
 			}
 			if (checkForBinding(IOFunction::Free_Up)) {
-				cache.z += actualOffset;
+				positionVector.z += actualOffset;
 			}
 			if (checkForBinding(IOFunction::Free_Down)) {
-				cache.z -= actualOffset;
+				positionVector.z -= actualOffset;
 			}
 			if (checkForBinding(IOFunction::Free_Reset)) {
-				cache = glm::vec3(0);
+				positionVector = glm::vec3(0);
 			}
 			if (checkForBinding(IOFunction::Free_Speed_Add)) {
 				speed += SPEED_MULTIPLIER * deltatime;
@@ -169,15 +165,15 @@ public:
 			if (checkForBinding(IOFunction::Free_Speed_Reduce)) {
 				speed -= SPEED_MULTIPLIER * deltatime;
 			}
-			eye = cache;
-			center = cache + glm::vec3(lookAt * scale);
+			eye = positionVector;
+			center = positionVector + glm::vec3(directionVector * scale);
 			break;
 		default:
 			break;
 		}
 		speed = glm::clamp(speed, 0.001f, 1000.0f);
 		scale = glm::clamp(scale, 0.001f, 1000.0f);
-		oldView = glm::lookAt(eye, center, glm::vec3{ 0.0f, 0.0f, -1.0f });
+		const auto oldView = glm::lookAt(eye, center, glm::vec3{ 0.0f, 0.0f, -1.0f });
 		ggm->updateCameraMatrix(oldView);
 
 		if (checkForBinding(IOFunction::Select, RepressChecks::Select)) {
@@ -187,7 +183,7 @@ public:
 			dataHolder = internalDataHolder;
 			const auto bounds = api->getRenderExtent();
 			const auto dataBuffer = (float*)imageData.data();
-			const auto offset = (size_t)(bounds.x * vec.y) + (size_t)vec.x;
+			const auto offset = (size_t)(bounds.x * oldInputPosition.y) + (size_t)oldInputPosition.x;
 			if (imageData.size() > offset * sizeof(float)) {
 				const size_t idSelected = static_cast<size_t>(dataBuffer[offset]);
 				if (!checkForBinding(IOFunction::Multi_Select_Modifier)) {
@@ -201,13 +197,13 @@ public:
 			}
 		}
 
-		scrollStack = 0;
+		scrollCache = 0;
 	}
 
 	void mouseEvent(const tge::io::MouseEvent& event) override {
 		using namespace tge::io;
 		if (event.pressMode == PressMode::SCROLL) {
-			scrollStack += event.y;
+			scrollCache += event.y;
 		}
 		else {
 			switch (event.pressMode)
@@ -215,7 +211,8 @@ public:
 			case tge::io::PressMode::HOLD:
 			case tge::io::PressMode::CLICKED:
 			case tge::io::PressMode::RELEASED:
-				mouseStack[event.pressed] = event.pressMode;
+				mouseButtonsCache[event.pressed] = event.pressMode;
+				break;
 			default:
 				break;
 			}
@@ -225,18 +222,17 @@ public:
 		if (checkForBinding(IOFunction::Move_Camera)) {
 			switch (event.pressMode) {
 			case PressMode::CLICKED:
-				vec = glm::vec2(event.x, event.y);
+				oldInputPosition = glm::vec2(event.x, event.y);
 				break;
 			case PressMode::HOLD:
 				const auto currentVP = glm::inverse(ggm->getVPMatrix());
 				glm::vec2 newPos(event.x, event.y);
-				auto currentDelta = (newPos - vec) * MODIFER;
-				deltaMouse += currentDelta;
-				vec = newPos;
+				auto currentDelta = (newPos - oldInputPosition) * MODIFER;
+				oldInputPosition = newPos;
 				const auto newRotX = glm::rotate(-currentDelta.x, glm::vec3(currentVP * glm::vec4(0.0, 1.0f, 0.0, 0.0)));
 				const auto newRotY = glm::rotate(currentDelta.y, glm::vec3(currentVP * glm::vec4(1.0f, 0.0, 0.0, 0.0)));
-				lookAt = glm::normalize(newRotX * lookAt);
-				lookAt = glm::normalize(newRotY * lookAt);
+				directionVector = glm::normalize(newRotX * directionVector);
+				directionVector = glm::normalize(newRotY * directionVector);
 				break;
 			}
 		}
@@ -245,13 +241,13 @@ public:
 	void keyboardEvent(const tge::io::KeyboardEvent& event) override {
 		if (event.signal < 126) {
 			if (event.mode == tge::io::PressMode::RELEASED) {
-				stack[event.signal] = tge::io::PressMode::RELEASED;
+				keyboardPressesCache[event.signal] = tge::io::PressMode::RELEASED;
 			}
-			else if (stack[event.signal] == tge::io::PressMode::CLICKED) {
-				stack[event.signal] = tge::io::PressMode::HOLD;
+			else if (keyboardPressesCache[event.signal] == tge::io::PressMode::CLICKED) {
+				keyboardPressesCache[event.signal] = tge::io::PressMode::HOLD;
 			}
 			else if (event.mode == tge::io::PressMode::CLICKED) {
-				stack[event.signal] = tge::io::PressMode::CLICKED;
+				keyboardPressesCache[event.signal] = tge::io::PressMode::CLICKED;
 			}
 		}
 	}
