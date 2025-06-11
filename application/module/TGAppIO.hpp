@@ -12,7 +12,7 @@ constexpr float offset = 2.0f;
 
 BETTER_ENUM(CameraModel, char, Rotating, Free_Cam);
 BETTER_ENUM(IOFunctionBindingType, uint32_t, Keyboard, Mouse, Scroll);
-BETTER_ENUM(IOFunction, uint32_t, Rotating_Forward, Rotating_Backwards);
+BETTER_ENUM(IOFunction, uint32_t, Rotating_Forward, Rotating_Backwards, Rotating_Speed_Add, Rotating_Speed_Reduce);
 
 struct IOFunctionBinding {
 	IOFunctionBindingType type = IOFunctionBindingType::Keyboard;
@@ -20,6 +20,7 @@ struct IOFunctionBinding {
 };
 
 extern std::array<IOFunctionBinding, IOFunction::_size()> functionBindings;
+constexpr float SPEED_MULTIPLIER = 10;
 
 class TGAppIO : public tge::io::IOModule {
 public:
@@ -91,10 +92,16 @@ public:
 		{
 		case CameraModel::Rotating:
 			if (checkForBinding(IOFunction::Rotating_Forward)) {
-				scale -= actualOffset;
+				scale -= actualOffset * 2.0f;
 			}
 			if (checkForBinding(IOFunction::Rotating_Backwards)) {
-				scale += actualOffset;
+				scale += actualOffset * 2.0f;
+			}
+			if (checkForBinding(IOFunction::Rotating_Speed_Add)) {
+				speed += SPEED_MULTIPLIER * deltatime;
+			}
+			if (checkForBinding(IOFunction::Rotating_Speed_Reduce)) {
+				speed -= SPEED_MULTIPLIER * deltatime;
 			}
 			if (stack['Q']) {
 				cache.z += actualOffset;
@@ -139,6 +146,7 @@ public:
 		default:
 			break;
 		}
+		speed = glm::clamp(speed, 0.001f, 1000.0f);
 		scale = glm::clamp(scale, 0.001f, 1000.0f);
 		oldView = glm::lookAt(eye, center, glm::vec3{ 0.0f, 0.0f, -1.0f });
 		ggm->updateCameraMatrix(oldView);
@@ -176,10 +184,11 @@ public:
 		using namespace tge::io;
 		if (event.pressMode == PressMode::SCROLL) {
 			scrollStack += event.y;
-			speed = glm::max(0.05f, glm::min(speed + event.y * 0.2f, 100.0f));
+		}
+		if (event.pressMode == PressMode::CLICKED || event.pressMode == PressMode::HOLD) {
+			mouseStack[event.pressed] = true;
 		}
 		if (event.pressMode == PressMode::CLICKED) {
-			mouseStack[event.pressed] = true;
 			if (!pressedMiddle) vec = glm::vec2(event.x, event.y);
 			if (event.pressed == 1) {
 				pressedLeft = true;

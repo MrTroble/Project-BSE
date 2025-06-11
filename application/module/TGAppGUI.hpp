@@ -54,7 +54,7 @@ public:
 
 			auto appio =
 				static_cast<TGAppIO*>(io);
-
+			ImGui::Text("Speed: %f.3", appio->speed);
 			selectorFor(appio->cameraModel, "Camera Mode", [=](auto x) { appio->changeCameraModel(x); });
 		}
 
