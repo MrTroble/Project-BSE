@@ -54,8 +54,51 @@ public:
 
 			auto appio =
 				static_cast<TGAppIO*>(io);
-			ImGui::Text("Speed: %f.3", appio->speed);
+			ImGui::Text("Speed: %f", appio->speed);
 			selectorFor(appio->cameraModel, "Camera Mode", [=](auto x) { appio->changeCameraModel(x); });
+
+			if (ImGui::CollapsingHeader("Keybindings")) {
+				for (const auto function : IOFunction::_values())
+				{
+					if (appio->cameraModel._to_integral() == CameraModel::Rotating &&
+						function._to_index() >= IOFunction::Free_Forward && function._to_index() <= IOFunction::Free_Reset)
+						continue;
+					if (appio->cameraModel._to_integral() == CameraModel::Free_Cam && function._to_index() < IOFunction::Free_Forward)
+						continue;
+					const auto binding = functionBindings[function._to_index()];
+					std::string outputString = function._to_string();
+					std::replace(outputString.begin(), outputString.end(), '_', ' ');
+					const auto realValue = std::abs(binding.key);
+					switch (binding.type)
+					{
+					case IOFunctionBindingType::Keyboard: {
+						if (std::isalnum(realValue)) {
+							ImGui::Text("%s: [%c]", outputString.c_str(), (char)realValue);
+						}
+						else {
+							auto optional = SpecialKeys::_from_integral_nothrow(realValue);
+							if (optional) {
+								ImGui::Text("%s: [%s]", outputString.c_str(), optional->_to_string());
+								break;
+							}
+							ImGui::Text("%s: [Error!]", outputString.c_str());
+						}
+						break;
+					}
+					case IOFunctionBindingType::Mouse: {
+						ImGui::Text("%s: [Mouse %d]", outputString.c_str(), realValue);
+						break;
+					}
+					case IOFunctionBindingType::Scroll: {
+						const char* upOrDown = binding.key > 0 ? "Up" : "Down";
+						ImGui::Text("%s: [Scroll %s]", outputString.c_str(), upOrDown);
+						break;
+					}
+					default:
+						ImGui::Text("%s: Unbound", outputString.c_str());
+					}
+				}
+			}
 		}
 
 		focused = ImGui::IsWindowFocused();

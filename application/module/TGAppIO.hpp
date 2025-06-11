@@ -11,16 +11,21 @@
 constexpr float offset = 2.0f;
 
 BETTER_ENUM(CameraModel, char, Rotating, Free_Cam);
-BETTER_ENUM(IOFunctionBindingType, uint32_t, Keyboard, Mouse, Scroll);
-BETTER_ENUM(IOFunction, uint32_t, Rotating_Forward, Rotating_Backwards, Rotating_Speed_Add, Rotating_Speed_Reduce);
+BETTER_ENUM(IOFunctionBindingType, uint32_t, Keyboard, Mouse, Scroll, None);
+BETTER_ENUM(IOFunction, uint32_t, Rotating_Forward, Rotating_Backwards, //
+	Rotating_Speed_Add, Rotating_Speed_Reduce, Rotating_Up, Rotating_Down, Rotating_Reset,//
+	Free_Forward, Free_Backwards, Free_Left, Free_Right, Free_Up, Free_Down, Free_Reset,//
+	Select, Multi_Select_Modifier, Move_Camera);
 
 struct IOFunctionBinding {
-	IOFunctionBindingType type = IOFunctionBindingType::Keyboard;
+	IOFunctionBindingType type = IOFunctionBindingType::None;
 	int32_t key = -1;
 };
 
 extern std::array<IOFunctionBinding, IOFunction::_size()> functionBindings;
 constexpr float SPEED_MULTIPLIER = 10;
+
+BETTER_ENUM(SpecialKeys, uint32_t, Shift=126);
 
 class TGAppIO : public tge::io::IOModule {
 public:
@@ -35,27 +40,29 @@ public:
 	glm::vec3 cache{};
 	float scale = 1;
 	float speed = 1;
-	std::array<bool, 255> stack = { false };
-	bool pressedLeft = false;
-	bool pressedMiddle = false;
-	bool pressedShift = false;
+	std::array<tge::io::PressMode, 255> stack = { tge::io::PressMode::UNKNOWN };
 	glm::mat4 oldView = glm::identity<glm::mat4>();
 	glm::vec4 oldRotX{};
 	glm::vec4 oldRotY{};
 	glm::vec4 lookAt{ 0, 1.0, 0, 0 };
 	CameraModel cameraModel = CameraModel::Rotating;
 	double scrollStack = 0;
-	std::array<bool, 16> mouseStack = { false };
+	std::array<tge::io::PressMode, 16> mouseStack = { tge::io::PressMode::UNKNOWN };
 
 	void getImageIDFromBackend();
 
 	inline bool checkForBinding(const IOFunctionBinding binding) {
+		const auto realKey = std::abs(binding.key);
 		switch (binding.type)
 		{
 		case IOFunctionBindingType::Keyboard:
-			return stack[binding.key];
+			if (stack[realKey] == tge::io::PressMode::CLICKED) return true;
+			return binding.key > 0 &&
+				stack[realKey] == tge::io::PressMode::HOLD;
 		case IOFunctionBindingType::Mouse:
-			return mouseStack[binding.key];
+			if (mouseStack[realKey] == tge::io::PressMode::CLICKED) return true;
+			return binding.key > 0 &&
+				mouseStack[realKey] == tge::io::PressMode::HOLD;
 		case IOFunctionBindingType::Scroll:
 			return scrollStack * binding.key > 0.0;
 		default:
@@ -68,6 +75,8 @@ public:
 	}
 
 	tge::main::Error init() override {
+		std::fill(begin(mouseStack), end(mouseStack), tge::io::PressMode::RELEASED);
+		std::fill(begin(stack), end(stack), tge::io::PressMode::RELEASED);
 		getImageIDFromBackend();
 		return tge::io::IOModule::init();
 	}
@@ -103,13 +112,13 @@ public:
 			if (checkForBinding(IOFunction::Rotating_Speed_Reduce)) {
 				speed -= SPEED_MULTIPLIER * deltatime;
 			}
-			if (stack['Q']) {
+			if (checkForBinding(IOFunction::Rotating_Up)) {
 				cache.z += actualOffset;
 			}
-			if (stack['E']) {
+			if (checkForBinding(IOFunction::Rotating_Down)) {
 				cache.z -= actualOffset;
 			}
-			if (stack['R']) {
+			if (checkForBinding(IOFunction::Rotating_Reset)) {
 				cache = glm::vec3(0);
 			}
 			eye = cache + glm::vec3(lookAt * scale);
@@ -119,25 +128,25 @@ public:
 			glm::vec3 yDir(glm::normalize(currentVP * glm::vec4(1.0f, 0.0, 0.0, 0.0)) * actualOffset);
 			glm::vec3 xDir(-yDir.y, yDir.x, 0.0f);
 			scale = 1;
-			if (stack['W']) {
+			if (checkForBinding(IOFunction::Free_Forward)) {
 				cache -= xDir;
 			}
-			if (stack['S']) {
+			if (checkForBinding(IOFunction::Free_Backwards)) {
 				cache += xDir;
 			}
-			if (stack['A']) {
+			if (checkForBinding(IOFunction::Free_Left)) {
 				cache -= yDir;
 			}
-			if (stack['D']) {
+			if (checkForBinding(IOFunction::Free_Right)) {
 				cache += yDir;
 			}
-			if (stack['Q']) {
+			if (checkForBinding(IOFunction::Free_Up)) {
 				cache.z += actualOffset;
 			}
-			if (stack['E']) {
+			if (checkForBinding(IOFunction::Free_Down)) {
 				cache.z -= actualOffset;
 			}
-			if (stack['R']) {
+			if (checkForBinding(IOFunction::Free_Reset)) {
 				cache = glm::vec3(0);
 			}
 			eye = cache;
@@ -151,8 +160,7 @@ public:
 		oldView = glm::lookAt(eye, center, glm::vec3{ 0.0f, 0.0f, -1.0f });
 		ggm->updateCameraMatrix(oldView);
 
-		if (pressedLeft) {
-			pressedLeft = false;
+		if (checkForBinding(IOFunction::Select)) {
 			auto api = ggm->getAPILayer();
 			const auto [imageData, internalDataHolder] =
 				api->getImageData(imageID, dataHolder);
@@ -162,9 +170,8 @@ public:
 			const auto offset = (size_t)(bounds.x * vec.y) + (size_t)vec.x;
 			if (imageData.size() > offset * sizeof(float)) {
 				const size_t idSelected = static_cast<size_t>(dataBuffer[offset]);
-				if (!pressedShift) {
+				if (!checkForBinding(IOFunction::Multi_Select_Modifier)) {
 					selectedIDs.clear();
-					pressedLeft = false;
 				}
 				const auto end = std::end(selectedIDs);
 				const auto foundIter =
@@ -174,9 +181,6 @@ public:
 			}
 		}
 
-
-		std::fill(begin(stack), end(stack), false);
-		std::fill(begin(mouseStack), end(mouseStack), false);
 		scrollStack = 0;
 	}
 
@@ -185,29 +189,22 @@ public:
 		if (event.pressMode == PressMode::SCROLL) {
 			scrollStack += event.y;
 		}
-		if (event.pressMode == PressMode::CLICKED || event.pressMode == PressMode::HOLD) {
-			mouseStack[event.pressed] = true;
+		else if (event.pressMode == tge::io::PressMode::RELEASED) {
+			mouseStack[event.pressed] = tge::io::PressMode::RELEASED;
 		}
-		if (event.pressMode == PressMode::CLICKED) {
-			if (!pressedMiddle) vec = glm::vec2(event.x, event.y);
-			if (event.pressed == 1) {
-				pressedLeft = true;
-			}
-			else if (event.pressed == 3) {
-				pressedMiddle = true;
-			}
-			if (event.additional & 8) {
-				pressedShift = true;
-			}
+		else if (stack[event.pressed] == tge::io::PressMode::CLICKED) {
+			mouseStack[event.pressed] = tge::io::PressMode::HOLD;
 		}
-		else if (event.pressMode == PressMode::RELEASED) {
-			if (event.pressed == 3) {
-				pressedMiddle = false;
-			}
+		else if (event.pressMode == tge::io::PressMode::CLICKED) {
+			mouseStack[event.pressed] = tge::io::PressMode::CLICKED;
 		}
+
 		constexpr auto MODIFER = 0.001f;
-		if (pressedMiddle) {
+		if (checkForBinding(IOFunction::Move_Camera)) {
 			switch (event.pressMode) {
+			case PressMode::CLICKED:
+				vec = glm::vec2(event.x, event.y);
+				break;
 			case PressMode::HOLD:
 				const auto currentVP = glm::inverse(ggm->getVPMatrix());
 				glm::vec2 newPos(event.x, event.y);
@@ -224,8 +221,16 @@ public:
 	}
 
 	void keyboardEvent(const tge::io::KeyboardEvent& event) override {
-		if (event.signal < 255) {
-			stack[event.signal] = true;
+		if (event.signal < 126) {
+			if (event.mode == tge::io::PressMode::RELEASED) {
+				stack[event.signal] = tge::io::PressMode::RELEASED;
+			}
+			else if (stack[event.signal] == tge::io::PressMode::CLICKED) {
+				stack[event.signal] = tge::io::PressMode::HOLD;
+			}
+			else if (event.mode == tge::io::PressMode::CLICKED) {
+				stack[event.signal] = tge::io::PressMode::CLICKED;
+			}
 		}
 	}
 
