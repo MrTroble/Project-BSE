@@ -14,7 +14,7 @@ BETTER_ENUM(CameraModel, char, Rotating, Free_Cam);
 BETTER_ENUM(IOFunctionBindingType, uint32_t, Keyboard, Mouse, Scroll, None);
 BETTER_ENUM(IOFunction, uint32_t, Rotating_Forward, Rotating_Backwards, //
 	Rotating_Speed_Add, Rotating_Speed_Reduce, Rotating_Up, Rotating_Down, Rotating_Reset,//
-	Free_Forward, Free_Backwards, Free_Left, Free_Right, Free_Up, Free_Down, Free_Reset,//
+	Free_Forward, Free_Backwards, Free_Left, Free_Right, Free_Up, Free_Down, Free_Speed_Add, Free_Speed_Reduce, Free_Reset,//
 	Select, Multi_Select_Modifier, Move_Camera);
 
 struct IOFunctionBinding {
@@ -25,7 +25,8 @@ struct IOFunctionBinding {
 extern std::array<IOFunctionBinding, IOFunction::_size()> functionBindings;
 constexpr float SPEED_MULTIPLIER = 10;
 
-BETTER_ENUM(SpecialKeys, uint32_t, Shift=126);
+BETTER_ENUM(SpecialKeys, uint32_t, Shift = 126);
+BETTER_ENUM(RepressChecks, uint32_t, Select);
 
 class TGAppIO : public tge::io::IOModule {
 public:
@@ -48,30 +49,43 @@ public:
 	CameraModel cameraModel = CameraModel::Rotating;
 	double scrollStack = 0;
 	std::array<tge::io::PressMode, 16> mouseStack = { tge::io::PressMode::UNKNOWN };
+	std::array<bool, RepressChecks::_size()> repressChecks{ false };
 
 	void getImageIDFromBackend();
 
-	inline bool checkForBinding(const IOFunctionBinding binding) {
+	inline bool checkForBinding(const IOFunctionBinding binding, bool* repressCheck = nullptr) const {
+		// TODO Check binding
 		const auto realKey = std::abs(binding.key);
+		auto iterator = stack.data();
 		switch (binding.type)
 		{
-		case IOFunctionBindingType::Keyboard:
-			if (stack[realKey] == tge::io::PressMode::CLICKED) return true;
-			return binding.key > 0 &&
-				stack[realKey] == tge::io::PressMode::HOLD;
+		case IOFunctionBindingType::Keyboard: break;
 		case IOFunctionBindingType::Mouse:
-			if (mouseStack[realKey] == tge::io::PressMode::CLICKED) return true;
-			return binding.key > 0 &&
-				mouseStack[realKey] == tge::io::PressMode::HOLD;
+			iterator = mouseStack.data();
+			break;
 		case IOFunctionBindingType::Scroll:
 			return scrollStack * binding.key > 0.0;
 		default:
 			return false;
 		}
+		if (repressCheck == nullptr) {
+			return iterator[realKey] == tge::io::PressMode::HOLD || iterator[realKey] == tge::io::PressMode::CLICKED;
+		}
+		if (iterator[realKey] == tge::io::PressMode::RELEASED) {
+			*repressCheck = false;
+			return false;
+		}
+		if (*repressCheck) return false;
+		*repressCheck = true;
+		return true;
 	}
 
-	inline bool checkForBinding(const IOFunction function) {
-		return checkForBinding(functionBindings[function._to_index()]);
+	inline bool checkForBinding(const IOFunction function, bool* repressCheck = nullptr) const {
+		return checkForBinding(functionBindings[function._to_index()], repressCheck);
+	}
+
+	inline bool checkForBinding(const IOFunction function, const RepressChecks check) {
+		return checkForBinding(functionBindings[function._to_index()], &repressChecks[check._to_index()]);
 	}
 
 	tge::main::Error init() override {
@@ -149,6 +163,12 @@ public:
 			if (checkForBinding(IOFunction::Free_Reset)) {
 				cache = glm::vec3(0);
 			}
+			if (checkForBinding(IOFunction::Free_Speed_Add)) {
+				speed += SPEED_MULTIPLIER * deltatime;
+			}
+			if (checkForBinding(IOFunction::Free_Speed_Reduce)) {
+				speed -= SPEED_MULTIPLIER * deltatime;
+			}
 			eye = cache;
 			center = cache + glm::vec3(lookAt * scale);
 			break;
@@ -160,7 +180,7 @@ public:
 		oldView = glm::lookAt(eye, center, glm::vec3{ 0.0f, 0.0f, -1.0f });
 		ggm->updateCameraMatrix(oldView);
 
-		if (checkForBinding(IOFunction::Select)) {
+		if (checkForBinding(IOFunction::Select, RepressChecks::Select)) {
 			auto api = ggm->getAPILayer();
 			const auto [imageData, internalDataHolder] =
 				api->getImageData(imageID, dataHolder);
@@ -189,14 +209,16 @@ public:
 		if (event.pressMode == PressMode::SCROLL) {
 			scrollStack += event.y;
 		}
-		else if (event.pressMode == tge::io::PressMode::RELEASED) {
-			mouseStack[event.pressed] = tge::io::PressMode::RELEASED;
-		}
-		else if (stack[event.pressed] == tge::io::PressMode::CLICKED) {
-			mouseStack[event.pressed] = tge::io::PressMode::HOLD;
-		}
-		else if (event.pressMode == tge::io::PressMode::CLICKED) {
-			mouseStack[event.pressed] = tge::io::PressMode::CLICKED;
+		else {
+			switch (event.pressMode)
+			{
+			case tge::io::PressMode::HOLD:
+			case tge::io::PressMode::CLICKED:
+			case tge::io::PressMode::RELEASED:
+				mouseStack[event.pressed] = event.pressMode;
+			default:
+				break;
+			}
 		}
 
 		constexpr auto MODIFER = 0.001f;

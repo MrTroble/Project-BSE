@@ -38,7 +38,7 @@ public:
 	}
 
 	void renderGUI() override {
-		if (ImGui::Begin("test")) {
+		if (ImGui::Begin("Debug Menue")) {
 			if (ImGui::SliderFloat3("Light", (float*)&light.pos, -10.0f, 10.0f) ||  //
 				ImGui::SliderFloat("Intesity", (float*)&light.intensity, -10.0f,
 					10.0f)  //

@@ -22,9 +22,11 @@ std::array<IOFunctionBinding, IOFunction::_size()> functionBindings = {
 	IOFunctionBinding{IOFunctionBindingType::Keyboard, 'D'},
 	IOFunctionBinding{IOFunctionBindingType::Keyboard, 'Q'},
 	IOFunctionBinding{IOFunctionBindingType::Keyboard, 'E'},
+	IOFunctionBinding{IOFunctionBindingType::Scroll, 1},
+	IOFunctionBinding{IOFunctionBindingType::Scroll, -1},
 	IOFunctionBinding{IOFunctionBindingType::Keyboard, 'R'},
 	// Other
-	IOFunctionBinding{IOFunctionBindingType::Mouse, -1},
+	IOFunctionBinding{IOFunctionBindingType::Mouse, 1},
 	IOFunctionBinding{IOFunctionBindingType::Keyboard, SpecialKeys::Shift},
 	IOFunctionBinding{IOFunctionBindingType::Mouse, 3}
 };
