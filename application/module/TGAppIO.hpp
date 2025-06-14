@@ -25,7 +25,6 @@ struct IOFunctionBinding {
 extern std::array<IOFunctionBinding, IOFunction::_size()> functionBindings;
 constexpr float SPEED_MULTIPLIER = 10;
 
-BETTER_ENUM(SpecialKeys, uint32_t, Shift = 126);
 BETTER_ENUM(RepressChecks, uint32_t, Select);
 
 class TGAppIO : public tge::io::IOModule {
@@ -41,7 +40,7 @@ public:
 	glm::vec4 directionVector{ 0, 1.0, 0, 0 };
 	float scale = 1;
 	float speed = 1;
-	std::array<tge::io::PressMode, 255> keyboardPressesCache{};
+	std::array<tge::io::PressMode, 1024> keyboardPressesCache{};
 	std::array<tge::io::PressMode, 16> mouseButtonsCache{};
 	double scrollCache = 0;
 	std::array<bool, RepressChecks::_size()> repressChecks{ false };
@@ -182,18 +181,26 @@ public:
 				api->getImageData(imageID, dataHolder);
 			dataHolder = internalDataHolder;
 			const auto bounds = api->getRenderExtent();
-			const auto dataBuffer = (float*)imageData.data();
+			const auto dataBuffer = (int*)imageData.data();
 			const auto offset = (size_t)(bounds.x * oldInputPosition.y) + (size_t)oldInputPosition.x;
-			if (imageData.size() > offset * sizeof(float)) {
-				const size_t idSelected = static_cast<size_t>(dataBuffer[offset]);
-				if (!checkForBinding(IOFunction::Multi_Select_Modifier)) {
-					selectedIDs.clear();
+			if (imageData.size() > offset * sizeof(int)) {
+				const auto idSelected = dataBuffer[offset];
+				if (idSelected > 0) {
+					if (!checkForBinding(IOFunction::Multi_Select_Modifier)) {
+						selectedIDs.clear();
+					}
+					const auto end = std::end(selectedIDs);
+					const auto foundIter =
+						std::find(std::begin(selectedIDs), end, idSelected);
+					if (foundIter == end) selectedIDs.push_back(idSelected);
+					selectInternal();
 				}
-				const auto end = std::end(selectedIDs);
-				const auto foundIter =
-					std::find(std::begin(selectedIDs), end, idSelected);
-				if (foundIter == end) selectedIDs.push_back(idSelected);
-				selectInternal();
+				else {
+					PLOG_DEBUG << "Nothing selected!";
+				}
+			}
+			else {
+				PLOG_WARNING << "Buffer check for selection out of range!";
 			}
 		}
 
@@ -202,6 +209,7 @@ public:
 
 	void mouseEvent(const tge::io::MouseEvent& event) override {
 		using namespace tge::io;
+		
 		if (event.pressMode == PressMode::SCROLL) {
 			scrollCache += event.y;
 		}
@@ -216,14 +224,17 @@ public:
 			default:
 				break;
 			}
+		}			
+		
+		switch (event.pressMode) {
+		case PressMode::CLICKED:
+			oldInputPosition = glm::vec2(event.x, event.y);
+			break;
 		}
 
 		constexpr auto MODIFER = 0.001f;
 		if (checkForBinding(IOFunction::Move_Camera)) {
 			switch (event.pressMode) {
-			case PressMode::CLICKED:
-				oldInputPosition = glm::vec2(event.x, event.y);
-				break;
 			case PressMode::HOLD:
 				const auto currentVP = glm::inverse(ggm->getVPMatrix());
 				glm::vec2 newPos(event.x, event.y);
@@ -239,7 +250,7 @@ public:
 	}
 
 	void keyboardEvent(const tge::io::KeyboardEvent& event) override {
-		if (event.signal < 126) {
+		if (event.signal < keyboardPressesCache.size()) {
 			if (event.mode == tge::io::PressMode::RELEASED) {
 				keyboardPressesCache[event.signal] = tge::io::PressMode::RELEASED;
 			}
