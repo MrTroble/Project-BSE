@@ -25,7 +25,6 @@ struct IOFunctionBinding {
 extern std::array<IOFunctionBinding, IOFunction::_size()> functionBindings;
 constexpr float SPEED_MULTIPLIER = 10;
 
-BETTER_ENUM(SpecialKeys, uint32_t, Shift = 126);
 BETTER_ENUM(RepressChecks, uint32_t, Select);
 
 class TGAppIO : public tge::io::IOModule {
@@ -41,7 +40,7 @@ public:
 	glm::vec4 directionVector{ 0, 1.0, 0, 0 };
 	float scale = 1;
 	float speed = 1;
-	std::array<tge::io::PressMode, 255> keyboardPressesCache{};
+	std::array<tge::io::PressMode, 1024> keyboardPressesCache{};
 	std::array<tge::io::PressMode, 16> mouseButtonsCache{};
 	double scrollCache = 0;
 	std::array<bool, RepressChecks::_size()> repressChecks{ false };
@@ -186,7 +185,6 @@ public:
 			const auto offset = (size_t)(bounds.x * oldInputPosition.y) + (size_t)oldInputPosition.x;
 			if (imageData.size() > offset * sizeof(int)) {
 				const auto idSelected = dataBuffer[offset];
-				PLOG_DEBUG << idSelected;
 				if (idSelected > 0) {
 					if (!checkForBinding(IOFunction::Multi_Select_Modifier)) {
 						selectedIDs.clear();
@@ -211,6 +209,7 @@ public:
 
 	void mouseEvent(const tge::io::MouseEvent& event) override {
 		using namespace tge::io;
+		
 		if (event.pressMode == PressMode::SCROLL) {
 			scrollCache += event.y;
 		}
@@ -251,7 +250,7 @@ public:
 	}
 
 	void keyboardEvent(const tge::io::KeyboardEvent& event) override {
-		if (event.signal < 126) {
+		if (event.signal < keyboardPressesCache.size()) {
 			if (event.mode == tge::io::PressMode::RELEASED) {
 				keyboardPressesCache[event.signal] = tge::io::PressMode::RELEASED;
 			}
