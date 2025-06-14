@@ -182,18 +182,27 @@ public:
 				api->getImageData(imageID, dataHolder);
 			dataHolder = internalDataHolder;
 			const auto bounds = api->getRenderExtent();
-			const auto dataBuffer = (float*)imageData.data();
+			const auto dataBuffer = (int*)imageData.data();
 			const auto offset = (size_t)(bounds.x * oldInputPosition.y) + (size_t)oldInputPosition.x;
-			if (imageData.size() > offset * sizeof(float)) {
-				const size_t idSelected = static_cast<size_t>(dataBuffer[offset]);
-				if (!checkForBinding(IOFunction::Multi_Select_Modifier)) {
-					selectedIDs.clear();
+			if (imageData.size() > offset * sizeof(int)) {
+				const auto idSelected = dataBuffer[offset];
+				PLOG_DEBUG << idSelected;
+				if (idSelected > 0) {
+					if (!checkForBinding(IOFunction::Multi_Select_Modifier)) {
+						selectedIDs.clear();
+					}
+					const auto end = std::end(selectedIDs);
+					const auto foundIter =
+						std::find(std::begin(selectedIDs), end, idSelected);
+					if (foundIter == end) selectedIDs.push_back(idSelected);
+					selectInternal();
 				}
-				const auto end = std::end(selectedIDs);
-				const auto foundIter =
-					std::find(std::begin(selectedIDs), end, idSelected);
-				if (foundIter == end) selectedIDs.push_back(idSelected);
-				selectInternal();
+				else {
+					PLOG_DEBUG << "Nothing selected!";
+				}
+			}
+			else {
+				PLOG_WARNING << "Buffer check for selection out of range!";
 			}
 		}
 
@@ -216,14 +225,17 @@ public:
 			default:
 				break;
 			}
+		}			
+		
+		switch (event.pressMode) {
+		case PressMode::CLICKED:
+			oldInputPosition = glm::vec2(event.x, event.y);
+			break;
 		}
 
 		constexpr auto MODIFER = 0.001f;
 		if (checkForBinding(IOFunction::Move_Camera)) {
 			switch (event.pressMode) {
-			case PressMode::CLICKED:
-				oldInputPosition = glm::vec2(event.x, event.y);
-				break;
 			case PressMode::HOLD:
 				const auto currentVP = glm::inverse(ggm->getVPMatrix());
 				glm::vec2 newPos(event.x, event.y);

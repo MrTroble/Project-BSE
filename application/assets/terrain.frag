@@ -33,8 +33,7 @@
 
         "layout(location=0) out vec4 COLOR;",
         "layout(location=1) out vec4 NORMAL;",
-        "layout(location=2) out float ROUGHNESS;",
-        "layout(location=3) out float METALLIC;",
+        "layout(location=2) out int MATERIAL;",
         "layout(binding=0) uniform sampler samplertex;",
         "layout(binding=1) uniform texture2D colorTextures[192];",
 
@@ -49,8 +48,7 @@
         "}",
 
         "void main() {",
-        "   ROUGHNESS = 0;",
-        "   METALLIC = 0;",
+        "   MATERIAL = 0;",
         "   COLOR = colorFromQuadrant();",
         "   //COLOR = vec4(colorFromQuadrant().r * vec3(1), 1);",
         "   NORMAL = vec4(NORMALIN, 1);",

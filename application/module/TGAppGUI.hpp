@@ -54,6 +54,25 @@ public:
 
 			auto appio =
 				static_cast<TGAppIO*>(io);
+#if 0
+			if (ImGui::Button("Print Metadata Buffer")) {
+				const auto [imageData, internalDataHolder] =
+					api->getImageData(appio->imageID, appio->dataHolder);
+				appio->dataHolder = internalDataHolder;
+				const auto bounds = api->getRenderExtent();
+				const auto dataBuffer = (int*)imageData.data();
+				for (size_t y = 0; y < (size_t)bounds.y; y++)
+				{
+					for (size_t x = 0; x < (size_t)bounds.x; x++)
+					{
+						int value = dataBuffer[y * (size_t)bounds.x + x];
+						std::cout << (value < 1 ? 0:1);
+					}
+					std::cout << std::endl;
+				}
+			}
+#endif // 0
+
 			ImGui::Text("Speed: %f", appio->speed);
 			selectorFor(appio->cameraModel, "Camera Mode", [=](auto x) { appio->changeCameraModel(x); });
 
