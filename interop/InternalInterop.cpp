@@ -169,7 +169,13 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
 bool internalSelect(const size_t count, const size_t* ids) {
   std::vector<FormKey> vector(count);
   std::transform(ids, ids + count, vector.begin(), [](const auto id) {
-    return REFERENCE_MAP_TO_STRING[id].c_str();
+    auto iter = REFERENCE_MAP_TO_STRING.find(id);
+    if (iter == std::end(REFERENCE_MAP_TO_STRING)) {
+      PLOG_WARNING << "Trying to find formkey for index " << id
+                   << " but does not exist!";
+      return "";
+    }
+    return iter->second.c_str();
   });
   selectReferences(count, vector.data());
   return true;

@@ -49,8 +49,8 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
     return -1;
   }
 
-  lateModules.push_back(guiModul);
   lateModules.push_back(ioModul);
+  lateModules.push_back(guiModul);
   lateModules.push_back(tge::nif::nifModule);
   lateModules.push_back(terrainModule);
   terrainModule->api = getAPILayer();
@@ -73,7 +73,7 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
 
   ioModul->ggm = getGameGraphicsModule();
   guiModul->api = api;
-  guiModul->ggm = ioModul->ggm;
+  guiModul->winModule = ioModul->ggm->getWindowModule();
   const auto extent = api->getRenderExtent();
   ioModul->ggm->updateViewMatrix(glm::perspective(
       glm::radians(45.0f), extent.x / extent.y, 0.01f, 10000.0f));
@@ -101,3 +101,25 @@ void waitFinishedInit() {
 }
 
 TGE_DLLEXPORT SizeInformation getSizeInfo() { return {}; }
+
+void updateKeybindings(const KeyBindings bindings) {
+    std::copy(std::begin(bindings.bindingList), std::begin(bindings.bindingList) + IOFunction::_size(), functionBindings.data());
+}
+
+void getKeybindings(KeyBindings* bindings) {
+    std::copy(functionBindings.begin(), functionBindings.end(), std::begin(bindings->bindingList));
+}
+
+void enumerateKeyBindingNames(const char** stringsToWrite, size_t* amount) {
+    if (stringsToWrite == nullptr) {
+        *amount = IOFunction::_size();
+        return;
+    }
+    size_t counter = 0;
+    for (const auto function : IOFunction::_values())
+    {
+        *stringsToWrite++ = function._to_string();
+        counter++;
+        if (counter == *amount) break;
+    }
+}
