@@ -27,8 +27,8 @@ TGE_DLLEXPORT void waitFinishedInit();
 struct KeyBindings {
     IOFunctionBinding bindingList[IOFunction::_size()];
 };
-TGE_DLLEXPORT void updateKeybindings(const KeyBindings bindings);
-TGE_DLLEXPORT void getKeybindings(KeyBindings* bindings);
+TGE_DLLEXPORT void updateKeybindings(const IOFunctionBinding* bindings);
+TGE_DLLEXPORT void getKeybindings(IOFunctionBinding* bindings);
 
 /*
 * If stringsToWrite is nullptr then amount is written with the maximum amount of 

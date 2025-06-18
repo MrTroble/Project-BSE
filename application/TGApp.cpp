@@ -102,12 +102,12 @@ void waitFinishedInit() {
 
 TGE_DLLEXPORT SizeInformation getSizeInfo() { return {}; }
 
-void updateKeybindings(const KeyBindings bindings) {
-    std::copy(std::begin(bindings.bindingList), std::begin(bindings.bindingList) + IOFunction::_size(), functionBindings.data());
+void updateKeybindings(const IOFunctionBinding* bindings) {
+    std::copy(bindings, bindings + IOFunction::_size(), functionBindings.data());
 }
 
-void getKeybindings(KeyBindings* bindings) {
-    std::copy(functionBindings.begin(), functionBindings.end(), std::begin(bindings->bindingList));
+void getKeybindings(IOFunctionBinding* bindings) {
+    std::copy(functionBindings.begin(), functionBindings.end(), bindings);
 }
 
 void enumerateKeyBindingNames(const char** stringsToWrite, size_t* amount) {

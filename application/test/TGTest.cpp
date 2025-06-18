@@ -109,10 +109,10 @@ void test() {
   enumerateKeyBindingNames(useValues.data(), &numberOfElements);
 
   KeyBindings bindings;
-  getKeybindings(&bindings);
+  getKeybindings(bindings.bindingList);
 
   bindings.bindingList[IOFunction::Rotating_Reset] = { IOFunctionBindingType::Keyboard, 'P' };
-  updateKeybindings(bindings);
+  updateKeybindings(bindings.bindingList);
 }
 
 int main(int argv, const char** in) {
