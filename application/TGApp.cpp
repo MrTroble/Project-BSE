@@ -22,6 +22,7 @@
 #include "module/TGAppGUI.hpp"
 #include "module/TGAppIO.hpp"
 #include "module/TerrainModule.hpp"
+#include "module/Gizmos.hpp"
 
 #undef min
 #undef max
@@ -85,6 +86,9 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   guiModul->lightID = api->pushLights(1, &light);
 
   finishedLoading = true;
+
+  auto lib = loadLibrary(api);
+
   const auto startResult = start();
   finishedLoading = false;
   return (uint32_t)startResult;

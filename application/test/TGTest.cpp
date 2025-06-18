@@ -113,6 +113,7 @@ void test() {
 
   bindings.bindingList[IOFunction::Rotating_Reset] = { IOFunctionBindingType::Keyboard, 'P' };
   updateKeybindings(bindings.bindingList);
+
 }
 
 int main(int argv, const char** in) {

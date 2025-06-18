@@ -37,7 +37,6 @@
         "layout(push_constant) uniform constants { int id; } pushConst;",
         "",
         "void main() {",
-        "   MATERIAL_ID = pushConst.id;",
         "   NORMAL = vec4(1, 1, 1, 1);",
         "   COLOR = vec4(1, 1, 1, 1);"
       ]
@@ -63,6 +62,7 @@
     },
     {
       "code": [
+        "   if(abs(COLOR.a - 1) < 0.01f) MATERIAL_ID = pushConst.id;",
         "}"
       ]
     }
