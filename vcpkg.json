@@ -6,10 +6,6 @@
   "supports": "windows",
   "license": "Apache-2.0",
   "dependencies": [
-    "glslang",
-    "glm",
-    "imgui",
-    "rsm-bsa",
-    "plog"
+    "rsm-bsa"
   ]
 }
