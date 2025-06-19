@@ -7,6 +7,7 @@
 #include <graphics/GameGraphicsModule.hpp>
 #include <vector>
 #include <headerlibs/enum.h>
+#include "Gizmos.hpp"
 
 constexpr float offset = 2.0f;
 
@@ -45,6 +46,8 @@ public:
 	double scrollCache = 0;
 	std::array<bool, RepressChecks::_size()> repressChecks{ false };
 	CameraModel cameraModel = CameraModel::Rotating;
+	uint32_t toolSelected = 0;
+	GizmoLibrary* library = nullptr;
 
 	void getImageIDFromBackend();
 
@@ -175,6 +178,23 @@ public:
 		const auto oldView = glm::lookAt(eye, center, glm::vec3{ 0.0f, 0.0f, -1.0f });
 		ggm->updateCameraMatrix(oldView);
 
+		if (checkForBinding(IOFunction::Select)) {
+			if (toolSelected) {
+				if (toolSelected < 4) {
+					glm::vec4 directionVector(0.0f);
+					directionVector[toolSelected - 1] = 1.0f;
+					const auto px = ggm->getVPMatrix() * directionVector;
+					PLOG_DEBUG << px.x << " " << px.y << " " << px.z;
+					const auto factor = 4 * glm::sin(glm::dot(glm::vec2(px), glm::vec2(inputX, inputY)));
+					library->addPosition(glm::vec3(directionVector) * factor, ggm);
+				}
+			}
+		}
+		else {
+			toolSelected = 0;
+		}
+
+
 		if (checkForBinding(IOFunction::Select, RepressChecks::Select)) {
 			auto api = ggm->getAPILayer();
 			const auto [imageData, internalDataHolder] =
@@ -196,7 +216,12 @@ public:
 					selectInternal();
 				}
 				else {
-					PLOG_DEBUG << "Nothing selected!";
+					if (idSelected < 0 && idSelected >= -4) {
+						toolSelected = (uint32_t)std::abs(idSelected);
+					}
+					else {
+						PLOG_DEBUG << "Nothing selected!";
+					}
 				}
 			}
 			else {
@@ -209,7 +234,7 @@ public:
 
 	void mouseEvent(const tge::io::MouseEvent& event) override {
 		using namespace tge::io;
-		
+
 		if (event.pressMode == PressMode::SCROLL) {
 			scrollCache += event.y;
 		}
@@ -224,8 +249,8 @@ public:
 			default:
 				break;
 			}
-		}			
-		
+		}
+
 		switch (event.pressMode) {
 		case PressMode::CLICKED:
 			oldInputPosition = glm::vec2(event.x, event.y);

@@ -84,10 +84,10 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   light.pos = glm::vec3(0, 10, 0);
   light.intensity = 1.0f;
   guiModul->lightID = api->pushLights(1, &light);
-
   finishedLoading = true;
 
   auto lib = loadLibrary(api);
+  ioModul->library = &lib;
 
   const auto startResult = start();
   finishedLoading = false;

@@ -67,8 +67,8 @@ GizmoLibrary loadLibrary(tge::graphics::APILayer* api) {
 
 	auto ggm = api->getGraphicsModule();
 	NodeInfo info{ binding };
-	ggm->addNode(std::array{ info });
-
+	library.node = ggm->addNode(std::array{ info })[0];
+	
 	RenderInfo block;
 	block.indexBuffer = dataHolders[0];
 	block.indexCount = indexToCube.size();
