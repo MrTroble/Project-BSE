@@ -6,7 +6,7 @@
     {
       "code": [
         "layout(location=0) out vec4 COLOR;",
-        "layout(location=2) out int MATERIAL_ID;",
+        "layout(location=1) out int MATERIAL_ID;",
         "layout(push_constant) uniform constants { vec4 color; int id; } pushConst;",
         "",
         "void main() {",

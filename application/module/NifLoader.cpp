@@ -132,6 +132,7 @@ inline void createFromTextures(TBindingHolder holder, TSamplerHolder samplerID,
   binding.type = BindingType::Texture;
   binding.data.texture.sampler = samplerID;
   binding.data.texture.texture = albedoID;
+  binding.data.texture.useGeneralLayout = 0;
   binding.binding = 1;
   bindingInfos.push_back(binding);
   binding.data.texture.texture = normalID;
