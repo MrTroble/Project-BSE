@@ -32,14 +32,11 @@
     {
       "code": [
         "layout(location=0) out vec4 COLOR;",
-        "layout(location=1) out vec4 NORMAL;",
-        "layout(location=2) out float ROUGHNESS;",
-        "layout(location=3) out float METALLIC;",
-        "layout(push_constant) uniform constants { uint id; } pushConst;",
+        "layout(location=2) out vec4 NORMAL;",
+        "layout(location=1) out int MATERIAL_ID;",
+        "layout(push_constant) uniform constants { int id; } pushConst;",
         "",
         "void main() {",
-        "   ROUGHNESS = pushConst.id;",
-        "   METALLIC = 0;",
         "   NORMAL = vec4(1, 1, 1, 1);",
         "   COLOR = vec4(1, 1, 1, 1);"
       ]
@@ -65,6 +62,7 @@
     },
     {
       "code": [
+        "   if(abs(COLOR.a - 1) < 0.01f) MATERIAL_ID = pushConst.id;",
         "}"
       ]
     }

@@ -23,7 +23,7 @@ void test() {
   waitFinishedInit();
   std::vector<ReferenceLoad> loads;
   std::vector<std::string> names(100);
-  std::fill(begin(names), end(names), "wrhouse02.nif");
+  std::fill(begin(names), end(names), "meshes\\architecture\\whiterun\\wrbuildings\\wrhouse02.nif");
   vec3 translate = {0, 0, 0};
   constexpr auto toMeter = 1.42875f * 100;
 
@@ -58,7 +58,7 @@ void test() {
   loadBSARef[0].transform.scale = {0.3f, 0.3f, 0.3f};
 
   loadBSARef[1].formKey = "testBSACompressedWithTexturesForm";
-  loadBSARef[1].path = "meshes\\architecture\\whiterun\\wrhouse02.nif";
+  loadBSARef[1].path = "meshes\\architecture\\whiterun\\wrbuildings\\wrhouse02.nif";
   loadBSARef[1].transform = TGE_DEFAULT_TRANSFORM;
   loadBSARef[1].transform.translation.x = -500;
   loadBSARef[1].transform.scale = {0.1f, 0.1f, 0.1f};
@@ -101,16 +101,35 @@ void test() {
   info.cornerSets.BottomRight.BaseLayer.Diffuse = "assets\\textures\\bsdevorange.dds";
   info.cornerSets.BottomLeft.BaseLayer.Diffuse = "assets\\textures\\Leftlower.png";
   loadTerrain(1, &info, buffer.data());
+
+  size_t numberOfElements = 0;
+  enumerateKeyBindingNames(nullptr, &numberOfElements);
+  if (numberOfElements != IOFunction::_size()) throw std::runtime_error("Number of elements not equal!");
+  std::vector<const char*> useValues(numberOfElements);
+  enumerateKeyBindingNames(useValues.data(), &numberOfElements);
+
+  KeyBindings bindings;
+  getKeybindings(bindings.bindingList);
+
+  bindings.bindingList[IOFunction::Rotating_Reset] = { IOFunctionBindingType::Keyboard, 'P' };
+  updateKeybindings(bindings.bindingList);
+
 }
 
 int main(int argv, const char** in) {
+  std::string directory = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition\\Data";
+  if (argv > 1) {
+      std::string possibleArgument = in[1];
+      if (possibleArgument.starts_with("--skyrimLocation")) {
+        directory = possibleArgument.substr(17);
+      }
+  }
   std::thread thread(&test);
   thread.detach();
-  auto directory = "assets";
   std::vector<char*> bsaHandles{(char*)"ccQDRSSE001-SurvivalMode.bsa",
-                                (char*)"Whiterun - Textures.bsa",
-                                (char*)"Whiterun.bsa"};
-  InitConfig config{CURRENT_INIT_VERSION, (char*)directory};
+                                (char*)"Skyrim - Meshes0.bsa",
+                                (char*)"Skyrim - Textures1.bsa"};
+  InitConfig config{CURRENT_INIT_VERSION, (char*)directory.c_str()};
   config.featureSet.mipMapLevels = INVALID_UINT32;
   return initTGEditor(&config, (const char**)bsaHandles.data(),
                       bsaHandles.size());

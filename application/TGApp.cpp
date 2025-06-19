@@ -22,6 +22,7 @@
 #include "module/TGAppGUI.hpp"
 #include "module/TGAppIO.hpp"
 #include "module/TerrainModule.hpp"
+#include "module/Gizmos.hpp"
 
 #undef min
 #undef max
@@ -49,8 +50,8 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
     return -1;
   }
 
-  lateModules.push_back(guiModul);
   lateModules.push_back(ioModul);
+  lateModules.push_back(guiModul);
   lateModules.push_back(tge::nif::nifModule);
   lateModules.push_back(terrainModule);
   terrainModule->api = getAPILayer();
@@ -73,7 +74,7 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
 
   ioModul->ggm = getGameGraphicsModule();
   guiModul->api = api;
-  guiModul->ggm = ioModul->ggm;
+  guiModul->winModule = ioModul->ggm->getWindowModule();
   const auto extent = api->getRenderExtent();
   ioModul->ggm->updateViewMatrix(glm::perspective(
       glm::radians(45.0f), extent.x / extent.y, 0.01f, 10000.0f));
@@ -83,8 +84,11 @@ int initTGEditor(const InitConfig* config, const char** bsaFiles,
   light.pos = glm::vec3(0, 10, 0);
   light.intensity = 1.0f;
   guiModul->lightID = api->pushLights(1, &light);
-
   finishedLoading = true;
+
+  auto lib = loadLibrary(api);
+  ioModul->library = &lib;
+
   const auto startResult = start();
   finishedLoading = false;
   return (uint32_t)startResult;
@@ -101,3 +105,25 @@ void waitFinishedInit() {
 }
 
 TGE_DLLEXPORT SizeInformation getSizeInfo() { return {}; }
+
+void updateKeybindings(const IOFunctionBinding* bindings) {
+    std::copy(bindings, bindings + IOFunction::_size(), functionBindings.data());
+}
+
+void getKeybindings(IOFunctionBinding* bindings) {
+    std::copy(functionBindings.begin(), functionBindings.end(), bindings);
+}
+
+void enumerateKeyBindingNames(const char** stringsToWrite, size_t* amount) {
+    if (stringsToWrite == nullptr) {
+        *amount = IOFunction::_size();
+        return;
+    }
+    size_t counter = 0;
+    for (const auto function : IOFunction::_values())
+    {
+        *stringsToWrite++ = function._to_string();
+        counter++;
+        if (counter == *amount) break;
+    }
+}

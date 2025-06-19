@@ -69,15 +69,20 @@ Error NifModule::init() {
   size_t next = 0;
   for (const auto& name : archiveNames) {
     auto& archive = archivesLoaded[next++];
+    const auto location = std::filesystem::path(this->assetDirectory) / name;
+    if (!std::filesystem::exists(location)) {
+      PLOG_WARNING << "Archive path does not exist " << location
+                   << "! Skipping!";
+      continue;
+    }
     try {
-      archive.read(this->assetDirectory + name);
+      archive.read(location);
     } catch (...) {
-      PLOG_ERROR << "Archive loading failed for " << name << "!";
+      PLOG_ERROR << "Archive loading failed for " << location << "!";
       return Error::NOT_INITIALIZED;
     }
     if (archive.empty()) {
-      PLOG_WARNING << "Archive empty after load " << name << "!";
-      return Error::NOT_INITIALIZED;
+      PLOG_WARNING << "Archive empty after load " << location << "!";
     }
   }
   return Error::NONE;
@@ -127,6 +132,7 @@ inline void createFromTextures(TBindingHolder holder, TSamplerHolder samplerID,
   binding.type = BindingType::Texture;
   binding.data.texture.sampler = samplerID;
   binding.data.texture.texture = albedoID;
+  binding.data.texture.useGeneralLayout = 0;
   binding.binding = 1;
   bindingInfos.push_back(binding);
   binding.data.texture.texture = normalID;
@@ -346,6 +352,11 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
                              DataType::VertexData);
 
       std::vector<std::string> cacheString;
+      RenderTarget target = RenderTarget::OPAQUE_TARGET;
+      if (shape->HasAlphaProperty()) {
+        cacheString.push_back("TRANSLUCENT");
+        target = RenderTarget::TRANSLUCENT_TARGET;
+      }
       const auto shader = file.GetShader(shape);
       auto shaderData = file.GetShader(shape);
       if (shaderData && shader->HasTextureSet()) {
@@ -375,7 +386,8 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
             sha->compile({{ShaderType::VERTEX, vertexFile, cacheString},
                           {ShaderType::FRAGMENT, fragmentsFile, cacheString}},
                          createInfo);
-        const Material material(pipe);
+        Material material(pipe);
+        material.target = target;
         const auto materialId = api->pushMaterials(1, &material);
         foundItr =
             shaderCache.emplace(cacheString, std::pair(materialId[0], pipe))
@@ -417,6 +429,7 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
   auto startPointer = indexBufferID.data();
   for (size_t i = 0; i < count; i++) {
     auto& renderInfoTuple = allRenderInfos[i];
+    const uint32_t currentID = (uint32_t)allNodes[i].internalHandle;
 
     const auto process = [&](auto& renderInfos, auto& begins) {
       auto beginIterator = begins.begin();
@@ -428,9 +441,8 @@ std::vector<std::vector<TNodeHolder>> NifModule::load(const size_t count,
         }
         std::vector<std::byte> pushData;
         pushData.resize(sizeof(uint32_t));
-        memcpy(pushData.data(), &internalStart->internalHandle,
-               pushData.size());
-        info.constRanges.push_back({pushData, shader::ShaderType::FRAGMENT});
+        memcpy(pushData.data(), &currentID, pushData.size());
+        info.constRanges.emplace_back(pushData, shader::ShaderType::FRAGMENT);
         info.indexBuffer = *(internalStart++);
         beginIterator++;
       }

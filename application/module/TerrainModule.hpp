@@ -161,6 +161,7 @@ class TerrainModule : public tge::main::Module {
       info.binding = 1;
       info.bindingSet = renderInfo.bindingID;
       info.type = BindingType::Texture;
+      info.data.texture.useGeneralLayout = 0;
       size_t cornerID = 0;
       for (const auto& corner : forEachCorner(terrain.cornerSet)) {
         const auto diffuse = corner.BaseLayer.Diffuse;
@@ -189,6 +190,7 @@ class TerrainModule : public tge::main::Module {
       samplerInfo.bindingSet = renderInfo.bindingID;
       samplerInfo.data.texture.sampler = sampler;
       samplerInfo.data.texture.texture = TTextureHolder();
+      samplerInfo.data.texture.useGeneralLayout = 0;
       samplerInfo.type = BindingType::Sampler;
       bindingInfos.push_back(samplerInfo);
     }
