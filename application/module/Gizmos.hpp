@@ -4,6 +4,7 @@
 
 struct GizmoLibrary {
 	tge::graphics::TNodeHolder node;
+	glm::vec3 basePosition{};
 	glm::vec3 position{};
 
 	inline void addPosition(glm::vec3 toAdd, tge::graphics::GameGraphicsModule* ggm) {

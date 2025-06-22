@@ -8,6 +8,7 @@
 #include <vector>
 #include <headerlibs/enum.h>
 #include "Gizmos.hpp"
+#include <interop/InternalInterop.hpp>
 
 constexpr float offset = 2.0f;
 
@@ -102,6 +103,11 @@ public:
 		cameraModel = newModel;
 	}
 
+	inline std::vector<tge::graphics::TNodeHolder> from(std::span<const size_t> ids) {
+		using namespace tge::graphics;
+		return std::vector<TNodeHolder>(ids.begin(), ids.end());
+	}
+
 	void tick(double deltatime) override {
 		tge::io::IOModule::tick(deltatime);
 		const auto currentVP = glm::inverse(ggm->getVPMatrix());
@@ -184,18 +190,31 @@ public:
 					glm::vec4 directionVector(0.0f);
 					directionVector[toolSelected - 1] = 1.0f;
 					const auto px = ggm->getVPMatrix() * directionVector;
-					PLOG_DEBUG << px.x << " " << px.y << " " << px.z;
 					const auto factor = 4 * glm::sin(glm::dot(glm::vec2(px), glm::vec2(inputX, inputY)));
-					library->addPosition(glm::vec3(directionVector) * factor, ggm);
+					const auto deltaPosition = glm::vec3(directionVector) * factor;
+					library->addPosition(deltaPosition, ggm);
+					const auto nodeIDs = from(selectedIDs);
+					ggm->addTranslationToNodes(nodeIDs, deltaPosition);
 				}
 			}
 		}
 		else {
 			toolSelected = 0;
+			const auto nodeIDs = from(selectedIDs);
+			const auto transforms = ggm->getTransforms(nodeIDs);
+			std::vector<ReferenceUpdate> refTransforms;
+			refTransforms.reserve(transforms.size());
+			for (auto& old : transforms)
+			{
+				ReferenceUpdate updateCurrent{ "", UpdateType::TRANSFORM };
+				updateCurrent.transform = tge::interop::transformToOutput(old);
+				refTransforms.push_back(updateCurrent);
+			}
+			tge::interop::internalUpdateTransform(std::move(refTransforms), selectedIDs);
 		}
 
 
-		if (checkForBinding(IOFunction::Select, RepressChecks::Select)) {
+		if (!toolSelected && checkForBinding(IOFunction::Select, RepressChecks::Select)) {
 			auto api = ggm->getAPILayer();
 			const auto [imageData, internalDataHolder] =
 				api->getImageData(imageID, dataHolder);
