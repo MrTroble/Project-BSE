@@ -190,11 +190,13 @@ public:
 					glm::vec4 directionVector(0.0f);
 					directionVector[toolSelected - 1] = 1.0f;
 					const auto px = ggm->getVPMatrix() * directionVector;
-					const auto factor = 4 * glm::sin(glm::dot(glm::vec2(px), glm::vec2(inputX, inputY)));
-					const auto deltaPosition = glm::vec3(directionVector) * factor;
-					library->addPosition(deltaPosition, ggm);
-					const auto nodeIDs = from(selectedIDs);
-					ggm->addTranslationToNodes(nodeIDs, deltaPosition);
+					if (deltaX != 0 || deltaY != 0) {
+						const auto factor = glm::sin(glm::dot(glm::normalize(glm::vec2(px)), glm::normalize(glm::vec2(deltaX, deltaY))));
+						const auto deltaPosition = glm::vec3(directionVector) * factor;
+						library->addPosition(deltaPosition, ggm);
+						const auto nodeIDs = from(selectedIDs);
+						ggm->addTranslationToNodes(nodeIDs, deltaPosition);
+					}
 				}
 			}
 		}

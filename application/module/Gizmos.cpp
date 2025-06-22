@@ -63,6 +63,7 @@ GizmoLibrary loadLibrary(tge::graphics::APILayer* api) {
 
 	Material material(shaderPipe);
 	material.target = RenderTarget::TRANSLUCENT_TARGET;
+	material.depthTest = false;
 	const auto materialIDs = api->pushMaterials(std::array{ material });
 
 	auto ggm = api->getGraphicsModule();
