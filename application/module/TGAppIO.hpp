@@ -141,6 +141,7 @@ public:
 			}
 			eye = positionVector + glm::vec3(directionVector * scale);
 			center = positionVector;
+			library->setBasescale(4 * glm::length(glm::vec3(directionVector * scale)));
 			break;
 		case CameraModel::Free_Cam:
 			glm::vec3 yDir(glm::normalize(currentVP * glm::vec4(1.0f, 0.0, 0.0, 0.0)) * actualOffset);
@@ -175,6 +176,7 @@ public:
 			}
 			eye = positionVector;
 			center = positionVector + glm::vec3(directionVector * scale);
+			library->setBasescale(0.4 * glm::length(positionVector - library->basePosition));
 			break;
 		default:
 			break;
@@ -193,7 +195,7 @@ public:
 					if (deltaX != 0 || deltaY != 0) {
 						const auto factor = glm::sin(glm::dot(glm::normalize(glm::vec2(px)), glm::normalize(glm::vec2(deltaX, deltaY))));
 						const auto deltaPosition = glm::vec3(directionVector) * factor;
-						library->addPosition(deltaPosition, ggm);
+						library->addPosition(deltaPosition);
 						const auto nodeIDs = from(selectedIDs);
 						ggm->addTranslationToNodes(nodeIDs, deltaPosition);
 					}
@@ -213,6 +215,7 @@ public:
 				refTransforms.push_back(updateCurrent);
 			}
 			tge::interop::internalUpdateTransform(std::move(refTransforms), selectedIDs);
+			library->resetTo(library->basePosition + library->position);
 		}
 
 
@@ -234,6 +237,15 @@ public:
 					const auto foundIter =
 						std::find(std::begin(selectedIDs), end, idSelected);
 					if (foundIter == end) selectedIDs.push_back(idSelected);
+					const auto transforms = ggm->getTransforms(from(selectedIDs));
+					glm::vec3 minPos = transforms[0].translation;
+					glm::vec3 maxPos = transforms[0].translation;
+					for (const auto& transform : transforms)
+					{
+						minPos = glm::min(transform.translation, minPos);
+						maxPos = glm::max(transform.translation, maxPos);
+					}
+					library->resetTo(0.5f * (minPos + maxPos));
 					selectInternal();
 				}
 				else {
@@ -249,6 +261,7 @@ public:
 				PLOG_WARNING << "Buffer check for selection out of range!";
 			}
 		}
+		library->update(ggm);
 
 		scrollCache = 0;
 	}
