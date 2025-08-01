@@ -189,11 +189,13 @@ public:
 		if (checkForBinding(IOFunction::Select)) {
 			if (toolSelected) {
 				if (toolSelected < 4) {
-					glm::vec4 directionVector(0.0f);
-					directionVector[toolSelected - 1] = 1.0f;
-					const auto px = ggm->getVPMatrix() * directionVector;
 					if (deltaX != 0 || deltaY != 0) {
-						const auto factor = glm::sin(glm::dot(glm::normalize(glm::vec2(px)), glm::normalize(glm::vec2(deltaX, deltaY))));
+						glm::vec4 directionVector(0.0f);
+						directionVector[toolSelected - 1] = 1.0f;
+						const auto middleD = ggm->getVPMatrix() * glm::vec4(library->basePosition, 1);
+						const auto px = glm::inverse(ggm->getVPMatrix()) * glm::vec4(deltaX, deltaY, middleD.z, 1);
+						const auto dir = directionVector;
+						const auto factor = glm::dot(directionVector, glm::normalize(px));
 						const auto deltaPosition = glm::vec3(directionVector) * factor;
 						library->addPosition(deltaPosition);
 						const auto nodeIDs = from(selectedIDs);

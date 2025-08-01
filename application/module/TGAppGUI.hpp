@@ -87,11 +87,11 @@ public:
 					const auto binding = functionBindings[function._to_index()];
 					std::string outputString = function._to_string();
 					std::replace(outputString.begin(), outputString.end(), '_', ' ');
-					const auto realValue = std::abs(binding.key);
+					const uint32_t realValue = std::abs(binding.key);
 					switch (binding.type)
 					{
 					case IOFunctionBindingType::Keyboard: {
-						if (std::isalnum(realValue)) {
+						if (realValue < 255 && std::isalnum(realValue)) {
 							ImGui::Text("%s: [%c]", outputString.c_str(), (char)realValue);
 						}
 						else {
