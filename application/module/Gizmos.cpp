@@ -93,6 +93,6 @@ GizmoLibrary loadLibrary(tge::graphics::APILayer* api) {
 		value = block;
 		index++;
 	}
-	const auto render = api->pushRender(renderInfos, {}, RenderTarget::TRANSLUCENT_TARGET);
+	const auto render = api->pushRender(renderInfos, {}, RenderTarget::TOOL);
 	return library;
 }
