@@ -110,20 +110,19 @@ void updateKeybindings(const IOFunctionBinding* bindings) {
     std::copy(bindings, bindings + IOFunction::_size(), functionBindings.data());
 }
 
-void getKeybindings(IOFunctionBinding* bindings) {
-    std::copy(functionBindings.begin(), functionBindings.end(), bindings);
+IOFunctionBinding* getKeybindings() {
+	return functionBindings.data();
 }
 
-void enumerateKeyBindingNames(const char** stringsToWrite, size_t* amount) {
-    if (stringsToWrite == nullptr) {
-        *amount = IOFunction::_size();
-        return;
-    }
+std::array<const char*, IOFunction::_size()> functionNames;
+
+KeyBindingList enumerateKeyBindingNames() {
+    KeyBindingList list;
+	list.amount = IOFunction::_size();
     size_t counter = 0;
-    for (const auto function : IOFunction::_values())
+    for (const auto name : IOFunction::_names())
     {
-        *stringsToWrite++ = function._to_string();
-        counter++;
-        if (counter == *amount) break;
+		functionNames[counter++] = name;
     }
+	list.names = functionNames.data();
 }
