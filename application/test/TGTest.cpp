@@ -102,14 +102,12 @@ void test() {
   info.cornerSets.BottomLeft.BaseLayer.Diffuse = "assets\\textures\\Leftlower.png";
   loadTerrain(1, &info, buffer.data());
 
-  size_t numberOfElements = 0;
-  enumerateKeyBindingNames(nullptr, &numberOfElements);
-  if (numberOfElements != IOFunction::_size()) throw std::runtime_error("Number of elements not equal!");
-  std::vector<const char*> useValues(numberOfElements);
-  enumerateKeyBindingNames(useValues.data(), &numberOfElements);
+  auto list = enumerateKeyBindingNames();
+  if (list.amount != IOFunction::_size()) throw std::runtime_error("Number of elements not equal!");
 
   KeyBindings bindings;
-  getKeybindings(bindings.bindingList);
+  auto value = getKeybindings();
+  std::copy(value, value + IOFunction::_size(), std::begin(bindings.bindingList));
 
   bindings.bindingList[IOFunction::Rotating_Reset] = { IOFunctionBindingType::Keyboard, 'P' };
   updateKeybindings(bindings.bindingList);

@@ -125,4 +125,5 @@ KeyBindingList enumerateKeyBindingNames() {
 		functionNames[counter++] = name;
     }
 	list.names = functionNames.data();
+    return list;
 }
