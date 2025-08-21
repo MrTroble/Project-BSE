@@ -10,7 +10,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_compile_definitions(DEBUG=1)
 endif()
 
-if(false)
+set(USE_ASAN false)
+if(USE_ASAN)
 add_compile_options("/fsanitize=address")
 add_link_options("/fsanitize=address")
 if(true)
@@ -31,7 +32,7 @@ add_subdirectory(nifly)
 
 find_package(bsa CONFIG REQUIRED)
 
-add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp" "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/module/NifLoader.cpp" "interop/InternalInterop.cpp" "application/module/TGAppIO.cpp" "application/module/TerrainModule.cpp") 
+add_library(TGInterOp SHARED "interop/Interop.cpp" "interop/Interop.hpp" "application/TGApp.cpp" "application/TGAppDef.cpp"  "application/module/NifLoader.cpp" "interop/InternalInterop.cpp" "application/module/TGAppIO.cpp" "application/module/TerrainModule.cpp" "application/module/Gizmos.cpp") 
 target_include_directories(TGInterOp PUBLIC "TGEngine/TGEngine/public" "$ENV{VULKAN_DIR}")
 target_link_libraries(TGInterOp PUBLIC tc::TGEngine)
 target_link_libraries(TGInterOp PRIVATE bsa::bsa nifly)

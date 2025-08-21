@@ -46,7 +46,7 @@ class NifModule : public tge::main::Module {
   std::vector<std::string> archiveNames;
   std::mutex shaderCacheMutex;
   std::unordered_map<std::vector<std::string>,
-                     std::pair<tge::graphics::TPipelineHolder, void*>>
+                     std::pair<tge::graphics::TPipelineHolder, shader::ShaderPipe>>
       shaderCache;
   std::unordered_map<std::string, LoadedModelInformation> loadInformation;
   float translationFactor = 0.00142875f;

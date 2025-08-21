@@ -24,6 +24,24 @@ TGE_DLLEXPORT bool isFinished();
 
 TGE_DLLEXPORT void waitFinishedInit();
 
+struct KeyBindings {
+    IOFunctionBinding bindingList[IOFunction::_size()];
+};
+TGE_DLLEXPORT void updateKeybindings(const IOFunctionBinding* bindings);
+
+/*
+ * Please do not modify the memory of the returned pointer.
+ * Make a copy!
+ */
+TGE_DLLEXPORT IOFunctionBinding* getKeybindings();
+
+struct KeyBindingList {
+    size_t amount;
+    const char** names;
+};
+
+TGE_DLLEXPORT KeyBindingList enumerateKeyBindingNames();
+
 struct SizeInformation {
   size_t sizeInformationStruct = sizeof(SizeInformation);
   size_t initConfigStruct = sizeof(InitConfig);
@@ -37,6 +55,7 @@ struct SizeInformation {
   size_t cornerSetsStruct = sizeof(CornerSetsDefault);
   size_t terrainInfoStruct = sizeof(TerrainInfo);
   size_t featureStruct = sizeof(tge::graphics::FeatureSet);
+  size_t keyBindingsStruct = sizeof(KeyBindings);
+  size_t keyBindingsListStruct = sizeof(KeyBindingList);
 };
-
 TGE_DLLEXPORT SizeInformation getSizeInfo();

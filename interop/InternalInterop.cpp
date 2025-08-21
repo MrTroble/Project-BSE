@@ -20,18 +20,6 @@ std::unordered_map<std::string, std::vector<tge::graphics::TNodeHolder>>
 std::unordered_map<tge::graphics::TNodeHolder, std::string> REFERENCE_MAP_TO_STRING;
 std::mutex loadMutex;
 
-inline glm::vec3 vectors(const vec3& vec3) {
-  return glm::vec3(vec3.x, vec3.y, vec3.z);
-}
-
-inline glm::quat quats(const vec3& vec3) { return glm::quat(vectors(vec3)); }
-
-inline tge::graphics::NodeTransform transformFromInput(
-    const ReferenceTransform& transform) {
-  return {vectors(transform.translation), vectors(transform.scale),
-          quats(transform.rotations)};
-}
-
 struct InternalLoad {
   std::string formKey;
   std::string path;
@@ -43,8 +31,8 @@ bool load(const uint count, const ReferenceLoad* loads) {
   for (size_t i = 0; i < count; i++) {
     InternalLoad& load = start[i];
     const ReferenceLoad& old = loads[i];
-    load.transform = old.transform;
     load.formKey = std::string(old.formKey);
+    load.transform = old.transform;
     load.path = std::string(old.path);
   }
   std::thread thread(
@@ -166,13 +154,32 @@ bool terrain(const uint count, const TerrainInfo* infos, float* bufferIn) {
   return true;
 }
 
+inline std::vector<FormKey> getFormKeys(std::span<const size_t> ids) {
+    std::vector<FormKey> vector(ids.size());
+    std::transform(ids.begin(), ids.end(), vector.begin(), [](const auto id) {
+        auto iter = REFERENCE_MAP_TO_STRING.find(id);
+        if (iter == std::end(REFERENCE_MAP_TO_STRING)) {
+            PLOG_WARNING << "Trying to find formkey for index " << id
+                << " but does not exist!";
+            return "";
+        }
+        return iter->second.c_str();
+        });
+    return vector;
+}
+
 bool internalSelect(const size_t count, const size_t* ids) {
-  std::vector<FormKey> vector(count);
-  std::transform(ids, ids + count, vector.begin(), [](const auto id) {
-    return REFERENCE_MAP_TO_STRING[id].c_str();
-  });
-  selectReferences(count, vector.data());
-  return true;
+  auto vector = getFormKeys({ ids, ids + count });
+  return selectReferences(count, vector.data());
+}
+
+bool internalUpdateTransform(std::vector<ReferenceUpdate>&& update, std::span<size_t> ids) {
+    auto vector = getFormKeys(ids);
+    for (size_t i = 0; i < update.size(); i++)
+    {
+        update[i].formKey = vector[i];
+    }
+    return updateReferences(update.size(), update.data());
 }
 
 void* getMainWindowHandle()
