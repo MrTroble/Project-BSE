@@ -117,7 +117,7 @@ namespace tge::nif {
 
 	struct SupportStruct {
 		nifly::NiShape* shape;
-		void* shader;
+		ShaderPipe shader;
 		size_t begin;
 	};
 
@@ -169,7 +169,7 @@ namespace tge::nif {
 			supportSizeNoneOpaque.reserve(size);
 		}
 
-		inline void pushBack(nifly::NiShape* shape, void* shader, size_t begin,
+		inline void pushBack(nifly::NiShape* shape, ShaderPipe shader, size_t begin,
 			const RenderInfo& renderInfo) {
 			if (shape->HasAlphaProperty()) {
 				supportNoneOpaque.emplace_back(shape, shader, begin);
@@ -392,6 +392,9 @@ namespace tge::nif {
 		std::vector<TNodeHolder> allNodes;
 		allNodes.resize(count);
 
+		std::vector<float> alphaMod;
+		alphaMod.resize(count);
+
 		std::vector<std::vector<nifly::Triangle>> allTriangleLists;
 		allTriangleLists.reserve(count * count);
 
@@ -404,6 +407,7 @@ namespace tge::nif {
 			auto& file = filesByName[loads[i].file];
 			const auto& shapes = file.GetShapes();
 			size_t current = 0;
+			alphaMod[i] = 0;
 
 			RenderInfoHolder holder;
 			holder.reserve(shapes.size());
@@ -425,22 +429,25 @@ namespace tge::nif {
 				Material material;
 
 				if (shape->HasAlphaProperty()) {
-					auto alphaPropertie = file.GetAlphaProperty(shape);
-					NifAlphaReader reader{ *alphaPropertie };
-					auto sourceBlend = reader.GetSourceBlendMode();
-					cacheString.push_back(std::string("SRC_") + sourceBlend._to_string());
-					auto destinationBlend = reader.GetDestinationBlendMode();
-					cacheString.push_back(std::string("DST_") + destinationBlend._to_string());
-					auto blendFactor = std::make_shared<BlendFactorExt>();
-					blendFactor->dstColorFactor = fromNifAlphaFunction(destinationBlend);
-					blendFactor->srcColorFactor = fromNifAlphaFunction(sourceBlend);
+					auto alphaProperty = file.GetAlphaProperty(shape);
+					NifAlphaReader reader{ *alphaProperty };
 					if (reader.HasAlphaBlend()) {
-						// TODO: Add support for alpha blend
+						auto sourceBlend = reader.GetSourceBlendMode();
+						cacheString.push_back(std::string("SRC_") + sourceBlend._to_string());
+						auto destinationBlend = reader.GetDestinationBlendMode();
+						cacheString.push_back(std::string("DST_") + destinationBlend._to_string());
+						auto blendFactor = std::make_shared<BlendFactorExt>();
+						blendFactor->dstColorFactor = fromNifAlphaFunction(destinationBlend);
+						blendFactor->srcColorFactor = fromNifAlphaFunction(sourceBlend);
+						material.blendFactor = blendFactor;
 					}
 
-					material.blendFactor = blendFactor;
 					if (reader.HasAlphaTest()) {
 						// TODO: Add support for alpha test
+						auto testFunction = reader.GetAlphaTestFunction();
+						cacheString.push_back("ALPHATEST");
+						cacheString.push_back(std::string("TEST_") + testFunction._to_string());
+						alphaMod[i] = alphaProperty->threshold / 255.0f;
 					}
 					cacheString.push_back("TRANSLUCENT");
 					material.target = RenderTarget::TRANSLUCENT_TARGET;
@@ -471,8 +478,8 @@ namespace tge::nif {
 				if (foundItr == end(shaderCache)) {
 					ShaderCreateInfo createInfo = { [](size_t input) { return input; } };
 					const auto pipe =
-						sha->compile({ {ShaderType::VERTEX, vertexFile, cacheString},
-									  {ShaderType::FRAGMENT, fragmentsFile, cacheString} },
+						sha->compile({ {ShaderType::VERTEX, "vertexFile", vertexFile, cacheString},
+									  {ShaderType::FRAGMENT, "fragmentFile", fragmentsFile, cacheString}},
 							createInfo);
 					material.costumShaderData = pipe;
 					const auto materialId = api->pushMaterials(1, &material);
@@ -518,6 +525,7 @@ namespace tge::nif {
 		for (size_t i = 0; i < count; i++) {
 			auto& renderInfoTuple = allRenderInfos[i];
 			const uint32_t currentID = (uint32_t)allNodes[i].internalHandle;
+			const float currentAlphaMod = alphaMod[i];
 
 			const auto process = [&](auto& renderInfos, auto& begins) {
 				auto beginIterator = begins.begin();
@@ -528,8 +536,9 @@ namespace tge::nif {
 						index = *(internalStart++);
 					}
 					std::vector<std::byte> pushData;
-					pushData.resize(sizeof(uint32_t));
-					memcpy(pushData.data(), &currentID, pushData.size());
+					pushData.resize(sizeof(uint32_t) + sizeof(float));
+					memcpy(pushData.data(), &currentID, sizeof(uint32_t));
+					memcpy(pushData.data() + sizeof(uint32_t), &currentAlphaMod, sizeof(float));
 					info.constRanges.emplace_back(pushData, shader::ShaderType::FRAGMENT);
 					info.indexBuffer = *(internalStart++);
 					beginIterator++;

@@ -34,8 +34,7 @@
         "layout(location=0) out vec4 COLOR;",
         "layout(location=2) out vec4 NORMAL;",
         "layout(location=1) out int MATERIAL_ID;",
-        "layout(push_constant) uniform constants { int id; } pushConst;",
-        "",
+        "layout(push_constant) uniform constants { int id; float alphaTest; } pushConst;",
         "void main() {",
         "   NORMAL = vec4(1, 1, 1, 1);",
         "   COLOR = vec4(1, 1, 1, 1);"
@@ -59,6 +58,13 @@
         "   NORMAL *= vec4(NORMALIN, 1);"
       ],
       "dependsOn": [ "NORMAL" ]
+    },
+    {
+      "code": [
+        "   if(COLOR.a <= pushConst.alphaTest) discard;",
+        "   COLOR.a = 1;"
+      ],
+      "dependsOn": [ "ALPHATEST" ]
     },
     {
       "code": [
